@@ -16,7 +16,11 @@ define(["N/record"], (record) => {
     /* context.response.renderPdf(data); */
     //TESTING COMMENT
     //DAVID
+<<<<<<< HEAD
     //OTRO
+=======
+    //DAVID TEST
+>>>>>>> 486a28aa1afb7263db105a29a1461e14d842891a
   };
   return {
     onRequest,
