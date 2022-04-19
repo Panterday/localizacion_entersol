@@ -14,8 +14,6 @@ define(["N/record"], (record) => {
       output: "Certifica pago",
     });
     /* context.response.renderPdf(data); */
-    //TESTING COMMENT
-    //DAVID
   };
   return {
     onRequest,
