@@ -109,8 +109,9 @@ define([
       });
       fileJsonTest.save();
 
-      //WRITE FUNCTION
       const extraCertData = funcionesLoc.getCertExtraData(validexJson);
+      const { fechaCert, serieCSD, serieSat, firmaCfdi, firmaSat } =
+        extraCertData;
 
       const xmlIdToSave = handleXmlResponse(
         validexXmlResponse,
@@ -158,6 +159,11 @@ define([
           custbody_ent_entloc_cadena_qr: validexQr,
           custbody_ent_entloc_cadena_original: validexCadenaOriginal,
           custbody_ent_entloc_pdf_timbrado: idPdfToSave,
+          custbody_ent_entloc_serie_csd: serieCSD,
+          custbody_ent_entloc_fecha_cert: fechaCert,
+          custbody_ent_entloc_serie_sat: serieSat,
+          custbody_ent_entloc_firma_cfdi: firmaCfdi,
+          custbody_ent_entloc_firma_sat: firmaSat,
         },
       });
       //Redirección a la transacción
