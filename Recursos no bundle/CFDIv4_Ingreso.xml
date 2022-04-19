@@ -1,0 +1,123 @@
+﻿<?xml version="1.0" encoding="UTF-8"?> 
+<!--Setting locale for MEXICO-->
+<#setting locale = "es_MX">
+<!--Certification date-->
+<#assign aDateTime = .now>
+<!--Zeros number-->
+<#assign zeros = "0.00">
+<#assign customItem = customData.extraData.customItem>
+<#function getAttrPair attr value>
+   <#if value?has_content>
+    <#assign result="${attr}=\"${value}\"">
+    <#return result>
+  </#if>  
+</#function>
+<#function getNodePair node attr value>
+   <#if value?has_content>
+    <#assign result="<${node} ${attr}=\"${value}\" />">
+    <#return result>
+  </#if>  
+</#function>
+<!--Transform a string from $0,0.00 to 0.00-->
+<#function formatFromCurrency amount>
+	<#assign result = amount?keep_after("$")?replace(",", "")?number?string[zeros]>
+	<#return result>
+</#function>
+<#function formatFromString amount>
+	<#assign result = amount?number?string[zeros]>
+	<#return result>
+</#function>
+<#function formatRate amount>
+	<#assign result = ((amount?number)/100)?string[zeros]>
+	<#return result>
+</#function>
+<cfdi:Comprobante 
+	xmlns:cfdi="http://www.sat.gob.mx/cfd/4" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd" 
+	Version="4.0" 
+	Fecha="${aDateTime?string.iso_nz?keep_before(".")}" 
+	Serie="${customData.extraData.customRecordData.serie}" 
+	Folio="${customData.extraData.customRecordData.folio}" 
+	FormaPago="${record.custbody_ent_entloc_forma_pago?keep_before(" -")}" 
+	SubTotal="${formatFromCurrency(record.subtotal)}" 
+	Moneda="${record.currencysymbol}" 
+	Total="${formatFromCurrency(record.total)}" 
+	TipoDeComprobante="I" 
+	MetodoPago="${record.custbody_ent_entloc_ent_metodo_pago?keep_before(" -")}" 
+	LugarExpedicion="${customData.extraData.customSubsidiaryData.address.zip}" 
+	Exportacion="${record.custbody_ent_entloc_exportacion?keep_before(" -")}" > 
+	<cfdi:Emisor 
+		Rfc="${subsidiary.federalidnumber}" 
+		Nombre="${subsidiary.name}" 
+		RegimenFiscal="${subsidiary.custrecord_ent_entloc_regimen_fiscal?keep_before(" -")}"
+	/> 
+	<cfdi:Receptor 
+		Rfc="${customer.custentity_ent_entloc_rfc}" 
+		Nombre="${customer.firstname} ${customer.middlename} ${customer.lastname}" 
+		DomicilioFiscalReceptor="${customer.billzip}" 
+		RegimenFiscalReceptor="${record.custbody_ent_entloc_reg_fis_receptor?keep_before(" -")}" 
+		UsoCFDI="${record.custbody_ent_entloc_uso_cfdi?keep_before(" -")}"
+	/> 
+	<cfdi:Conceptos>
+		<#list record.item as item>
+			<cfdi:Concepto 
+				Cantidad="${item.quantity}" 
+				Unidad="${item.units}" 
+				NoIdentificacion="${item.item}" 
+				Descripcion="${item.description}" 
+				ValorUnitario="${formatFromCurrency(item.rate)}" 
+				Importe="${formatFromCurrency(item.amount)}" 
+				ClaveProdServ="${item.custcol_ent_entloc_sat_clv_pro_view?keep_before(" -")}" 
+				ClaveUnidad="${customItem.satUnitCodes[item?index]?keep_before(" -")}" 
+				ObjetoImp="${item.custcol_ent_entloc_obj_impuesto?keep_before(" -")}"
+			>
+				<#if customItem.taxItemDetails?has_content>
+					<cfdi:Impuestos> 
+						<#if customItem.taxItemDetails[item?index].isGroup?number == 0>
+							<cfdi:Traslados> 
+								<cfdi:Traslado 
+									Base="${formatFromString(customItem.taxItemDetails[item?index].base)}" 
+									Impuesto="${customItem.taxItemDetails[item?index].impuesto}" 
+									TipoFactor="${customItem.taxItemDetails[item?index].tipoFactor}" 
+									TasaOCuota="${formatRate(customItem.taxItemDetails[item?index].tasaOcuota)}" 
+									Importe="${formatFromString(customItem.taxItemDetails[item?index].importe)}"
+								/> 
+							</cfdi:Traslados>
+						<#else>
+							<cfdi:Traslados> 
+								<#list customItem.taxItemDetails[item?index].taxesPerItem as taxElement>
+									<cfdi:Traslado 
+										Base="${formatFromString(taxElement.base)}" 
+										Impuesto="${taxElement.impuesto}" 
+										TipoFactor="${taxElement.tipoFactor}" 
+										TasaOCuota="${formatRate(taxElement.tasaOcuota)}" 
+										Importe="${formatFromString(taxElement.importe)}"
+									/> 
+								</#list>
+							</cfdi:Traslados>
+						</#if> 
+					</cfdi:Impuestos> 
+				</#if> 
+			</cfdi:Concepto> 
+		</#list> 
+	</cfdi:Conceptos> 
+	<#if customItem.taxTotal?has_content>
+		<cfdi:Impuestos 
+			TotalImpuestosTrasladados="${formatFromString(customItem.taxTotal)}"> 
+				<#if customItem.taxSummary?has_content>
+					<cfdi:Traslados> 
+						<#list customItem.taxSummary as elementSummary>
+								<cfdi:Traslado 
+									Base="${formatFromString(elementSummary.base)}"
+									Impuesto="${elementSummary.impuesto}" 
+									TipoFactor="${elementSummary.tipoFactor}"
+									TasaOCuota="${formatRate(elementSummary.tasaOcuota)}" 
+									Importe="${formatFromString(elementSummary.importe)}" 
+								/> 
+						</#list>
+					</cfdi:Traslados> 
+				</#if>
+		</cfdi:Impuestos> 
+	</#if>
+</cfdi:Comprobante>

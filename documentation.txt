@@ -1,0 +1,66 @@
+Campos de transacción:
+    Nombre campos: Prefijo ENT – Nombre de campo
+    ID Campos: _ent_entloc_nombrecampo
+Para la creación de catálogos (registros personalizados o listas), se debe usar el prefijo ENT - Nombre registro o lista, para el nombre del registro. 
+El nombre de los campos NO deben llevar el prefijo ENT - , únicamente el ID sí (_en_entloc_nombrecampo).
+    
+    Nombres de campos: 
+CFDI 4.0
+    Registros personalizados: 
+        Configuración localización entersol
+    Campos personalizados de transacción: 
+        ENT – UUID 
+        ENT – DOCUMENTO ELECTRÓNICO 
+        ENT – ESTADO GENERACIÓN XML 
+        ENT – ESTADO CERTIFICACIÓN
+        ENT – Cadena original (Ocultos)
+        ENT – Cadena QR (Ocultos)
+        ENT - PDF TIMBRADO
+        ENT - Método de pago (Ligado a lista: ENT - Sat método de pago)
+		ENT - USO CFDI (Ligado a lista: ENT - Sat USO CFDI)
+        ENT - Sat forma de pago (Ligado a lista: ENT - Sat forma de pago)
+        ENT - Exportación (Ligado a lista: ENT - Sat exportación)
+        ENT - Sat clave prod servicio (Vista del campo Sat clave prod servicio en el artículo)
+        ENT - Régimen fiscal receptor
+    Campos personalizados de subsidiaria: 
+        ENT- Régimen fiscal (Ligado a lista: ENT - Sat régimen fiscal)
+    Campos personalizadas de cliente: 
+        ENT - Rfc
+		ENT - Régimen fiscal
+        ENT - Uso de CFDI
+        ENT - Forma de pago
+        ENT - Método de pago
+    Campos personalizadas de artículo: 
+        ENT - Sat clave prod servicio (Ligado a lista: ENT - Sat clave prod serv)
+        ENT - Objeto de impuesto
+    Campos de línea de artículos
+        ENT - Sat clave prod servicio
+        ENT - Objeto de impuesto
+    Otros campos personalizados (Aplicado a código de impuesto): 
+        ENT - Código de impuesto (Ligado a lista: ENT - Sat código de impuesto)
+    Formularios: 
+        Factura de venta Entersol localización
+    Centros y fichas: 
+		Transacción:
+        	CFDI 4.0
+		Cliente: 
+			CFDI 4.0
+
+    Comienzo de mapeo de XML para la certificación en dos pasos. 
+    Comienzo de carga de catálogos. 
+
+    Listas personalizadas 
+        ENT - Sat Método de pago
+        ENT - Sat forma de pago
+        ENT - Sat exportación
+        ENT - Sat régimen fiscal
+        ENT - Sat código de impuesto
+        ENT - Sat Periodicidad
+        ENT - Sat Meses
+        ENT - Sat Tipo relacion
+        ENT - Sat Uso de CFDI
+        ENT - Sat Objeto Impuesto
+        ENT - Sat Tipo Factor
+        ENT - Sat clave unidad
+
+

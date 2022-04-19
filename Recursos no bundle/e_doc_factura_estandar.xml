@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<#setting locale = "es_MX">
+<#function getAttrPair attr value>
+   <#if value?has_content>
+    <#assign result="${attr}=\"${value}\"">
+    <#return result>
+  </#if>  
+</#function>
+<#function getNodePair node attr value>
+   <#if value?has_content>
+    <#assign result="<${node} ${attr}=\"${value}\" />">
+    <#return result>
+  </#if>  
+</#function>
+<cfdi:Comprobante
+    xsi:schemaLocation = 
+                  "http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd http://www.sat.gob.mx/CartaPorte20 http://www.sat.gob.mx/sitio_internet/cfd/CartaPorte/CartaPorte20.xsd http://www.sat.gob.mx/ComercioExterior11 http://www.sat.gob.mx/sitio_internet/cfd/ComercioExterior11/ComercioExterior11.xsd"
+    xmlns:cartaporte20 = "http://www.sat.gob.mx/CartaPorte20"
+    xmlns:cfdi = "http://www.sat.gob.mx/cfd/4"
+    xmlns:xsi =  "http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:cce11 = "http://www.sat.gob.mx/ComercioExterior11"
+    FormaPAgo = "FormaPago"
+    LugarExpedicion = "54080"
+    MetodoPago = "MetodoPago"
+    TipoCambio="${exchangeRate}"
+    Moneda="${currencyCode}"
+    SubTotal="Subtotal"
+    TipoDeComprobante="${satCodes.proofType}"
+    Total="Total"
+    Version="4.0"
+    TESTING = "${customInfo.name}"
+    Descuento="Descuento">
+    <cfdi:Emisor Rfc="IIA040805DZ4" Nombre="INDISTRIA ILUMINADORA DE ALMACENES SA DE CV" RegimenFiscal="601"/>
+    <cfdi:Receptor Rfc="URE180429TM6" Nombre="UNIVERSIDAD ROBOTICA ESPAÑOLA SA DE CV" DomicilioFiscalReceptor="65000" RegimenFiscalReceptor="601" UsoCFDI="G01"/>
+    <cfdi:Conceptos>
+      <cfdi:Concepto ClaveProdServ="50211503" Cantidad="1" ClaveUnidad="H87" Unidad="Pieza" Descripcion="Cigarros" ValorUnitario="200.00" Descuento="1" Importe="200.00" ObjetoImp="02">
+        <cfdi:Impuestos>
+          <cfdi:Traslados>
+            <cfdi:Traslado Base="1" Importe="0.16" Impuesto="002" TasaOCuota="0.160000" TipoFactor="Tasa"/>
+          </cfdi:Traslados>
+          <cfdi:Retenciones>
+            <cfdi:Retencion Base="1" Impuesto="001" TipoFactor="Tasa" TasaOCuota="0.100000" Importe="0.00"/>
+            <cfdi:Retencion Base="1" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.106666" Importe="0.00"/>
+          </cfdi:Retenciones>
+        </cfdi:Impuestos>
+      </cfdi:Concepto>
+	  </cfdi:Conceptos>
+	<cfdi:Impuestos TotalImpuestosRetenidos="0.00" TotalImpuestosTrasladados="0.16">
+		<cfdi:Retenciones>
+			<cfdi:Retencion Impuesto="001" Importe="0.00"/>
+			<cfdi:Retencion Impuesto="002" Importe="0.00"/>
+		</cfdi:Retenciones>
+		<cfdi:Traslados>
+			<cfdi:Traslado Base="1" Importe="0.16" Impuesto="002" TasaOCuota="0.160000" TipoFactor="Tasa"/>
+		</cfdi:Traslados>
+	</cfdi:Impuestos>
+</cfdi:Comprobante>

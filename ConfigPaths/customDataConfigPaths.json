@@ -1,0 +1,6 @@
+{
+  "paths": {
+    "customData": "../CustomData/ent_custom_data_source.js",
+    "funcionesLoc": "../Funciones/ent_funciones_localizacion.js"
+  }
+}
