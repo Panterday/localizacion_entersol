@@ -657,14 +657,14 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       ].$.SelloSAT;
 
     return {
-      usoCFDI,
-      metodoPago,
-      formaPago,
       fechaTimbrado,
       noSerieCSD,
       noSerieSAT,
       firmaCFDI,
       firmaSAT,
+      usoCFDI,
+      metodoPago,
+      formaPago,
     };
   };
   return {
