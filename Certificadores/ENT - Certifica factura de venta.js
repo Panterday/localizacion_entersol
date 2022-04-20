@@ -110,9 +110,9 @@ define([
       fileJsonTest.save();
 
       const extraCertData = funcionesLoc.getCertExtraData(validexJson);
-      const { fechaCert, serieCSD, serieSat, firmaCfdi, firmaSat } =
+      const { fechaTimbrado, noSerieCSD, noSerieSAT, firmaCFDI, firmaSAT } =
         extraCertData;
-
+      log.debug("extraCertData", extraCertData);
       const xmlIdToSave = handleXmlResponse(
         validexXmlResponse,
         nombreDocumento,
@@ -136,7 +136,7 @@ define([
           extraCertData,
         },
       };
-      log.debug("CUSTOM FULL DATA", customFullData.certData.extraCertData);
+      log.debug("CUSTOM FULL DATA", customFullData.extraData);
       //Create PDF
       const idPdfToSave = funcionesLoc.getPdfRendered(
         currentRecord,
@@ -159,11 +159,11 @@ define([
           custbody_ent_entloc_cadena_qr: validexQr,
           custbody_ent_entloc_cadena_original: validexCadenaOriginal,
           custbody_ent_entloc_pdf_timbrado: idPdfToSave,
-          custbody_ent_entloc_serie_csd: serieCSD,
-          custbody_ent_entloc_fecha_cert: fechaCert,
-          custbody_ent_entloc_serie_sat: serieSat,
-          custbody_ent_entloc_firma_cfdi: firmaCfdi,
-          custbody_ent_entloc_firma_sat: firmaSat,
+          custbody_ent_entloc_serie_csd: noSerieCSD,
+          custbody_ent_entloc_fecha_cert: fechaTimbrado,
+          custbody_ent_entloc_serie_sat: noSerieSAT,
+          custbody_ent_entloc_firma_cfdi: firmaCFDI,
+          custbody_ent_entloc_firma_sat: firmaSAT,
         },
       });
       //Redirección a la transacción
