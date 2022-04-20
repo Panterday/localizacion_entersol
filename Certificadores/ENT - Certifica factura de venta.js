@@ -13,6 +13,7 @@ define([
   "N/runtime",
   "N/ui/message",
   "N/encode",
+  "N/xml",
   "customData",
   "funcionesLoc",
 ], (
@@ -25,6 +26,7 @@ define([
   runtime,
   message,
   encode,
+  xml,
   customData,
   funcionesLoc
 ) => {
@@ -63,6 +65,53 @@ define([
     idXmlFile = xmlFileObj.save();
     return idXmlFile;
   };
+  const renderizaString = (
+    currentRecord,
+    customerRecord,
+    subsidiaryRecord,
+    currentTemplate
+  ) => {
+    let renderedTemplate = null;
+    const renderXml = render.create();
+    //Extra custom data
+    const extraData = funcionesLoc.getExtraCustomData(currentRecord);
+    //Global custom data
+    const globalData = customData.getDataForInvoice();
+    const customFullData = {
+      globalData,
+      extraData,
+    };
+    log.debug("RENDER", customFullData);
+    //Add custom data source
+    renderXml.addCustomDataSource({
+      format: render.DataSource.OBJECT,
+      alias: "customData",
+      data: customFullData,
+    });
+    //Add current record
+    renderXml.addRecord("record", currentRecord);
+    //Add subsidiary record
+    renderXml.addRecord("subsidiary", subsidiaryRecord);
+    //Add customer record
+    renderXml.addRecord("customer", customerRecord);
+    log.debug("CUSTOMER RECORD", customerRecord);
+    //Add template
+    renderXml.templateContent = currentTemplate;
+    //Try to render
+    try {
+      renderedTemplate = renderXml.renderAsString();
+      log.debug("RENDERED TEMPLATE FUNC", renderedTemplate);
+      return {
+        error: false,
+        renderedTemplate,
+      };
+    } catch (error) {
+      return {
+        error: true,
+        details: error,
+      };
+    }
+  };
   const handleTwoStepsCert = (
     currentRecord,
     subsidiaryRecord,
@@ -81,6 +130,7 @@ define([
       id: generatedXml,
     });
     const xmlText = xmlObj.getContents();
+    log.debug("XMLTEXTCERT2", xmlText);
     const body = JSON.stringify({
       xml: xmlText,
     });
@@ -195,8 +245,81 @@ define([
       });
     }
   };
+  const handleOneStepsCert = (
+    currentRecord,
+    customerRecord,
+    subsidiaryRecord,
+    permisosValidex,
+    prodMod,
+    idGuardaDocumentosCarpeta,
+    currentTemplate
+  ) => {
+    const xmlRenderedObj = renderizaString(
+      currentRecord,
+      customerRecord,
+      subsidiaryRecord,
+      currentTemplate
+    );
+    const recordType = currentRecord.type;
+    const recordId = currentRecord.id;
+    if (!xmlRenderedObj.error) {
+      let xmlDocument = null;
+      try {
+        //Render XML
+        xmlDocument = xml.Parser.fromString({
+          text: xmlRenderedObj.renderedTemplate,
+        });
+        //Back to String
+        const backToStringXml = xml.Parser.toString({
+          document: xmlDocument,
+        });
+        const body = JSON.stringify({
+          xml: backToStringXml,
+        });
+        const validexResponse = handlePostRequest(
+          body,
+          permisosValidex,
+          prodMod
+        );
+        const validexBodyResponse = JSON.parse(validexResponse.body);
+        redirect.toRecord({
+          type: recordType,
+          id: recordId,
+          parameters: { showGenMessage: true },
+        });
+      } catch (error) {
+        log.debug("ERROR", error);
+        record.submitFields({
+          type: recordType,
+          id: recordId,
+          values: {
+            custbody_ent_entloc_estado_gen_xml: error.message,
+            custbody_ent_entloc_doc_prev: "",
+          },
+        });
+        redirect.toRecord({
+          type: recordType,
+          id: recordId,
+          parameters: { errorGenMessage: true },
+        });
+      }
+    } else {
+      record.submitFields({
+        type: recordType,
+        id: recordId,
+        values: {
+          custbody_ent_entloc_estado_gen_xml: xmlRenderedObj.details,
+          custbody_ent_entloc_doc_prev: "",
+        },
+      });
+      redirect.toRecord({
+        type: recordType,
+        id: recordId,
+        parameters: { errorGenMessage: true },
+      });
+    }
+  };
   const onRequest = (context) => {
-    log.debug("CERT FAC", "CERT FACT");
     const recordId = context.request.parameters.id;
     const recordType = context.request.parameters.type;
     const currentRecord = record.load({
@@ -251,6 +374,15 @@ define([
       );
     } else {
       //One step certification
+      handleOneStepsCert(
+        currentRecord,
+        customerRecord,
+        subsidiaryRecord,
+        globalConfig.permisosValidex,
+        globalConfig.prodMod,
+        globalConfig.idGuardaDocumentosCarpeta,
+        userConfig.plantillaEdocument
+      );
     }
   };
   return {

@@ -61,6 +61,7 @@ define([
     //Try to render
     try {
       renderedTemplate = renderXml.renderAsString();
+      log.debug("RENDERED TEMPLATE FUNC", renderedTemplate);
       return {
         error: false,
         renderedTemplate,
@@ -120,6 +121,7 @@ define([
       let xmlDocument = null;
       try {
         //Render XML
+        log.debug("XML TO RENDER", xmlRenderedObj.renderedTemplate);
         xmlDocument = xml.Parser.fromString({
           text: xmlRenderedObj.renderedTemplate,
         });
