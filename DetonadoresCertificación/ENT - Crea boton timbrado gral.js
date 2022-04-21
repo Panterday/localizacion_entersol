@@ -40,44 +40,25 @@ define([
     }
     return buttonLabel;
   };
-  const dynamicSuiteletUrl = (recordType) => {
-    let suiteletUrl = "";
-    switch (recordType) {
-      case "invoice":
-        suiteletUrl = url.resolveScript({
-          scriptId: "customscript_ent_entloc_certifica_fv",
-          deploymentId: "customdeploy_ent_entloc_certifica_fv_imp",
-        });
-        break;
-      case "customerpayment":
-        suiteletUrl = url.resolveScript({
-          scriptId: "customscript_ent_entloc_cert_pc",
-          deploymentId: "customdeploy_ent_entloc_cert_pc_imp",
-        });
-        break;
-      case "creditmemo":
-        buttonLabel = "Certificar nota de crédito";
-        break;
-    }
-    return suiteletUrl;
-  };
-  const handleCertButton = (tranUuid, recordId, recordType, form) => {
-    if (/* !tranUuid */ true) {
-      const suiteletUrl = dynamicSuiteletUrl(recordType);
-      //Building params string
-      const params = `&id=${recordId}&type=${recordType}`;
+  const handleCertButton = (recordId, recordType, form) => {
+    const suiteletUrl = url.resolveScript({
+      scriptId: "customscript_ent_entloc_certifica_fv",
+      deploymentId: "customdeploy_ent_entloc_certifica_fv_imp",
+    });
+    //Building params string
+    const params = `&id=${recordId}&type=${recordType}&genCert=0`;
 
-      //Building target url
-      const target = `${suiteletUrl}+${params}`;
+    //Building target url
+    const target = `${suiteletUrl}+${params}`;
 
-      //TESTING INLINE HTML
-      const hideField = form.addField({
-        id: "custpage_ent_locent_hide_btn",
-        label: "Hidden",
-        type: serverWidget.FieldType.INLINEHTML,
-      });
+    //TESTING INLINE HTML
+    const hideField = form.addField({
+      id: "custpage_ent_locent_hide_btn",
+      label: "Hidden",
+      type: serverWidget.FieldType.INLINEHTML,
+    });
 
-      hideField.defaultValue = /* html */ `
+    hideField.defaultValue = /* html */ `
           <script>
             const btnCertificar = document.querySelector("#custpage_ent_locent_button_cert");
             btnCertificar.addEventListener("click", () => {
@@ -85,37 +66,35 @@ define([
             });
           </script>
         `;
-      //Dynaminc button label
-      let buttonLabel = dynamicButtonLabel(recordType);
+    //Dynaminc button label
+    let buttonLabel = dynamicButtonLabel(recordType);
 
-      //Adding a button to the form
-      form.addButton({
-        id: "custpage_ent_locent_button_cert",
-        label: buttonLabel,
-        functionName: `window.open("${target}", "_self")`,
-      });
-    }
+    //Adding a button to the form
+    form.addButton({
+      id: "custpage_ent_locent_button_cert",
+      label: buttonLabel,
+      functionName: `window.open("${target}", "_self")`,
+    });
   };
-  const handleGenerationButton = (tranUuid, recordType, recordId, form) => {
-    if (/* !tranUuid */ true) {
-      const suiteletUrl = url.resolveScript({
-        scriptId: "customscript_ent_entloc_genera_xml_previ",
-        deploymentId: "customdeploy_ent_entloc_genera_xml_p_imp",
-      });
-      //Building params string
-      const params = `&id=${recordId}&type=${recordType}`;
+  const handleGenerationButton = (recordType, recordId, form) => {
+    const suiteletUrl = url.resolveScript({
+      scriptId: "customscript_ent_entloc_genera_xml_previ",
+      deploymentId: "customdeploy_ent_entloc_genera_xml_p_imp",
+    });
+    //Building params string
+    const params = `&id=${recordId}&type=${recordType}&genCert=1`;
 
-      //Building target url
-      const target = `${suiteletUrl}+${params}`;
+    //Building target url
+    const target = `${suiteletUrl}+${params}`;
 
-      //TESTING INLINE HTML
-      const hideField = form.addField({
-        id: "custpage_ent_entloc_hide_generation",
-        label: "Hidden",
-        type: serverWidget.FieldType.INLINEHTML,
-      });
+    //TESTING INLINE HTML
+    const hideField = form.addField({
+      id: "custpage_ent_entloc_hide_generation",
+      label: "Hidden",
+      type: serverWidget.FieldType.INLINEHTML,
+    });
 
-      hideField.defaultValue = /* html */ `
+    hideField.defaultValue = /* html */ `
           <script>
             const btnCertificar = document.querySelector("#custpage_ent_entloc_gen_btn");
             btnCertificar.addEventListener("click", () => {
@@ -124,13 +103,12 @@ define([
           </script>
         `;
 
-      //Adding a button to the form
-      form.addButton({
-        id: "custpage_ent_entloc_gen_btn",
-        label: "Generar documento electrónico",
-        functionName: `window.open("${target}", "_self")`,
-      });
-    }
+    //Adding a button to the form
+    form.addButton({
+      id: "custpage_ent_entloc_gen_btn",
+      label: "Generar documento electrónico",
+      functionName: `window.open("${target}", "_self")`,
+    });
   };
   const beforeLoad = (context) => {
     if (context.type === context.UserEventType.VIEW) {
@@ -159,20 +137,22 @@ define([
         recordType,
         globalConfig.access
       );
+      log.debug("USER CONFIG", userConfig);
       //Invoice
       if (recordType === "invoice") {
         /* handleGenerationButton(uuid, recordType, recordId, form); */
-        if (userConfig.aplica && !uuid) {
+        /* if (userConfig.aplica && !uuid) {
           if (userConfig.habilitaCertDosPasos) {
             if (xmlPrev && !estatusCert) {
-              handleCertButton(uuid, recordId, recordType, form);
+              handleCertButton(recordId, recordType, form);
             } else {
-              handleGenerationButton(uuid, recordType, recordId, form);
+              handleGenerationButton(recordType, recordId, form);
             }
           } else {
-            handleCertButton(uuid, recordId, recordType, form);
+            handleCertButton(recordId, recordType, form);
           }
-        }
+        } */
+        handleCertButton(recordId, recordType, form);
       }
       //Customer payment
       /* if (recordType === "customerpayment") {
@@ -180,6 +160,21 @@ define([
           handleCertButton(uuid, mexLocUuid, recordId, recordType, form);
         }
       } */
+      //Credit memo
+      if (recordType === "creditmemo") {
+        /* handleGenerationButton(uuid, recordType, recordId, form); */
+        if (userConfig.aplica && !uuid) {
+          if (userConfig.habilitaCertDosPasos) {
+            if (xmlPrev && !estatusCert) {
+              handleCertButton(recordId, recordType, form);
+            } else {
+              handleGenerationButton(recordType, recordId, form);
+            }
+          } else {
+            handleCertButton(recordId, recordType, form);
+          }
+        }
+      }
     }
   };
   return {

@@ -424,6 +424,7 @@ define([
   const onRequest = (context) => {
     const recordId = context.request.parameters.id;
     const recordType = context.request.parameters.type;
+    const genCert = context.request.parameters.genCert;
     const currentRecord = record.load({
       type: recordType,
       id: recordId,
@@ -460,7 +461,7 @@ define([
       recordType,
       globalConfig.access
     );
-    if (generatedXml) {
+    if (genCert === 0) {
       handleTwoStepsCert(
         currentRecord,
         subsidiaryRecord,

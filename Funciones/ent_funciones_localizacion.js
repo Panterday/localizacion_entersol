@@ -200,7 +200,21 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
               fieldId: "custrecord_ent_entloc_plan_gen_xml_fv",
             }),
           };
-          break;
+        case "creditmemo":
+          return {
+            aplica: globalConfigRecord.getValue({
+              fieldId: "custrecord_ent_entloc_se_aplica_nc",
+            }),
+            habilitaCertDosPasos: globalConfigRecord.getValue({
+              fieldId: "custrecord_ent_entloc_hab_cert_2_nc",
+            }),
+            plantillaPdfPublica: globalConfigRecord.getValue({
+              fieldId: "custrecord_ent_entloc_plantilla_imp_nc",
+            }),
+            plantillaEdocument: globalConfigRecord.getValue({
+              fieldId: "custrecord_ent_entloc_plan_gen_xml_nc",
+            }),
+          };
         default:
           break;
       }
@@ -457,11 +471,11 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           );
           if (!exist) {
             taxSummary.push({
-              base: amount,
+              base: Number(amount),
               impuesto: keepBefore(taxcode, " -"),
               tipoFactor: "Tasa",
               tasaOcuota: rate,
-              importe: taxAmount,
+              importe: Number(taxAmount),
             });
           } else {
             log.debug("EXIST", exist);
@@ -498,11 +512,11 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
               );
               if (!exist) {
                 taxSummary.push({
-                  base: tax.base,
+                  base: Number(tax.base),
                   impuesto: tax.impuesto,
                   tipoFactor: tax.tipoFactor,
                   tasaOcuota: tax.tasaOcuota,
-                  importe: tax.importe,
+                  importe: Number(tax.importe),
                 });
               } else {
                 log.debug("EXIST", exist);
@@ -522,21 +536,25 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
             );
             if (!exist) {
               taxSummary.push({
-                base: taxListDetails.taxesPerItem.base,
+                base: Number(taxListDetails.taxesPerItem.base),
                 impuesto: taxListDetails.taxesPerItem.impuesto,
                 tipoFactor: taxListDetails.taxesPerItem.tipoFactor,
                 tasaOcuota: taxListDetails.taxesPerItem.tasaOcuota,
-                importe: taxListDetails.taxesPerItem.importe,
+                importe: Number(taxListDetails.taxesPerItem.importe),
               });
             } else {
               log.debug("EXIST", exist);
-              exist.importe = (
-                Number(exist.importe) +
-                Number(taxListDetails.taxesPerItem.importe)
-              ).toFixed(2);
-              exist.base = (
-                Number(exist.base) + Number(taxListDetails.taxesPerItem.base)
-              ).toFixed(2);
+              exist.importe = Number(
+                (
+                  Number(exist.importe) +
+                  Number(taxListDetails.taxesPerItem.importe)
+                ).toFixed(2)
+              );
+              exist.base = Number(
+                (
+                  Number(exist.base) + Number(taxListDetails.taxesPerItem.base)
+                ).toFixed(2)
+              );
             }
           }
         }
