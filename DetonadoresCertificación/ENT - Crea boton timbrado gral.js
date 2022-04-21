@@ -162,7 +162,7 @@ define([
       //Invoice
       if (recordType === "invoice") {
         /* handleGenerationButton(uuid, recordType, recordId, form); */
-        if (userConfig.aplica) {
+        if (userConfig.aplica && !uuid) {
           if (userConfig.habilitaCertDosPasos) {
             if (xmlPrev && !estatusCert) {
               handleCertButton(uuid, recordId, recordType, form);
