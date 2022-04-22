@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?> 
+<?xml version="1.0" encoding="UTF-8"?> 
 <!--Setting locale for MEXICO-->
 <#setting locale = "es_MX">
 <!--Certification date-->
@@ -47,7 +47,7 @@
 	SubTotal="${formatFromCurrency(record.subtotal)}" 
 	Moneda="${record.currencysymbol}" 
 	Total="${formatFromCurrency(record.total)}" 
-	TipoDeComprobante="I" 
+	TipoDeComprobante="E" 
 	MetodoPago="${record.custbody_ent_entloc_ent_metodo_pago?keep_before(" -")}" 
 	LugarExpedicion="${customData.extraData.customSubsidiaryData.address.zip}" 
 	Exportacion="${record.custbody_ent_entloc_exportacion?keep_before(" -")}" > 

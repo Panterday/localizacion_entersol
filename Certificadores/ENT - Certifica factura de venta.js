@@ -285,6 +285,7 @@ define([
           prodMod
         );
         const validexBodyResponse = JSON.parse(validexResponse.body);
+        log.debug("VALIDEX", validexBodyResponse);
         if (validexResponse.code === 200) {
           log.debug("VALIDEX", validexResponse);
           const validexXmlResponse = validexBodyResponse.base64.replace(
@@ -430,7 +431,7 @@ define([
       id: recordId,
     });
     const customerId = currentRecord.getValue({
-      fieldId: "entity",
+      fieldId: recordType === "customerpayment" ? "customer" : "entity",
     });
     const customerRecord = record.load({
       type: "customer",

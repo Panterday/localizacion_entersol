@@ -153,17 +153,12 @@ define([
           }
         } */
         handleCertButton(recordId, recordType, form);
+        handleGenerationButton(recordType, recordId, form);
       }
       //Customer payment
-      /* if (recordType === "customerpayment") {
-        if (applyCustomerPayment) {
-          handleCertButton(uuid, mexLocUuid, recordId, recordType, form);
-        }
-      } */
-      //Credit memo
-      if (recordType === "creditmemo") {
+      if (recordType === "customerpayment") {
         /* handleGenerationButton(uuid, recordType, recordId, form); */
-        if (userConfig.aplica && !uuid) {
+        /* if (userConfig.aplica && !uuid) {
           if (userConfig.habilitaCertDosPasos) {
             if (xmlPrev && !estatusCert) {
               handleCertButton(recordId, recordType, form);
@@ -173,7 +168,25 @@ define([
           } else {
             handleCertButton(recordId, recordType, form);
           }
-        }
+        } */
+        handleGenerationButton(recordType, recordId, form);
+        handleCertButton(recordId, recordType, form);
+      }
+      //Credit memo
+      if (recordType === "creditmemo") {
+        /* handleGenerationButton(uuid, recordType, recordId, form); */
+        /* if (userConfig.aplica && !uuid) {
+          if (userConfig.habilitaCertDosPasos) {
+            if (xmlPrev && !estatusCert) {
+              handleCertButton(recordId, recordType, form);
+            } else {
+              handleGenerationButton(recordType, recordId, form);
+            }
+          } else {
+            handleCertButton(recordId, recordType, form);
+          }
+        } */
+        handleCertButton(recordId, recordType, form);
       }
     }
   };

@@ -215,6 +215,21 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
               fieldId: "custrecord_ent_entloc_plan_gen_xml_nc",
             }),
           };
+        case "customerpayment":
+          return {
+            aplica: globalConfigRecord.getValue({
+              fieldId: "custrecord_ent_entloc_se_aplica_pc",
+            }),
+            habilitaCertDosPasos: globalConfigRecord.getValue({
+              fieldId: "custrecord_ent_entloc_hab_cert_2_pc",
+            }),
+            plantillaPdfPublica: globalConfigRecord.getValue({
+              fieldId: "custrecord_ent_entloc_plantilla_imp_pc",
+            }),
+            plantillaEdocument: globalConfigRecord.getValue({
+              fieldId: "custrecord_ent_entloc_plan_gen_xml_pc",
+            }),
+          };
         default:
           break;
       }
@@ -563,6 +578,49 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     const taxTotal = handleTaxTotal(taxSummary);
     return { taxItemDetails, taxTotal, taxSummary, satUnitCodes };
   };
+  const handleRelatedCfdis = (currentRecord) => {
+    const relatedCfdis = [];
+    const totalLines = currentRecord.getLineCount({
+      sublistId: "recmachcustrecord_ent_entloc_registro_padre",
+    });
+    for (let i = 0; i < totalLines; i++) {
+      const tipoRelacion = currentRecord.getSublistText({
+        sublistId: "recmachcustrecord_ent_entloc_registro_padre",
+        fieldId: "custrecord_ent_entloc_tipo_relacion",
+        line: i,
+      });
+      const transaccion = currentRecord.getSublistText({
+        sublistId: "recmachcustrecord_ent_entloc_registro_padre",
+        fieldId: "custrecord_ent_entloc_transaccion",
+        line: i,
+      });
+      const uuid = currentRecord.getSublistValue({
+        sublistId: "recmachcustrecord_ent_entloc_registro_padre",
+        fieldId: "custrecord_ent_entloc_uuid",
+        line: i,
+      });
+      const related = relatedCfdis.find(
+        (element) => element.tipoRelacion === tipoRelacion
+      );
+      if (!related) {
+        relatedCfdis.push({
+          tipoRelacion,
+          transacciones: [
+            {
+              transaccion,
+              uuid,
+            },
+          ],
+        });
+      } else {
+        related.transacciones.push({
+          transaccion,
+          uuid,
+        });
+      }
+    }
+    return relatedCfdis;
+  };
   const getExtraCustomData = (currentRecord) => {
     let total = currentRecord.getValue({
       fieldId: "total",
@@ -605,10 +663,14 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     }
     //Custom item
     const customItem = handleCustomItem(currentRecord);
+    //Related CFDIS
+    const relatedCfdis = handleRelatedCfdis(currentRecord);
+    log.debug("RELATEDCFDIS", relatedCfdis);
     return {
       customRecordData: {
         serie,
         folio,
+        relatedCfdis,
       },
       summary: {
         total,

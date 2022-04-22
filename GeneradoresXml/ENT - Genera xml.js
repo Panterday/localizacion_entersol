@@ -91,7 +91,7 @@ define([
       id: subsidiaryId,
     });
     const customerId = currentRecord.getValue({
-      fieldId: "entity",
+      fieldId: recordType === "customerpayment" ? "customer" : "entity",
     });
     let customerRecord = null;
     if (customerId) {

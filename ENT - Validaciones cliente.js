@@ -5,7 +5,31 @@
 /*The mode in which the record is being accessed. The mode can be set
 to one of the following values:
 copy, create, edit*/
-define(["N/record"], (record) => {
+define(["N/record", "N/search"], (record, search) => {
+  const handleUuid = (invoiceId) => {
+    let uuid = null;
+    const invoiceSearchObj = search.create({
+      type: "transaction",
+      filters: [
+        ["mainline", "is", "T"],
+        "AND",
+        ["custbody_ent_entloc_uuid", "isnotempty", ""],
+        "AND",
+        ["internalid", "anyof", invoiceId],
+      ],
+      columns: ["custbody_ent_entloc_uuid"],
+    });
+    const searchResultCount = invoiceSearchObj.runPaged().count;
+    if (searchResultCount > 0) {
+      invoiceSearchObj.run().each((result) => {
+        uuid = result.getValue({
+          name: "custbody_ent_entloc_uuid",
+        });
+        return true;
+      });
+    }
+    return uuid;
+  };
   const pageInit = (context) => {
     if (context.mode == "edit" || context.mode == "create") {
       try {
@@ -76,7 +100,33 @@ define(["N/record"], (record) => {
       }
     }
   };
+  const fieldChanged = (context) => {
+    //if(context.mode === 'edit'){
+    const currentRecord = context.currentRecord;
+    const sublistId = context.sublistId;
+    const fieldId = context.fieldId;
+    if (
+      sublistId === "recmachcustrecord_ent_entloc_registro_padre" &&
+      fieldId === "custrecord_ent_entloc_transaccion"
+    ) {
+      log.debug("CHANGING", "CHANGING");
+      const refId = currentRecord.getCurrentSublistValue({
+        sublistId: "recmachcustrecord_ent_entloc_registro_padre",
+        fieldId: fieldId,
+      });
+      log.debug("REFID", refId);
+      const uuid = handleUuid(refId);
+      log.debug("UUID", uuid);
+      currentRecord.setCurrentSublistValue({
+        sublistId: "recmachcustrecord_ent_entloc_registro_padre",
+        fieldId: "custrecord_ent_entloc_uuid",
+        value: uuid,
+      });
+    }
+    //};
+  };
   return {
     pageInit,
+    fieldChanged,
   };
 });
