@@ -42,8 +42,8 @@ define([
   };
   const handleCertButton = (recordId, recordType, form) => {
     const suiteletUrl = url.resolveScript({
-      scriptId: "customscript_ent_entloc_certifica_fv",
-      deploymentId: "customdeploy_ent_entloc_certifica_fv_imp",
+      scriptId: "customscript_ent_entloc_certifica_cfdi",
+      deploymentId: "customdeploy_ent_entloc_certifica_cfdi",
     });
     //Building params string
     const params = `&id=${recordId}&type=${recordType}&genCert=0`;

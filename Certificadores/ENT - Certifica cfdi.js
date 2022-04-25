@@ -421,6 +421,8 @@ define([
         parameters: { errorGenMessage: true },
       });
     }
+    const scriptObj = runtime.getCurrentScript();
+    log.debug("Remaining governance units: ", scriptObj.getRemainingUsage());
   };
   const onRequest = (context) => {
     const recordId = context.request.parameters.id;
