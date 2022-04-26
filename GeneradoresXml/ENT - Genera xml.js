@@ -161,7 +161,8 @@ define([
           type: recordType,
           id: recordId,
           values: {
-            custbody_ent_entloc_estado_gen_xml: error.message,
+            custbody_ent_entloc_estado_gen_xml:
+              "Generation error: " + error.message,
             custbody_ent_entloc_doc_prev: "",
           },
         });
@@ -176,7 +177,8 @@ define([
         type: recordType,
         id: recordId,
         values: {
-          custbody_ent_entloc_estado_gen_xml: xmlRenderedObj.details,
+          custbody_ent_entloc_estado_gen_xml:
+            "Generation error: " + xmlRenderedObj.details,
           custbody_ent_entloc_doc_prev: "",
         },
       });

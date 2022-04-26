@@ -110,9 +110,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       const folderSearchObj = search.create({
         type: "folder",
         filters: [
-          ["name", "is", "Documentos generados CFDI 4.0"],
+          ["name", "is", "Documentos_usuario"],
           "AND",
-          ["istoplevel", "is", "T"],
+          ["istoplevel", "is", "F"],
         ],
         columns: ["internalid"],
       });
@@ -124,25 +124,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           });
           idGuardaDocumentosCarpeta = folderId;
         });
-      } else {
-        //No existe folder
-        try {
-          const folderRecord = record.create({
-            type: record.Type.FOLDER,
-          });
-          folderRecord.setValue({
-            fieldId: "name",
-            value: "Documentos generados CFDI 4.0",
-          });
-          folderId = folderRecord.save({
-            enableSourcing: true,
-            ignoreMandatoryFields: true,
-          });
-          idGuardaDocumentosCarpeta = folderId;
-        } catch (error) {
-          errorInterDescription = "<br /> " + error;
-          log.debug("FOLDER", error);
-        }
       }
       //Set global folder ID
       record.submitFields({
@@ -747,12 +728,64 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       formaPago,
     };
   };
+  const handleFolderId = (folderName, parentFolder) => {
+    //==================================Buscando carpeta en gabinete==============================//
+    let folderId = null;
+    //Busca carpeta
+    const folderSearchObj = search.create({
+      type: "folder",
+      filters: [["name", "is", folderName], "AND", ["istoplevel", "is", "F"]],
+      columns: ["internalid"],
+    });
+    const searchResultCount = folderSearchObj.runPaged().count;
+    if (searchResultCount > 0) {
+      folderSearchObj.run().each((result) => {
+        folderId = result.getValue({
+          name: "internalid",
+        });
+      });
+    } else {
+      try {
+        const folderRecord = record.create({
+          type: record.Type.FOLDER,
+        });
+        folderRecord.setValue({
+          fieldId: "name",
+          value: folderName,
+        });
+        folderRecord.setValue({
+          fieldId: "parent",
+          value: parentFolder,
+        });
+        folderId = folderRecord.save({
+          enableSourcing: true,
+          ignoreMandatoryFields: true,
+        });
+      } catch (error) {
+        log.debug("FOLDER", error);
+      }
+    }
+    return folderId;
+  };
+
+  const getFolderId = (currentSubsidiaryText, fechaTimbrado, parent) => {
+    const fechaTimbradoObj = new Date(fechaTimbrado);
+    const año = fechaTimbradoObj.getFullYear();
+    const mes = fechaTimbradoObj.getMonth();
+    const subsidiaryFolderId = handleFolderId(currentSubsidiaryText, parent);
+    const yearFolderId = handleFolderId(año + "", subsidiaryFolderId);
+    const monthFolderId = handleFolderId(mes + "", yearFolderId);
+
+    log.debug("BUSCANDO SUB FOLDER", monthFolderId);
+    log.debug("SUBSID", `${currentSubsidiaryText}/${fechaTimbrado}`);
+  };
   return {
     getGlobalConfig,
     getUserConfig,
     getPdfRendered,
     getExtraCustomData,
     getCertExtraData,
+    getFolderId,
   };
 });
 //Probando GIT

@@ -163,11 +163,13 @@ define([
       const { fechaTimbrado, noSerieCSD, noSerieSAT, firmaCFDI, firmaSAT } =
         extraCertData;
       log.debug("extraCertData", extraCertData);
+
       const xmlIdToSave = handleXmlResponse(
         validexXmlResponse,
         nombreDocumento,
         idGuardaDocumentosCarpeta
       );
+
       //DELETE PREVIEW XML
       file.delete({
         id: generatedXml,
@@ -267,6 +269,9 @@ define([
     const recordId = currentRecord.id;
     if (!xmlRenderedObj.error) {
       let xmlDocument = null;
+      const currentSubsidiaryText = currentRecord.getText({
+        fieldId: "subsidiary",
+      });
       try {
         //Render XML
         xmlDocument = xml.Parser.fromString({
@@ -312,6 +317,13 @@ define([
           const { fechaTimbrado, noSerieCSD, noSerieSAT, firmaCFDI, firmaSAT } =
             extraCertData;
           log.debug("extraCertData", extraCertData);
+
+          //Get folder id Based on custom path
+          funcionesLoc.getFolderId(
+            currentSubsidiaryText,
+            fechaTimbrado,
+            idGuardaDocumentosCarpeta
+          );
           const xmlIdToSave = handleXmlResponse(
             validexXmlResponse,
             nombreDocumento,
@@ -377,6 +389,7 @@ define([
             id: recordId,
             values: {
               custbody_ent_entloc_estado_certifica:
+                "Certification error: " +
                 validexBodyResponse.errorDescription[2] +
                 validexBodyResponse.errorDescription[8],
             },
@@ -396,7 +409,8 @@ define([
           type: recordType,
           id: recordId,
           values: {
-            custbody_ent_entloc_estado_gen_xml: error.message,
+            custbody_ent_entloc_estado_gen_xml:
+              "Generation error: " + error.message,
             custbody_ent_entloc_doc_prev: "",
           },
         });
@@ -411,7 +425,8 @@ define([
         type: recordType,
         id: recordId,
         values: {
-          custbody_ent_entloc_estado_gen_xml: xmlRenderedObj.details,
+          custbody_ent_entloc_estado_gen_xml:
+            "Generation error: " + xmlRenderedObj.details,
           custbody_ent_entloc_doc_prev: "",
         },
       });
