@@ -160,14 +160,45 @@ define([
       fileJsonTest.save();
 
       const extraCertData = funcionesLoc.getCertExtraData(validexJson);
-      const { fechaTimbrado, noSerieCSD, noSerieSAT, firmaCFDI, firmaSAT } =
-        extraCertData;
+      const {
+        fechaTimbrado,
+        noSerieCSD,
+        noSerieSAT,
+        firmaCFDI,
+        firmaSAT,
+        tipoComprobante,
+      } = extraCertData;
       log.debug("extraCertData", extraCertData);
+
+      //Get folder id Based on custom path
+      const folderForXml = funcionesLoc.getFolderId(
+        currentSubsidiaryText,
+        fechaTimbrado,
+        idGuardaDocumentosCarpeta,
+        tipoComprobante,
+        "xml"
+      );
+      const folderForPdf = funcionesLoc.getFolderId(
+        currentSubsidiaryText,
+        fechaTimbrado,
+        idGuardaDocumentosCarpeta,
+        tipoComprobante,
+        "pdf"
+      );
+      log.debug(
+        "FOLDERS",
+        "XML: " +
+          folderForXml.tipoArchFolderId +
+          " pDF: " +
+          folderForPdf.tipoArchFolderId
+      );
 
       const xmlIdToSave = handleXmlResponse(
         validexXmlResponse,
         nombreDocumento,
-        idGuardaDocumentosCarpeta
+        !folderForXml.error
+          ? folderForXml.tipoArchFolderId
+          : idGuardaDocumentosCarpeta
       );
 
       //DELETE PREVIEW XML
@@ -196,7 +227,9 @@ define([
         customerRecord,
         customFullData,
         plantillaPdfPublica,
-        idGuardaDocumentosCarpeta,
+        !folderForPdf.error
+          ? folderForPdf.tipoArchFolderId
+          : idGuardaDocumentosCarpeta,
         nombreDocumento
       );
       log.debug("PDF", idPdfToSave);
@@ -314,20 +347,44 @@ define([
           fileJsonTest.save();
 
           const extraCertData = funcionesLoc.getCertExtraData(validexJson);
-          const { fechaTimbrado, noSerieCSD, noSerieSAT, firmaCFDI, firmaSAT } =
-            extraCertData;
+          const {
+            fechaTimbrado,
+            noSerieCSD,
+            noSerieSAT,
+            firmaCFDI,
+            firmaSAT,
+            tipoComprobante,
+          } = extraCertData;
           log.debug("extraCertData", extraCertData);
 
           //Get folder id Based on custom path
-          funcionesLoc.getFolderId(
+          const folderForXml = funcionesLoc.getFolderId(
             currentSubsidiaryText,
             fechaTimbrado,
-            idGuardaDocumentosCarpeta
+            idGuardaDocumentosCarpeta,
+            tipoComprobante,
+            "xml"
+          );
+          const folderForPdf = funcionesLoc.getFolderId(
+            currentSubsidiaryText,
+            fechaTimbrado,
+            idGuardaDocumentosCarpeta,
+            tipoComprobante,
+            "pdf"
+          );
+          log.debug(
+            "FOLDERS",
+            "XML: " +
+              folderForXml.tipoArchFolderId +
+              " pDF: " +
+              folderForPdf.tipoArchFolderId
           );
           const xmlIdToSave = handleXmlResponse(
             validexXmlResponse,
             nombreDocumento,
-            idGuardaDocumentosCarpeta
+            !folderForXml.error
+              ? folderForXml.tipoArchFolderId
+              : idGuardaDocumentosCarpeta
           );
           //Extra custom data
           const extraData = funcionesLoc.getExtraCustomData(currentRecord);
@@ -351,7 +408,9 @@ define([
             customerRecord,
             customFullData,
             plantillaPdfPublica,
-            idGuardaDocumentosCarpeta,
+            !folderForPdf.error
+              ? folderForPdf.tipoArchFolderId
+              : idGuardaDocumentosCarpeta,
             nombreDocumento
           );
           log.debug("PDF", idPdfToSave);

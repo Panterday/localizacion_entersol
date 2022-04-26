@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<cfdi:Comprobante xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cfdi="http://www.sat.gob.mx/cfd/3" xsi:schemaLocation="http://www.sat.gob.mx/cfd/3 http://www.sat.gob.mx/sitio_internet/cfd/3/cfdv33.xsd http://www.sat.gob.mx/Pagos http://www.sat.gob.mx/sitio_internet/cfd/Pagos/Pagos10.xsd"
+Fecha="2022-03-06T18:16:00"
+
+Folio="QMXN-000082"
+LugarExpedicion="01180"
+Moneda="XXX"
+SubTotal="0"
+TipoDeComprobante="P"
+Total="0"
+Version="3.3">
+<cfdi:Emisor Nombre="Quimix SA de CV" RegimenFiscal="601" Rfc="QUI960709E68" />
+<cfdi:Receptor Nombre="PET AND PLAY SA DE CV" Rfc="PPL1502178B1" UsoCFDI="P01" />
+<cfdi:Conceptos>
+    <cfdi:Concepto Cantidad="1" ClaveProdServ="84111506" ClaveUnidad="ACT" Descripcion="Pago" Importe="0" ValorUnitario="0" />
+</cfdi:Conceptos>
+<cfdi:Complemento>
+    <pago10:Pagos xmlns:pago10="http://www.sat.gob.mx/Pagos" Version="1.0">
+      <pago10:Pago
+            FechaPago="2022-01-06T12:00:00"
+            FormaDePagoP="03"
+            MonedaP="MXN"
+            Monto="164300.00"
+      >
+            <pago10:DoctoRelacionado 
+                  IdDocumento="c1712e93-c467-4c4d-95bc-038d1deafd0b"
+                  Folio="226218"
+                  Serie="FMN"
+                  MonedaDR="MXN" 
+                  MetodoDePagoDR="PPD" 
+                  NumParcialidad="1" 
+                  ImpSaldoAnt="10388.00" 
+                  ImpPagado="10388.00" 
+                  ImpSaldoInsoluto="0.00" 
+            />
+            <pago10:DoctoRelacionado IdDocumento="7346f455-279e-46c8-926c-038d1deaa73d"
+                  Folio="226302"
+                  Serie="FMN"
+                  MonedaDR="MXN" MetodoDePagoDR="PPD" NumParcialidad="1" ImpSaldoAnt="20880.00" ImpPagado="20880.00" ImpSaldoInsoluto="0.00" 
+            />
+            <pago10:DoctoRelacionado IdDocumento="5251d83b-9ec4-4f89-a3e8-5999d71a5735"
+                  Folio="226174"
+                  Serie="FMN"
+                  MonedaDR="MXN" MetodoDePagoDR="PPD" NumParcialidad="1" ImpSaldoAnt="43603.88" ImpPagado="43603.88" ImpSaldoInsoluto="0.00" 
+            />
+            <pago10:DoctoRelacionado IdDocumento="e27f2a92-80a6-4304-ba68-038d1deac298"
+                  Folio="226319"
+                  Serie="FMN"
+                  MonedaDR="MXN" MetodoDePagoDR="PPD" NumParcialidad="1" ImpSaldoAnt="288426.00" ImpPagado="89428.12" ImpSaldoInsoluto="198997.88" 
+            />
+      </pago10:Pago>
+    </pago10:Pagos>
+  </cfdi:Complemento>
+</cfdi:Comprobante>

@@ -405,7 +405,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         unitList = result.getText({
           name: "custrecord_ent_entloc_clave_sat",
         });
-
         return true;
       });
     }
@@ -602,6 +601,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     }
     return relatedCfdis;
   };
+  const handleDataForPayment = (currentRecord) => {
+    return false;
+  };
   const getExtraCustomData = (currentRecord) => {
     let total = currentRecord.getValue({
       fieldId: "total",
@@ -615,6 +617,12 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     const tranid = currentRecord.getValue({
       fieldId: "tranid",
     });
+    const recordType = currentRecord.type;
+    let dataForPayment = null;
+    if (recordType === "customerpayment") {
+      dataForPayment = handleDataForPayment(currentRecord);
+      log.debug("CUSTOM CONCEPTS PAYMENT", dataForPayment);
+    }
     //Custom transaction
     const { serie, folio } = handleFolioSerie(tranid);
     //Summary
@@ -717,6 +725,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         "tfd:TimbreFiscalDigital"
       ].$.SelloSAT;
 
+    const tipoComprobante = jsonString["cfdi:Comprobante"].$.TipoDeComprobante;
     return {
       fechaTimbrado,
       noSerieCSD,
@@ -726,6 +735,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       usoCFDI,
       metodoPago,
       formaPago,
+      tipoComprobante,
     };
   };
   const handleFolderId = (folderName, parentFolder) => {
@@ -767,16 +777,93 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     }
     return folderId;
   };
-  const getFolderId = (currentSubsidiaryText, fechaTimbrado, parent) => {
-    const fechaTimbradoObj = new Date(fechaTimbrado);
-    const año = fechaTimbradoObj.getFullYear();
-    const mes = fechaTimbradoObj.getMonth();
-    const subsidiaryFolderId = handleFolderId(currentSubsidiaryText, parent);
-    const yearFolderId = handleFolderId(año + "", subsidiaryFolderId);
-    const monthFolderId = handleFolderId(mes + "", yearFolderId);
-
-    log.debug("BUSCANDO SUB FOLDER", monthFolderId);
-    log.debug("SUBSID", `${currentSubsidiaryText}/${fechaTimbrado}`);
+  const handleFolderNames = (mes, tipoComprobante) => {
+    let mesText = "";
+    let tipoText = "";
+    switch (mes) {
+      case 0:
+        mesText = "Enero";
+        break;
+      case 1:
+        mesText = "Febrero";
+        break;
+      case 2:
+        mesText = "Marzo";
+        break;
+      case 3:
+        mesText = "Abril";
+        break;
+      case 4:
+        mesText = "Mayo";
+        break;
+      case 5:
+        mesText = "Junio";
+        break;
+      case 6:
+        mesText = "Julio";
+        break;
+      case 7:
+        mesText = "Agosto";
+        break;
+      case 8:
+        mesText = "Septiembre";
+        break;
+      case 9:
+        mesText = "Octubre";
+        break;
+      case 10:
+        mesText = "Noviembre";
+        break;
+      case 11:
+        mesText = "Diciembre";
+        break;
+    }
+    switch (tipoComprobante) {
+      case "I":
+        tipoText = "Ingreso";
+        break;
+      case "E":
+        tipoText = "Egreso";
+        break;
+      case "P":
+        tipoText = "Pago";
+        break;
+      case "T":
+        tipoText = "Traslado";
+        break;
+    }
+    return {
+      mesText,
+      tipoText,
+    };
+  };
+  const getFolderId = (
+    currentSubsidiaryText,
+    fechaTimbrado,
+    parent,
+    tipoComprobante,
+    tipoArchivo
+  ) => {
+    try {
+      const fechaTimbradoObj = new Date(fechaTimbrado);
+      const año = fechaTimbradoObj.getFullYear();
+      const mes = fechaTimbradoObj.getMonth();
+      const { mesText, tipoText } = handleFolderNames(mes, tipoComprobante);
+      const subsidiaryFolderId = handleFolderId(currentSubsidiaryText, parent);
+      const yearFolderId = handleFolderId(año + "", subsidiaryFolderId);
+      const monthFolderId = handleFolderId(mesText, yearFolderId);
+      const tipoComFolderId = handleFolderId(tipoText, monthFolderId);
+      const tipoArchFolderId = handleFolderId(tipoArchivo, tipoComFolderId);
+      return {
+        error: false,
+        tipoArchFolderId,
+      };
+    } catch (error) {
+      return {
+        error: true,
+        details: error,
+      };
+    }
   };
   return {
     getGlobalConfig,
@@ -787,5 +874,3 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     getFolderId,
   };
 });
-//Probando GIT
-//RAMA DAVID HOLA
