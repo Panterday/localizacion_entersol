@@ -767,7 +767,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     }
     return folderId;
   };
-
   const getFolderId = (currentSubsidiaryText, fechaTimbrado, parent) => {
     const fechaTimbradoObj = new Date(fechaTimbrado);
     const año = fechaTimbradoObj.getFullYear();
