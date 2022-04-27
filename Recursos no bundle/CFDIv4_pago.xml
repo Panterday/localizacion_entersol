@@ -79,13 +79,28 @@
 		<pago20:Pagos Version="2.0">
 			<pago20:Totales MontoTotalPagos="${formatFromCurrency(record.payment)}"/>
 			<pago20:Pago 
-				FechaPago="2021-12-15T00:00:00" 
+				FechaPago="${record.createddate?string.iso_nz}" 
 				FormaDePagoP="${record.custbody_ent_entloc_forma_pago?keep_before(" -")}" 
 				MonedaP="${record.currencysymbol}" 
 				Monto="${formatFromCurrency(record.payment)}" 
 				TipoCambioP="1"
 			>
-				<pago20:DoctoRelacionado IdDocumento="bfc36522-4b8e-45c4-8f14-d11b289f9eb7" MonedaDR="MXN" NumParcialidad="1" ImpSaldoAnt="200.00" ImpPagado="200.00" ImpSaldoInsoluto="0.00" ObjetoImpDR="01" EquivalenciaDR="1"/>
+				<pago20:DoctoRelacionado 
+					IdDocumento="bfc36522-4b8e-45c4-8f14-d11b289f9eb7" 
+					MonedaDR="MXN" 
+					NumParcialidad="1" 
+					ImpSaldoAnt="Importe a pagar" 
+					ImpPagado="Pago" 
+					ImpSaldoInsoluto="ImpSaldoAnt - ImpPagado" 
+					ObjetoImpDR="02" 
+					EquivalenciaDR="1"
+				>
+					<pago20:ImpuestosDR>
+                        <pago20:TrasladosDR>
+                            <pago20:TrasladoDR BaseDR="100.00" ImpuestoDR="002" TipoFactorDR="Tasa" TasaOCuotaDR="0.160000" ImporteDR="16.00" />
+                        </pago20:TrasladosDR>
+                    </pago20:ImpuestosDR>
+				</pago20:DoctoRelacionado>
 			</pago20:Pago>
 		</pago20:Pagos>
 	</cfdi:Complemento>

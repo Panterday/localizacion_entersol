@@ -105,26 +105,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     }
     if (!idGuardaDocumentosCarpeta && subsidiaryId) {
       //==================================Buscando carpeta en gabinete==============================//
-      let folderId = null;
-      //Busca carpeta
-      const folderSearchObj = search.create({
-        type: "folder",
-        filters: [
-          ["name", "is", "Documentos_usuario"],
-          "AND",
-          ["istoplevel", "is", "F"],
-        ],
-        columns: ["internalid"],
-      });
-      const searchResultCount = folderSearchObj.runPaged().count;
-      if (searchResultCount > 0) {
-        folderSearchObj.run().each((result) => {
-          folderId = result.getValue({
-            name: "internalid",
-          });
-          idGuardaDocumentosCarpeta = folderId;
-        });
-      }
+      const parentFolder = handleFolderId("Entersol localización", -20);
+      const cfdiFolder = handleFolderId("CFDI", parentFolder);
+      idGuardaDocumentosCarpeta = cfdiFolder;
       //Set global folder ID
       record.submitFields({
         type: "customrecord_ent_entloc_config_registro",
@@ -744,7 +727,13 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     //Busca carpeta
     const folderSearchObj = search.create({
       type: "folder",
-      filters: [["name", "is", folderName], "AND", ["istoplevel", "is", "F"]],
+      filters: [
+        ["name", "is", folderName],
+        "AND",
+        ["istoplevel", "is", "F"],
+        "AND",
+        ["predecessor", "anyof", parentFolder],
+      ],
       columns: ["internalid"],
     });
     const searchResultCount = folderSearchObj.runPaged().count;
@@ -777,47 +766,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     }
     return folderId;
   };
-  const handleFolderNames = (mes, tipoComprobante) => {
-    let mesText = "";
+  const handleTipoCompText = (tipoComprobante) => {
     let tipoText = "";
-    switch (mes) {
-      case 0:
-        mesText = "Enero";
-        break;
-      case 1:
-        mesText = "Febrero";
-        break;
-      case 2:
-        mesText = "Marzo";
-        break;
-      case 3:
-        mesText = "Abril";
-        break;
-      case 4:
-        mesText = "Mayo";
-        break;
-      case 5:
-        mesText = "Junio";
-        break;
-      case 6:
-        mesText = "Julio";
-        break;
-      case 7:
-        mesText = "Agosto";
-        break;
-      case 8:
-        mesText = "Septiembre";
-        break;
-      case 9:
-        mesText = "Octubre";
-        break;
-      case 10:
-        mesText = "Noviembre";
-        break;
-      case 11:
-        mesText = "Diciembre";
-        break;
-    }
     switch (tipoComprobante) {
       case "I":
         tipoText = "Ingreso";
@@ -832,10 +782,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         tipoText = "Traslado";
         break;
     }
-    return {
-      mesText,
-      tipoText,
-    };
+    return tipoText;
   };
   const getFolderId = (
     currentSubsidiaryText,
@@ -845,15 +792,26 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     tipoArchivo
   ) => {
     try {
+      log.debug("TIPO COMPROBANTE", tipoComprobante);
       const fechaTimbradoObj = new Date(fechaTimbrado);
       const año = fechaTimbradoObj.getFullYear();
       const mes = fechaTimbradoObj.getMonth();
-      const { mesText, tipoText } = handleFolderNames(mes, tipoComprobante);
+      let mesText = mes + "";
+      if (mesText.length === 1) {
+        mesText = "0" + mes;
+      }
+      const tipoText = handleTipoCompText(tipoComprobante);
+
       const subsidiaryFolderId = handleFolderId(currentSubsidiaryText, parent);
+      log.debug("SUBSIDIARYFOLDER", subsidiaryFolderId);
       const yearFolderId = handleFolderId(año + "", subsidiaryFolderId);
+      log.debug("YEARFOLDER", yearFolderId);
       const monthFolderId = handleFolderId(mesText, yearFolderId);
+      log.debug("MONTHFOLDER", monthFolderId);
       const tipoComFolderId = handleFolderId(tipoText, monthFolderId);
+      log.debug("TIPOFOLDER", tipoComFolderId);
       const tipoArchFolderId = handleFolderId(tipoArchivo, tipoComFolderId);
+      log.debug("TIPOARCH", tipoArchFolderId);
       return {
         error: false,
         tipoArchFolderId,

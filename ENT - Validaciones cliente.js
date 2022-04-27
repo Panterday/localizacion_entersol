@@ -56,7 +56,7 @@ define(["N/record", "N/search"], (record, search) => {
           fieldId: "custbody_ent_entloc_reg_fis_receptor",
         });
 
-        if (!usoCfdiFac) {
+        if (usoCfdiFac) {
           const usoCfdiCliente = customerRecord.getValue({
             fieldId: "custentity_ent_uso_de_cfdi",
           });
@@ -66,7 +66,8 @@ define(["N/record", "N/search"], (record, search) => {
             value: usoCfdiCliente,
           });
         }
-        if (!metodoPagoFac) {
+        if (metodoPagoFac) {
+          log.debug("EXECUTE CHANGE", "changed");
           const metodoPagoCliente = customerRecord.getValue({
             fieldId: "custentity_ent_metodo_de_pago",
           });
@@ -76,7 +77,7 @@ define(["N/record", "N/search"], (record, search) => {
             value: metodoPagoCliente,
           });
         }
-        if (!formaPagoFac) {
+        if (formaPagoFac) {
           const formaPagoCliente = customerRecord.getValue({
             fieldId: "custentity_ent_uso_de_cfdi",
           });
@@ -86,7 +87,7 @@ define(["N/record", "N/search"], (record, search) => {
             value: formaPagoCliente,
           });
         }
-        if (!regimenFiscalFac) {
+        if (regimenFiscalFac) {
           const regimenFiscalCliente = customerRecord.getValue({
             fieldId: "custentity_ent_entloc_regimen_fiscal",
           });
