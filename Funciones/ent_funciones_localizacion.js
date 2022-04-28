@@ -367,7 +367,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     }
   };
   const handleTaxTotal = (taxSummary) => {
-    log.debug("TAX SUMMARY", taxSummary);
     let totalTraslados = 0;
     taxSummary.forEach((element) => {
       totalTraslados += Number(element.importe);
@@ -375,7 +374,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     return totalTraslados;
   };
   const handleSatCode = (unit) => {
-    log.debug("UNIT", unit);
     let unitList = null;
     const unitsObj = search.create({
       type: "customrecord_ent_entloc_mapeo_unidades",
@@ -391,7 +389,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         return true;
       });
     }
-    log.debug("unitLIST", unitList);
     return unitList;
   };
   const handleCustomItem = (currentRecord) => {
@@ -456,7 +453,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
               importe: Number(taxAmount),
             });
           } else {
-            log.debug("EXIST", exist);
             exist.importe = (Number(exist.importe) + Number(taxAmount)).toFixed(
               2
             );
@@ -497,7 +493,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
                   importe: Number(tax.importe),
                 });
               } else {
-                log.debug("EXIST", exist);
                 exist.importe = (
                   Number(exist.importe) + Number(tax.importe)
                 ).toFixed(2);
@@ -521,7 +516,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
                 importe: Number(taxListDetails.taxesPerItem.importe),
               });
             } else {
-              log.debug("EXIST", exist);
               exist.importe = Number(
                 (
                   Number(exist.importe) +
@@ -604,7 +598,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     let dataForPayment = null;
     if (recordType === "customerpayment") {
       dataForPayment = handleDataForPayment(currentRecord);
-      log.debug("CUSTOM CONCEPTS PAYMENT", dataForPayment);
     }
     //Custom transaction
     const { serie, folio } = handleFolioSerie(tranid);
@@ -637,7 +630,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     const customItem = handleCustomItem(currentRecord);
     //Related CFDIS
     const relatedCfdis = handleRelatedCfdis(currentRecord);
-    log.debug("RELATEDCFDIS", relatedCfdis);
     return {
       customRecordData: {
         serie,
@@ -683,10 +675,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     /* context.response.writeFile(newfile, true); */
   };
   const getCertExtraData = (jsonString) => {
-    log.debug("JSONSTRING", jsonString);
     //Convertir JSON
     const usoCFDI = jsonString["cfdi:Comprobante"]["cfdi:Receptor"].$.UsoCFDI;
-    log.debug("obj JSON", usoCFDI);
     const metodoPago = jsonString["cfdi:Comprobante"].$.MetodoPago;
     const formaPago = jsonString["cfdi:Comprobante"].$.FormaPago;
     const fechaTimbrado =
@@ -721,7 +711,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       tipoComprobante,
     };
   };
-  const handleFolderId = (folderName, parentFolder) => {
+  const handleFolderId = (folderName, parentFolder, subsidiaryId) => {
     //==================================Buscando carpeta en gabinete==============================//
     let folderId = null;
     //Busca carpeta
@@ -756,6 +746,12 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           fieldId: "parent",
           value: parentFolder,
         });
+        if (subsidiaryId) {
+          folderRecord.setValue({
+            fieldId: "subsidiary",
+            value: subsidiaryId,
+          });
+        }
         folderId = folderRecord.save({
           enableSourcing: true,
           ignoreMandatoryFields: true,
@@ -785,14 +781,14 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     return tipoText;
   };
   const getFolderId = (
-    currentSubsidiaryText,
+    subsidiaryId,
+    subsidiaryRfc,
     fechaTimbrado,
     parent,
     tipoComprobante,
     tipoArchivo
   ) => {
     try {
-      log.debug("TIPO COMPROBANTE", tipoComprobante);
       const fechaTimbradoObj = new Date(fechaTimbrado);
       const año = fechaTimbradoObj.getFullYear();
       const mes = fechaTimbradoObj.getMonth();
@@ -802,16 +798,19 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       }
       const tipoText = handleTipoCompText(tipoComprobante);
 
-      const subsidiaryFolderId = handleFolderId(currentSubsidiaryText, parent);
-      log.debug("SUBSIDIARYFOLDER", subsidiaryFolderId);
-      const yearFolderId = handleFolderId(año + "", subsidiaryFolderId);
-      log.debug("YEARFOLDER", yearFolderId);
-      const monthFolderId = handleFolderId(mesText, yearFolderId);
-      log.debug("MONTHFOLDER", monthFolderId);
-      const tipoComFolderId = handleFolderId(tipoText, monthFolderId);
-      log.debug("TIPOFOLDER", tipoComFolderId);
-      const tipoArchFolderId = handleFolderId(tipoArchivo, tipoComFolderId);
-      log.debug("TIPOARCH", tipoArchFolderId);
+      const subsidiaryFolderId = handleFolderId(
+        subsidiaryRfc,
+        parent,
+        subsidiaryId
+      );
+      const yearFolderId = handleFolderId(año + "", subsidiaryFolderId, null);
+      const monthFolderId = handleFolderId(mesText, yearFolderId, null);
+      const tipoComFolderId = handleFolderId(tipoText, monthFolderId, null);
+      const tipoArchFolderId = handleFolderId(
+        tipoArchivo,
+        tipoComFolderId,
+        null
+      );
       return {
         error: false,
         tipoArchFolderId,

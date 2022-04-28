@@ -81,7 +81,6 @@ define([
       globalData,
       extraData,
     };
-    log.debug("RENDER", customFullData);
     //Add custom data source
     renderXml.addCustomDataSource({
       format: render.DataSource.OBJECT,
@@ -94,13 +93,11 @@ define([
     renderXml.addRecord("subsidiary", subsidiaryRecord);
     //Add customer record
     renderXml.addRecord("customer", customerRecord);
-    log.debug("CUSTOMER RECORD", customerRecord);
     //Add template
     renderXml.templateContent = currentTemplate;
     //Try to render
     try {
       renderedTemplate = renderXml.renderAsString();
-      log.debug("RENDERED TEMPLATE FUNC", renderedTemplate);
       return {
         error: false,
         renderedTemplate,
@@ -122,6 +119,8 @@ define([
     generatedXml,
     permisosValidex,
     prodMod,
+    subsidiaryRfc,
+    subsidiaryId,
     idGuardaDocumentosCarpeta,
     plantillaPdfPublica
   ) => {
@@ -130,7 +129,6 @@ define([
       id: generatedXml,
     });
     const xmlText = xmlObj.getContents();
-    log.debug("XMLTEXTCERT2", xmlText);
     const body = JSON.stringify({
       xml: xmlText,
     });
@@ -138,7 +136,6 @@ define([
     const validexBodyResponse = JSON.parse(validexResponse.body);
     log.debug("VALIDEX", validexBodyResponse);
     if (validexResponse.code === 200) {
-      log.debug("VALIDEX", validexResponse);
       const validexXmlResponse = validexBodyResponse.base64.replace(
         "data:text/xml;base64,",
         ""
@@ -147,17 +144,17 @@ define([
       const validexUUID = validexBodyResponse.UUID;
       const validexCadenaOriginal = validexBodyResponse.cadenaOriginal;
       const validexJson = validexBodyResponse.data;
-
-      log.debug("JSON", validexJson);
       //Build CERT DATA
       //SAVING JSON FOR TESTING
-      const fileJsonTest = file.create({
-        name: "json_validex.json",
-        fileType: file.Type.JSON,
-        contents: JSON.stringify(validexJson),
-        folder: idGuardaDocumentosCarpeta,
-      });
-      fileJsonTest.save();
+      if (!prodMod) {
+        const fileJsonTest = file.create({
+          name: "json_validex.json",
+          fileType: file.Type.JSON,
+          contents: JSON.stringify(validexJson),
+          folder: idGuardaDocumentosCarpeta,
+        });
+        fileJsonTest.save();
+      }
 
       const extraCertData = funcionesLoc.getCertExtraData(validexJson);
       const {
@@ -168,31 +165,24 @@ define([
         firmaSAT,
         tipoComprobante,
       } = extraCertData;
-      log.debug("extraCertData", extraCertData);
 
       //Get folder id Based on custom path
       const folderForXml = funcionesLoc.getFolderId(
-        currentSubsidiaryText,
+        subsidiaryId,
+        subsidiaryRfc,
         fechaTimbrado,
         idGuardaDocumentosCarpeta,
         tipoComprobante,
         "xml"
       );
       const folderForPdf = funcionesLoc.getFolderId(
-        currentSubsidiaryText,
+        subsidiaryId,
+        subsidiaryRfc,
         fechaTimbrado,
         idGuardaDocumentosCarpeta,
         tipoComprobante,
         "pdf"
       );
-      log.debug(
-        "FOLDERS",
-        "XML: " +
-          folderForXml.tipoArchFolderId +
-          " pDF: " +
-          folderForPdf.tipoArchFolderId
-      );
-
       const xmlIdToSave = handleXmlResponse(
         validexXmlResponse,
         nombreDocumento,
@@ -232,7 +222,6 @@ define([
           : idGuardaDocumentosCarpeta,
         nombreDocumento
       );
-      log.debug("PDF", idPdfToSave);
       //OK
       record.submitFields({
         type: recordType,
@@ -288,6 +277,8 @@ define([
     nombreDocumento,
     permisosValidex,
     prodMod,
+    subsidiaryRfc,
+    subsidiaryId,
     idGuardaDocumentosCarpeta,
     currentTemplate,
     plantillaPdfPublica
@@ -302,9 +293,6 @@ define([
     const recordId = currentRecord.id;
     if (!xmlRenderedObj.error) {
       let xmlDocument = null;
-      const currentSubsidiaryText = currentRecord.getText({
-        fieldId: "subsidiary",
-      });
       try {
         //Render XML
         xmlDocument = xml.Parser.fromString({
@@ -325,7 +313,6 @@ define([
         const validexBodyResponse = JSON.parse(validexResponse.body);
         log.debug("VALIDEX", validexBodyResponse);
         if (validexResponse.code === 200) {
-          log.debug("VALIDEX", validexResponse);
           const validexXmlResponse = validexBodyResponse.base64.replace(
             "data:text/xml;base64,",
             ""
@@ -334,18 +321,17 @@ define([
           const validexUUID = validexBodyResponse.UUID;
           const validexCadenaOriginal = validexBodyResponse.cadenaOriginal;
           const validexJson = validexBodyResponse.data;
-
-          log.debug("JSON", validexJson);
           //Build CERT DATA
           //SAVING JSON FOR TESTING
-          const fileJsonTest = file.create({
-            name: "json_validex.json",
-            fileType: file.Type.JSON,
-            contents: JSON.stringify(validexJson),
-            folder: idGuardaDocumentosCarpeta,
-          });
-          fileJsonTest.save();
-
+          if (!prodMod) {
+            const fileJsonTest = file.create({
+              name: "json_validex.json",
+              fileType: file.Type.JSON,
+              contents: JSON.stringify(validexJson),
+              folder: idGuardaDocumentosCarpeta,
+            });
+            fileJsonTest.save();
+          }
           const extraCertData = funcionesLoc.getCertExtraData(validexJson);
           const {
             fechaTimbrado,
@@ -355,29 +341,22 @@ define([
             firmaSAT,
             tipoComprobante,
           } = extraCertData;
-          log.debug("extraCertData", extraCertData);
-
           //Get folder id Based on custom path
           const folderForXml = funcionesLoc.getFolderId(
-            currentSubsidiaryText,
+            subsidiaryId,
+            subsidiaryRfc,
             fechaTimbrado,
             idGuardaDocumentosCarpeta,
             tipoComprobante,
             "xml"
           );
           const folderForPdf = funcionesLoc.getFolderId(
-            currentSubsidiaryText,
+            subsidiaryId,
+            subsidiaryRfc,
             fechaTimbrado,
             idGuardaDocumentosCarpeta,
             tipoComprobante,
             "pdf"
-          );
-          log.debug(
-            "FOLDERS",
-            "XML: " +
-              folderForXml.tipoArchFolderId +
-              " pDF: " +
-              folderForPdf.tipoArchFolderId
           );
           const xmlIdToSave = handleXmlResponse(
             validexXmlResponse,
@@ -400,7 +379,7 @@ define([
               extraCertData,
             },
           };
-          log.debug("CUSTOM FULL DATA", customFullData.extraData);
+          log.debug("CUSTOM FULL DATA", customFullData);
           //Create PDF
           const idPdfToSave = funcionesLoc.getPdfRendered(
             currentRecord,
@@ -413,7 +392,6 @@ define([
               : idGuardaDocumentosCarpeta,
             nombreDocumento
           );
-          log.debug("PDF", idPdfToSave);
           //OK
           record.submitFields({
             type: recordType,
@@ -549,6 +527,8 @@ define([
         generatedXml,
         globalConfig.permisosValidex,
         globalConfig.prodMod,
+        subsidiaryRfc,
+        subsidiaryId,
         globalConfig.idGuardaDocumentosCarpeta,
         userConfig.plantillaPdfPublica
       );
@@ -561,6 +541,8 @@ define([
         nombreDocumento,
         globalConfig.permisosValidex,
         globalConfig.prodMod,
+        subsidiaryRfc,
+        subsidiaryId,
         globalConfig.idGuardaDocumentosCarpeta,
         userConfig.plantillaEdocument,
         userConfig.plantillaPdfPublica
