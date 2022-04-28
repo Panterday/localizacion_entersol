@@ -69,14 +69,12 @@ define([
     currentRecord,
     customerRecord,
     subsidiaryRecord,
-    currentTemplate
+    currentTemplate,
+    extraData,
+    globalData
   ) => {
     let renderedTemplate = null;
     const renderXml = render.create();
-    //Extra custom data
-    const extraData = funcionesLoc.getExtraCustomData(currentRecord);
-    //Global custom data
-    const globalData = customData.getDataForInvoice();
     const customFullData = {
       globalData,
       extraData,
@@ -125,6 +123,10 @@ define([
     plantillaPdfPublica
   ) => {
     //Let's certificate!
+    //Extra custom data
+    const extraData = funcionesLoc.getExtraCustomData(currentRecord);
+    //Global custom data
+    const globalData = customData.getDataForInvoice();
     const xmlObj = file.load({
       id: generatedXml,
     });
@@ -195,10 +197,6 @@ define([
       file.delete({
         id: generatedXml,
       });
-      //Extra custom data
-      const extraData = funcionesLoc.getExtraCustomData(currentRecord);
-      //Global custom data
-      const globalData = customData.getDataForInvoice();
       const customFullData = {
         globalData,
         extraData,
@@ -283,11 +281,17 @@ define([
     currentTemplate,
     plantillaPdfPublica
   ) => {
+    //Extra custom data
+    const extraData = funcionesLoc.getExtraCustomData(currentRecord);
+    //Global custom data
+    const globalData = customData.getDataForInvoice();
     const xmlRenderedObj = renderizaString(
       currentRecord,
       customerRecord,
       subsidiaryRecord,
-      currentTemplate
+      currentTemplate,
+      extraData,
+      globalData
     );
     const recordType = currentRecord.type;
     const recordId = currentRecord.id;
@@ -365,10 +369,6 @@ define([
               ? folderForXml.tipoArchFolderId
               : idGuardaDocumentosCarpeta
           );
-          //Extra custom data
-          const extraData = funcionesLoc.getExtraCustomData(currentRecord);
-          //Global custom data
-          const globalData = customData.getDataForInvoice();
           const customFullData = {
             globalData,
             extraData,
@@ -473,10 +473,9 @@ define([
         parameters: { errorGenMessage: true },
       });
     }
-    const scriptObj = runtime.getCurrentScript();
-    log.debug("Remaining governance units: ", scriptObj.getRemainingUsage());
   };
   const onRequest = (context) => {
+    const start = Date.now();
     const recordId = context.request.parameters.id;
     const recordType = context.request.parameters.type;
     const genCert = context.request.parameters.genCert;
@@ -548,6 +547,16 @@ define([
         userConfig.plantillaPdfPublica
       );
     }
+    const scriptObj = runtime.getCurrentScript();
+    const duration = Date.now() - start;
+    log.debug(
+      "Execution summary: ",
+      `Transaction: ${recordType} TranID: ${tranid} Subsidiary: ${subsidiaryId} Duration: ${(
+        Number(duration) / 1000
+      ).toFixed(
+        2
+      )} Seconds Remaining governance: ${scriptObj.getRemainingUsage()}`
+    );
   };
   return {
     onRequest,

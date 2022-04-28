@@ -74,6 +74,7 @@ define([
     }
   };
   const onRequest = (context) => {
+    const start = Date.now();
     const recordId = context.request.parameters.id;
     const recordType = context.request.parameters.type;
     const currentRecord = record.load({
@@ -188,6 +189,16 @@ define([
         parameters: { errorGenMessage: true },
       });
     }
+    const scriptObj = runtime.getCurrentScript();
+    const duration = Date.now() - start;
+    log.debug(
+      "Execution summary: ",
+      `Transaction: ${recordType} TranID: ${tranid} Subsidiary: ${subsidiaryId} Duration: ${(
+        Number(duration) / 1000
+      ).toFixed(
+        2
+      )} Seconds Remaining governance: ${scriptObj.getRemainingUsage()}`
+    );
   };
   return {
     onRequest,

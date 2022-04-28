@@ -392,6 +392,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     return unitList;
   };
   const handleCustomItem = (currentRecord) => {
+    log.debug("SE EJECUTA BÚSQUEDA IMPUESTOS", "SE EJECUTA BúSQUEDA IMPUESTOS");
     const taxItemDetails = [];
     const taxSummary = [];
     const satUnitCodes = [];
