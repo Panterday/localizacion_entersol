@@ -579,7 +579,185 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     }
     return relatedCfdis;
   };
+  const handleTaxesForPayment = (invoiceRecord, paymentAmount) => {
+    const currentRecord = invoiceRecord;
+    const invoiceAmount = invoiceRecord.getValue({
+      fieldId: "total",
+    });
+    log.debug(
+      "TOTAL",
+      `INVOICE TOTAL ${invoiceAmount} PAYMENT TOTAL ${paymentAmount}`
+    );
+    const porcentajePago =
+      (Number(paymentAmount) * 100) / Number(invoiceAmount);
+    log.debug("PORCENTAJE PAGO", porcentajePago);
+    //CALCULATE
+    log.debug("SE EJECUTA BÚSQUEDA IMPUESTOS", "SE EJECUTA BúSQUEDA IMPUESTOS");
+    const taxItemDetails = [];
+    const taxSummary = [];
+    const totalItemLines = currentRecord.getLineCount({ sublistId: "item" });
+    for (let i = 0; i < totalItemLines; i++) {
+      const taxcodeId = currentRecord.getSublistValue({
+        sublistId: "item",
+        fieldId: "taxcode",
+        line: i,
+      });
+      const taxAmount = currentRecord.getSublistValue({
+        sublistId: "item",
+        fieldId: "tax1amt",
+        line: i,
+      });
+      const amount = currentRecord.getSublistValue({
+        sublistId: "item",
+        fieldId: "amount",
+        line: i,
+      });
+      //Taxgroup or taxcode
+      let taxRecord = null;
+      try {
+        //Try to load taxcode
+        taxRecord = record.load({
+          type: "salestaxitem",
+          id: taxcodeId,
+        });
+        if (taxRecord) {
+          const { taxcode, rate, exempt } = handleTaxCodeDetails(taxRecord);
+          taxItemDetails.push({
+            isGroup: 0,
+            exempt,
+            base: amount,
+            impuesto: keepBefore(taxcode, " -"),
+            tipoFactor: "Tasa",
+            tasaOcuota: rate,
+            importe: taxAmount,
+          });
+          //Push summary
+          const exist = taxSummary.find(
+            (element) =>
+              element.impuesto === keepBefore(taxcode, " -") &&
+              element.tasaOcuota === rate
+          );
+          if (!exist) {
+            taxSummary.push({
+              base: Number(amount),
+              impuesto: keepBefore(taxcode, " -"),
+              tipoFactor: "Tasa",
+              tasaOcuota: rate,
+              importe: Number(taxAmount),
+            });
+          } else {
+            exist.importe = (Number(exist.importe) + Number(taxAmount)).toFixed(
+              2
+            );
+            exist.base = (Number(exist.base) + Number(amount)).toFixed(2);
+          }
+        }
+      } catch (error) {
+        log.debug(
+          "No fue posible cargar un código de impuesto, se procede a cargar un grupo de impuesto",
+          error
+        );
+        //Try to load taxgroup
+        taxRecord = record.load({
+          type: "taxgroup",
+          id: taxcodeId,
+        });
+        if (taxRecord) {
+          const taxListDetails = handleTaxGroupDetails(
+            taxRecord,
+            amount,
+            taxAmount
+          );
+          if (taxListDetails.isGroup) {
+            taxItemDetails.push(taxListDetails);
+            //Push summary
+            taxListDetails.taxesPerItem.forEach((tax) => {
+              const exist = taxSummary.find(
+                (element) =>
+                  element.impuesto === tax.impuesto &&
+                  element.tasaOcuota === tax.tasaOcuota
+              );
+              if (!exist) {
+                taxSummary.push({
+                  base: Number(tax.base),
+                  impuesto: tax.impuesto,
+                  tipoFactor: tax.tipoFactor,
+                  tasaOcuota: tax.tasaOcuota,
+                  importe: Number(tax.importe),
+                });
+              } else {
+                exist.importe = (
+                  Number(exist.importe) + Number(tax.importe)
+                ).toFixed(2);
+                exist.base = (Number(exist.base) + Number(tax.base)).toFixed(2);
+              }
+            });
+          } else {
+            taxItemDetails.push(taxListDetails.taxesPerItem);
+            //Push summary
+            const exist = taxSummary.find(
+              (element) =>
+                element.impuesto === taxListDetails.taxesPerItem.impuesto &&
+                element.tasaOcuota === taxListDetails.taxesPerItem.tasaOcuota
+            );
+            if (!exist) {
+              taxSummary.push({
+                base: Number(taxListDetails.taxesPerItem.base),
+                impuesto: taxListDetails.taxesPerItem.impuesto,
+                tipoFactor: taxListDetails.taxesPerItem.tipoFactor,
+                tasaOcuota: taxListDetails.taxesPerItem.tasaOcuota,
+                importe: Number(taxListDetails.taxesPerItem.importe),
+              });
+            } else {
+              exist.importe = Number(
+                (
+                  Number(exist.importe) +
+                  Number(taxListDetails.taxesPerItem.importe)
+                ).toFixed(2)
+              );
+              exist.base = Number(
+                (
+                  Number(exist.base) + Number(taxListDetails.taxesPerItem.base)
+                ).toFixed(2)
+              );
+            }
+          }
+        }
+      }
+    }
+    const taxTotal = handleTaxTotal(taxSummary);
+    return { taxItemDetails, taxTotal, taxSummary };
+  };
   const handleDataForPayment = (currentRecord) => {
+    const totalApplyLines = currentRecord.getLineCount({ sublistId: "apply" });
+    for (let i = 0; i < totalApplyLines; i++) {
+      const apply = currentRecord.getSublistValue({
+        sublistId: "apply",
+        fieldId: "apply",
+        line: i,
+      });
+      if (apply) {
+        const amount = currentRecord.getSublistValue({
+          sublistId: "apply",
+          fieldId: "amount",
+          line: i,
+        });
+        const internalInvoiceId = currentRecord.getSublistValue({
+          sublistId: "apply",
+          fieldId: "internalid",
+          line: i,
+        });
+        const invoiceRelated = record.load({
+          type: "invoice",
+          id: internalInvoiceId,
+        });
+        log.debug("INVOICE RELATED", amount);
+        /* const taxesForPayment = */ handleTaxesForPayment(
+          invoiceRelated,
+          amount
+        );
+      }
+    }
     return false;
   };
   const getExtraCustomData = (currentRecord) => {
