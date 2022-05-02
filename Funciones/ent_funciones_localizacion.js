@@ -1001,6 +1001,112 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       };
     }
   };
+  const getStringRelated = (jsonString) => {
+    let relacionCfdi = "";
+    let tipoRelacion = "";
+    let transaccion = "";
+    let uuid = "";
+    const relatedCfdis = jsonString.customRecordData.relatedCfdis;
+    for (let i = 0; i < relatedCfdis.length; i++) {
+      tipoRelacion = relatedCfdis[i].tipoRelacion;
+      if (relatedCfdis.length > 1) {
+        if (i === relatedCfdis.length - 1) {
+          relacionCfdi += `|||${tipoRelacion}///`;
+        } else {
+          relacionCfdi += `${tipoRelacion}///`;
+        }
+      } else {
+        relacionCfdi += `${tipoRelacion}///`;
+      }
+
+      const transaccionesCfdis =
+        jsonString.customRecordData.relatedCfdis[i].transacciones;
+      for (let j = 0; j < transaccionesCfdis.length; j++) {
+        transaccion = transaccionesCfdis[j].transaccion;
+        uuid = transaccionesCfdis[j].uuid;
+        if (j === transaccionesCfdis.length - 1) {
+          relacionCfdi += `${transaccion}///${uuid}`;
+        }
+      }
+    }
+
+    return relacionCfdi;
+  };
+  const getStringTax = (jsonString) => {
+    ///////Totales Impuestos//////////
+    let totalTax = "";
+    let impuestosField = "";
+    const taxItem = jsonString.customItem.taxItemDetails;
+    const taxTotal = jsonString.customItem.taxTotal;
+    const taxSum = jsonString.customItem.taxSummary;
+    for (let i = 0; i < taxSum.length; i++) {
+      let impuesto = taxSum[i].impuesto;
+      let impuestoTasa = taxSum[i].tasaOcuota;
+
+      if (impuesto === "002") {
+        impuesto = "IVA";
+      } else if (impuesto === "003") {
+        impuesto = "IEPS";
+      }
+      if (i == taxSum.length - 1) {
+        totalTax += `${impuesto} ${impuestoTasa}%://$${taxSum[i].importe}`;
+      } else {
+        totalTax += `${impuesto} ${impuestoTasa}%://$${taxSum[i].importe}//`;
+      }
+    }
+
+    ///////Impuestos Items//////////
+    for (let i = 0; i < taxItem.length; i++) {
+      let impuesto = taxItem[i].impuesto;
+      if (taxItem[i].isGroup === 0) {
+        let importe = taxItem[i].importe;
+        let tasa = taxItem[i].tasaOcuota;
+
+        if (impuesto === "002") {
+          impuesto = "IVA";
+
+          if (i === taxItem.length - 1) {
+            impuestosField += `///${impuesto}  ${tasa}% $${importe}`;
+          } else {
+            impuestosField += `${impuesto}  ${tasa}% $${importe}///`;
+          }
+        } else if (impuesto === "003") {
+          impuesto = "IEPS";
+
+          if (i === taxItem.length - 1) {
+            impuestosField += `///${impuesto} ${tasa}% $${importe}`;
+          } else {
+            impuestosField += `${impuesto} ${tasa}% $${importe}///`;
+          }
+        }
+      } else if (taxItem[i].isGroup === 1) {
+        const groupItem = taxItem[i].taxesPerItem;
+        for (let j = 0; j < groupItem.length; j++) {
+          let importeGroup = groupItem[j].importe;
+          let impuestoGroup = groupItem[j].impuesto;
+          let tasaGroup = groupItem[j].tasaOcuota;
+
+          if (impuestoGroup === "002") {
+            impuestoGroup = "IVA";
+            if (j === groupItem.length - 1) {
+              impuestosField += ` ${impuestoGroup} ${tasaGroup}% $${importeGroup} ##${totalTax}//$${taxTotal}`;
+            } else {
+              impuestosField += `${impuestoGroup} ${tasaGroup}% $${importeGroup} -`;
+            }
+          } else if (impuestoGroup === "003") {
+            impuestoGroup = "IEPS";
+            if (j === groupItem.length - 1) {
+              impuestosField += ` ${impuestoGroup} ${tasaGroup}% $${importeGroup} ##${totalTax}//$${taxTotal}`;
+            } else {
+              impuestosField += `${impuestoGroup} ${tasaGroup}% $${importeGroup} -`;
+            }
+          }
+        }
+      }
+    }
+
+    return impuestosField;
+  };
   return {
     getGlobalConfig,
     getUserConfig,
@@ -1008,5 +1114,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     getExtraCustomData,
     getCertExtraData,
     getFolderId,
+    getStringRelated,
+    getStringTax
   };
 });

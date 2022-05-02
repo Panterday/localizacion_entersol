@@ -380,6 +380,11 @@ define([
             },
           };
           log.debug("CUSTOM FULL DATA", customFullData);
+
+          //Get json to string Tax and Related CFDI
+          const stringRelatedCfdi = funcionesLoc.getStringRelated(customFullData.extraData);
+          const stringTaxesItem = funcionesLoc.getStringTax(customFullData.extraData);
+
           //Create PDF
           const idPdfToSave = funcionesLoc.getPdfRendered(
             currentRecord,
@@ -409,6 +414,8 @@ define([
               custbody_ent_entloc_serie_sat: noSerieSAT,
               custbody_ent_entloc_firma_cfdi: firmaCFDI,
               custbody_ent_entloc_firma_sat: firmaSAT,
+              custbody_ent_entloc_impuestos_items: stringTaxesItem,
+              custbody_ent_entloc_cfdis_relacionados: stringRelatedCfdi,
             },
           });
           //Redirección a la transacción
