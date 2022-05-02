@@ -585,7 +585,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       fieldId: "total",
     });
     log.debug(
-      "TOTALS",
+      "TOTAL",
       `INVOICE TOTAL ${invoiceAmount} PAYMENT TOTAL ${paymentAmount}`
     );
     const porcentajePago =
