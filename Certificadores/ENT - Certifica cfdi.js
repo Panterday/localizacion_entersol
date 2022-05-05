@@ -136,7 +136,6 @@ define([
     });
     const validexResponse = handlePostRequest(body, permisosValidex, prodMod);
     const validexBodyResponse = JSON.parse(validexResponse.body);
-    log.debug("VALIDEX", validexBodyResponse);
     if (validexResponse.code === 200) {
       const validexXmlResponse = validexBodyResponse.base64.replace(
         "data:text/xml;base64,",
@@ -207,7 +206,6 @@ define([
           extraCertData,
         },
       };
-      log.debug("CUSTOM FULL DATA", customFullData.extraData);
       //Create PDF
       const idPdfToSave = funcionesLoc.getPdfRendered(
         currentRecord,
@@ -315,7 +313,6 @@ define([
           prodMod
         );
         const validexBodyResponse = JSON.parse(validexResponse.body);
-        log.debug("VALIDEX", validexBodyResponse);
         if (validexResponse.code === 200) {
           const validexXmlResponse = validexBodyResponse.base64.replace(
             "data:text/xml;base64,",
@@ -379,11 +376,14 @@ define([
               extraCertData,
             },
           };
-          log.debug("CUSTOM FULL DATA", customFullData);
 
           //Get json to string Tax and Related CFDI
-          const stringRelatedCfdi = funcionesLoc.getStringRelated(customFullData.extraData);
-          const stringTaxesItem = funcionesLoc.getStringTax(customFullData.extraData);
+          /* const stringRelatedCfdi = funcionesLoc.getStringRelated(
+            customFullData.extraData
+          );
+          const stringTaxesItem = funcionesLoc.getStringTax(
+            customFullData.extraData
+          ); */
 
           //Create PDF
           const idPdfToSave = funcionesLoc.getPdfRendered(
@@ -414,8 +414,8 @@ define([
               custbody_ent_entloc_serie_sat: noSerieSAT,
               custbody_ent_entloc_firma_cfdi: firmaCFDI,
               custbody_ent_entloc_firma_sat: firmaSAT,
-              custbody_ent_entloc_impuestos_items: stringTaxesItem,
-              custbody_ent_entloc_cfdis_relacionados: stringRelatedCfdi,
+              custbody_ent_entloc_impuestos_items: "",
+              custbody_ent_entloc_cfdis_relacionados: "",
             },
           });
           //Redirección a la transacción

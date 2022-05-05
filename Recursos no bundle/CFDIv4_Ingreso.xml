@@ -66,8 +66,8 @@
 		RegimenFiscal="${subsidiary.custrecord_ent_entloc_regimen_fiscal?keep_before(" -")}"
 	/> 
 	<cfdi:Receptor 
-		Rfc="${customer.custentity_ent_entloc_rfc}" 
-		Nombre="${customer.firstname} ${customer.middlename} ${customer.lastname}" 
+		Rfc="${customer.custentity_ent_entloc_rfc}"
+		Nombre="${customer.custentity_ent_entloc_nombre_legal_sat}" 
 		DomicilioFiscalReceptor="${customer.billzip}" 
 		RegimenFiscalReceptor="${record.custbody_ent_entloc_reg_fis_receptor?keep_before(" -")}" 
 		UsoCFDI="${record.custbody_ent_entloc_uso_cfdi?keep_before(" -")}"

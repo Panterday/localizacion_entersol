@@ -6,8 +6,6 @@
 <!--Zeros number-->
 <#assign zeros = "0.00">
 <#assign customItem = customData.extraData.customItem>
-<#assign totalTaxesForPayment = customData.extraData.totalTaxesForPayment>
-<#assign totalPaymentAmount = customData.extraData.totalPaymentAmount>
 <#assign customRecordData = customData.extraData.customRecordData>
 <#function getAttrPair attr value1 value2>
    <#if value1?has_content>
@@ -24,15 +22,6 @@
     <#return result>
   </#if>  
 </#function>
-<#function getTaxAttr>
-	<#assign taxesAttrList = "">
-	<#list totalTaxesForPayment as totalTax>
-		<#if totalTax.impuesto == "002" && totalTax.tasaOcuota == "16">
-			<#assign taxesAttrList= taxesAttrList + " " + "TotalTrasladosBaseIVA16=\"${totalTax.base}\" TotalTrasladosImpuestoIVA16=\"${totalTax.importe}\"">
-		</#if>
-	</#list>
-	<#return taxesAttrList>
-</#function>
 <!--Transform a string from $0,0.00 to 0.00-->
 <#function formatFromCurrency amount>
 	<#assign result = amount?keep_after("$")?replace(",", "")?number?string[zeros]>
@@ -43,7 +32,7 @@
 	<#return result>
 </#function>
 <#function formatRate amount>
-	<#assign result = ((amount?number)/100)?string["0.000000"]>
+	<#assign result = ((amount?number)/100)?string[zeros]>
 	<#return result>
 </#function>
 <cfdi:Comprobante 
@@ -89,44 +78,60 @@
 	<cfdi:Complemento>
 		<pago20:Pagos Version="2.0">
 			<pago20:Totales 
-				MontoTotalPagos="${totalPaymentAmount}"
-				${getTaxAttr()} 
+				MontoTotalPagos="3065.71" 
+				TotalTrasladosBaseIVA16="2642.86" 
+				TotalTrasladosImpuestoIVA16="422.85" 
 			/>
-			<#list customItem as item>
-				<pago20:Pago FechaPago="${record.createddate?string.iso_nz?keep_before(".")}" FormaDePagoP="${item.paymentData.paymentForm?keep_before(" -")}" MonedaP="${item.paymentData.currency}" Monto="${item.paymentData.pago}" TipoCambioP="${item.paymentData.exchangeRate}"> 
+				<pago20:Pago FechaPago="2022-04-25T16:30:00" FormaDePagoP="01" MonedaP="MXN" Monto="2382.9" TipoCambioP="1">
 					<pago20:DoctoRelacionado 
 						EquivalenciaDR="1" 
-						IdDocumento="${item.docToRel.invoiceUuid}" 
-						ImpPagado="${item.paymentData.pago}" 
-						ImpSaldoAnt="${item.paymentData.aPagar}" 
-						ImpSaldoInsoluto="${item.paymentData.aPagar?number - item.paymentData.pago?number}" 
-						MonedaDR="${item.docToRel.invoiceCurrency}" 
-						NumParcialidad="${item.docToRel.numParcialidad}" 
-						ObjetoImpDR="02"
-					>
+						IdDocumento="a2b12ab1-5a89-48e8-b787-83d9d5852319" 
+						ImpPagado="2382.9" 
+						ImpSaldoAnt="23828.97" 
+						ImpSaldoInsoluto="21446.07" 
+						MonedaDR="MXN" 
+						NumParcialidad="1" 
+						ObjetoImpDR="02">
 						<pago20:ImpuestosDR>
 							<pago20:TrasladosDR>
-								<#list item.taxes.taxItemDetails as taxItem>
-									<#if taxItem.isGroup?number == 0>
-										<pago20:TrasladoDR BaseDR="${taxItem.base}" ImporteDR="${taxItem.importe}" ImpuestoDR="${taxItem.impuesto}" TasaOCuotaDR="${formatRate(taxItem.tasaOcuota)}" TipoFactorDR="${taxItem.tipoFactor}"/>
-									<#else>
-										<#list taxItem.taxesPerItem as taxPerItem>
-											<pago20:TrasladoDR BaseDR="${taxPerItem.base}" ImporteDR="${taxPerItem.importe}" ImpuestoDR="${taxPerItem.impuesto}" TasaOCuotaDR="${formatRate(taxPerItem.tasaOcuota)}" TipoFactorDR="${taxPerItem.tipoFactor}"/>
-										</#list>
-									</#if>
-								</#list>
+								<pago20:TrasladoDR BaseDR="831.78" ImporteDR="133.08" ImpuestoDR="002" TasaOCuotaDR="0.160000" TipoFactorDR="Tasa"/>
+								<pago20:TrasladoDR BaseDR="834.99" ImporteDR="133.60" ImpuestoDR="002" TasaOCuotaDR="0.160000" TipoFactorDR="Tasa"/>
+								<pago20:TrasladoDR BaseDR="387.45" ImporteDR="61.99" ImpuestoDR="002" TasaOCuotaDR="0.160000" TipoFactorDR="Tasa"/>
+								<pago20:TrasladoDR BaseDR="355.46" ImporteDR="31.99" ImpuestoDR="003" TasaOCuotaDR="0.090000" TipoFactorDR="Tasa"/>
 							</pago20:TrasladosDR>
 						</pago20:ImpuestosDR>
 					</pago20:DoctoRelacionado>
 					<pago20:ImpuestosP>
 						<pago20:TrasladosP>
-							<#list item.taxes.taxSummary as summaryElement>
-								<pago20:TrasladoP BaseP="${summaryElement.base}" ImporteP="${summaryElement.importe}" ImpuestoP="${summaryElement.impuesto}" TasaOCuotaP="${formatRate(summaryElement.tasaOcuota)}" TipoFactorP="${summaryElement.tipoFactor}"/>
-							</#list>
+							<pago20:TrasladoP BaseP="2054.22" ImporteP="328.67" ImpuestoP="002" TasaOCuotaP="0.160000" TipoFactorP="Tasa"/>
+							<pago20:TrasladoP BaseP="355.46" ImporteP="31.99" ImpuestoP="003" TasaOCuotaP="0.090000" TipoFactorP="Tasa"/>
 						</pago20:TrasladosP>
 					</pago20:ImpuestosP>
 				</pago20:Pago>
-			</#list>
+				<pago20:Pago FechaPago="2022-04-25T16:30:00" FormaDePagoP="01" MonedaP="MXN" Monto="682.81" TipoCambioP="1">
+					<pago20:DoctoRelacionado 
+						EquivalenciaDR="1" 
+						IdDocumento="799982a8-2d8e-4c8b-b3bb-9ec907a413ca" 
+						ImpPagado="682.81" 
+						ImpSaldoAnt="6828.11" 
+						ImpSaldoInsoluto="6145.30" 
+						MonedaDR="MXN" 
+						NumParcialidad="1" 
+						ObjetoImpDR="02">
+						<pago20:ImpuestosDR>
+							<pago20:TrasladosDR>
+								<pago20:TrasladoDR BaseDR="124.77" ImporteDR="19.96" ImpuestoDR="002" TasaOCuotaDR="0.160000" TipoFactorDR="Tasa"/>
+								<pago20:TrasladoDR BaseDR="129.87" ImporteDR="20.78" ImpuestoDR="002" TasaOCuotaDR="0.160000" TipoFactorDR="Tasa"/>
+								<pago20:TrasladoDR BaseDR="334.00" ImporteDR="53.44" ImpuestoDR="002" TasaOCuotaDR="0.160000" TipoFactorDR="Tasa"/>
+							</pago20:TrasladosDR>
+						</pago20:ImpuestosDR>
+					</pago20:DoctoRelacionado>
+					<pago20:ImpuestosP>
+						<pago20:TrasladosP>
+							<pago20:TrasladoP BaseP="588.64" ImporteP="94.18" ImpuestoP="002" TasaOCuotaP="0.160000" TipoFactorP="Tasa"/>
+						</pago20:TrasladosP>
+					</pago20:ImpuestosP>
+				</pago20:Pago>
 		</pago20:Pagos>
 	</cfdi:Complemento>
 </cfdi:Comprobante>
