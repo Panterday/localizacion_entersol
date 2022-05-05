@@ -448,6 +448,34 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       totalRetenciones: Number(totalRetenciones.toFixed(2)),
     };
   };
+  const handleNewTaxSummary = (taxSummary) => {
+    const newTaxSummary = [];
+    for (let i = 0; i < taxSummary.summaryRet.length; i++) {
+      if (i === 0) {
+        newTaxSummary.push({
+          importe: taxSummary.summaryRet[i].importe,
+          impuesto: taxSummary.summaryRet[i].impuesto,
+        });
+      } else {
+        const found = newTaxSummary.find(
+          (element) => element.impuesto === taxSummary.summaryRet[i].impuesto
+        );
+        log.debug("FOUND", found);
+        if (found) {
+          log.debug("ENTRO EN FOUND", "ENTRO EN FOUND");
+          log.debug("NEWTAXSTATUS", newTaxSummary);
+          found.importe =
+            Number(found.importe) + Number(taxSummary.summaryRet[i].importe);
+        } else {
+          newTaxSummary.push({
+            importe: taxSummary.summaryRet[i].importe,
+            impuesto: taxSummary.summaryRet[i].impuesto,
+          });
+        }
+      }
+    }
+    return { summaryRet: newTaxSummary, summaryTras: taxSummary.summaryTras };
+  };
   const handleSatCode = (unit) => {
     let unitList = null;
     const unitsObj = search.create({
@@ -467,8 +495,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     return unitList;
   };
   const handleCustomItem = (currentRecord) => {
-    const taxTrasDetails = [];
-    const taxRetDetails = [];
+    const taxItemDetails = [];
     const taxSummary = { summaryRet: [], summaryTras: [] };
     const satUnitCodes = [];
     const totalItemLines = currentRecord.getLineCount({ sublistId: "item" });
@@ -504,12 +531,14 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           id: taxcodeId,
         });
         if (taxRecord) {
+          let taxTrasDetails = null;
+          let taxRetDetails = null;
           const { taxcode, rate, exempt } = handleTaxCodeDetails(taxRecord);
           let newRate = rate < 0 ? rate * -1 : rate;
           let newTaxAmount = taxAmount < 0 ? taxAmount * -1 : taxAmount;
           if (rate < 0) {
             //Es retención
-            taxRetDetails.push({
+            taxRetDetails = {
               isGroup: 0,
               exempt,
               base: amount,
@@ -517,7 +546,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
               tipoFactor: "Tasa",
               tasaOcuota: newRate,
               importe: newTaxAmount,
-            });
+            };
             //Push summary
             const exist = taxSummary.summaryRet.find(
               (element) =>
@@ -540,7 +569,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
             }
           } else {
             //Es traslado
-            taxTrasDetails.push({
+            taxTrasDetails = {
               isGroup: 0,
               exempt,
               base: amount,
@@ -548,7 +577,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
               tipoFactor: "Tasa",
               tasaOcuota: newRate,
               importe: newTaxAmount,
-            });
+            };
             //Push summary
             const exist = taxSummary.summaryTras.find(
               (element) =>
@@ -570,6 +599,11 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
               exist.base = (Number(exist.base) + Number(amount)).toFixed(2);
             }
           }
+          taxItemDetails.push({
+            item: i,
+            taxRetDetails,
+            taxTrasDetails,
+          });
         }
       } catch (error) {
         /* log.debug(
@@ -590,11 +624,13 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           );
           log.debug("TAXLISTDETAILS", taxListDetails);
           if (taxListDetails.isGroup) {
+            let taxRetAuxTemp = null;
+            let taxTrasAuxTemp = null;
             if (taxListDetails.taxesPerItem.taxRetDetails.length > 0) {
-              taxRetDetails.push({
+              taxRetAuxTemp = {
                 isGroup: taxListDetails.isGroup,
                 details: taxListDetails.taxesPerItem.taxRetDetails,
-              });
+              };
               //Push summary
               taxListDetails.taxesPerItem.taxRetDetails.forEach((tax) => {
                 const exist = taxSummary.summaryRet.find(
@@ -621,10 +657,10 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
               });
             }
             if (taxListDetails.taxesPerItem.taxTrasDetails.length > 0) {
-              taxTrasDetails.push({
+              taxTrasAuxTemp = {
                 isGroup: taxListDetails.isGroup,
                 details: taxListDetails.taxesPerItem.taxTrasDetails,
-              });
+              };
               //Push summary
               taxListDetails.taxesPerItem.taxTrasDetails.forEach((tax) => {
                 const exist = taxSummary.summaryTras.find(
@@ -650,9 +686,16 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
                 }
               });
             }
+            taxItemDetails.push({
+              item: i,
+              taxRetDetails: taxRetAuxTemp,
+              taxTrasDetails: taxTrasAuxTemp,
+            });
           } else {
+            let taxRetAuxTemp = null;
+            let taxTrasAuxTemp = null;
             if (taxListDetails.isRet) {
-              taxRetDetails.push(taxListDetails.taxesPerItem);
+              taxRetAuxTemp = taxListDetails.taxesPerItem;
               //Push summary
               const exist = taxSummary.summaryRet.find(
                 (element) =>
@@ -682,7 +725,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
                 );
               }
             } else {
-              taxTrasDetails.push(taxListDetails.taxesPerItem);
+              taxTrasAuxTemp = taxListDetails.taxesPerItem;
               //Push summary
               const exist = taxSummary.summaryTras.find(
                 (element) =>
@@ -712,16 +755,22 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
                 );
               }
             }
+            taxItemDetails.push({
+              item: i,
+              taxRetDetails: taxRetAuxTemp,
+              taxTrasDetails: taxTrasAuxTemp,
+            });
           }
         }
       }
     }
     const taxTotal = handleTaxTotal(taxSummary);
+    const newTaxSummary = handleNewTaxSummary(taxSummary);
+    log.debug("NEWTAXSUMMARY", newTaxSummary);
     return {
-      taxTrasDetails,
-      taxRetDetails,
+      taxItemDetails,
       taxTotal,
-      taxSummary,
+      taxSummary: newTaxSummary,
       satUnitCodes,
     };
   };
@@ -1221,7 +1270,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       totalPaymentAmount = dataForPayment.totalPaymentAmount;
     } else {
       customItem = handleCustomItem(currentRecord);
-      log.debug("CUSTOMFINALEITEMDETAILS", customItem);
     }
     //Related CFDIS
     const relatedCfdis = handleRelatedCfdis(currentRecord);
