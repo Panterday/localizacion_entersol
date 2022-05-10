@@ -30,8 +30,12 @@ define(["N/record", "N/search"], (record, search) => {
     }
     return uuid;
   };
-  const pageInit = (context) => {
-    if (context.mode == "edit" || context.mode == "create") {
+  const fieldChanged = (context) => {
+    const currentRecord = context.currentRecord;
+    const sublistId = context.sublistId;
+    const fieldId = context.fieldId;
+    //Entity
+    if (fieldId === "entity") {
       try {
         const currentRecord = context.currentRecord;
         const customerId = currentRecord.getValue({
@@ -48,6 +52,8 @@ define(["N/record", "N/search"], (record, search) => {
           fieldId: "custbody_ent_entloc_ent_metodo_pago",
         });
 
+        log.debug("CUSTOMER RECORD", customerRecord);
+
         const formaPagoFac = customerRecord.getValue({
           fieldId: "custbody_ent_entloc_forma_pago",
         });
@@ -56,7 +62,7 @@ define(["N/record", "N/search"], (record, search) => {
           fieldId: "custbody_ent_entloc_reg_fis_receptor",
         });
 
-        if (usoCfdiFac) {
+        if (!usoCfdiFac) {
           const usoCfdiCliente = customerRecord.getValue({
             fieldId: "custentity_ent_uso_de_cfdi",
           });
@@ -66,7 +72,7 @@ define(["N/record", "N/search"], (record, search) => {
             value: usoCfdiCliente,
           });
         }
-        if (metodoPagoFac) {
+        if (!metodoPagoFac) {
           log.debug("EXECUTE CHANGE", "changed");
           const metodoPagoCliente = customerRecord.getValue({
             fieldId: "custentity_ent_metodo_de_pago",
@@ -77,7 +83,7 @@ define(["N/record", "N/search"], (record, search) => {
             value: metodoPagoCliente,
           });
         }
-        if (formaPagoFac) {
+        if (!formaPagoFac) {
           const formaPagoCliente = customerRecord.getValue({
             fieldId: "custentity_ent_uso_de_cfdi",
           });
@@ -87,7 +93,7 @@ define(["N/record", "N/search"], (record, search) => {
             value: formaPagoCliente,
           });
         }
-        if (regimenFiscalFac) {
+        if (!regimenFiscalFac) {
           const regimenFiscalCliente = customerRecord.getValue({
             fieldId: "custentity_ent_entloc_regimen_fiscal",
           });
@@ -100,12 +106,7 @@ define(["N/record", "N/search"], (record, search) => {
         log.debug("ERROR", error);
       }
     }
-  };
-  const fieldChanged = (context) => {
-    //if(context.mode === 'edit'){
-    const currentRecord = context.currentRecord;
-    const sublistId = context.sublistId;
-    const fieldId = context.fieldId;
+    //Related CFDIS
     if (
       sublistId === "recmachcustrecord_ent_entloc_registro_padre" &&
       fieldId === "custrecord_ent_entloc_transaccion"
@@ -124,10 +125,8 @@ define(["N/record", "N/search"], (record, search) => {
         value: uuid,
       });
     }
-    //};
   };
   return {
-    pageInit,
     fieldChanged,
   };
 });

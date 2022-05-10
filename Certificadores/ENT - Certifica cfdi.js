@@ -276,8 +276,7 @@ define([
     subsidiaryRfc,
     subsidiaryId,
     idGuardaDocumentosCarpeta,
-    currentTemplate,
-    plantillaPdfPublica
+    userConfig
   ) => {
     //Extra custom data
     const extraData = funcionesLoc.getExtraCustomData(currentRecord);
@@ -288,7 +287,7 @@ define([
       currentRecord,
       customerRecord,
       subsidiaryRecord,
-      currentTemplate,
+      userConfig.plantillaEdocument,
       extraData,
       globalData
     );
@@ -392,7 +391,7 @@ define([
             subsidiaryRecord,
             customerRecord,
             customFullData,
-            plantillaPdfPublica,
+            userConfig,
             !folderForPdf.error
               ? folderForPdf.tipoArchFolderId
               : idGuardaDocumentosCarpeta,
@@ -551,8 +550,7 @@ define([
         subsidiaryRfc,
         subsidiaryId,
         globalConfig.idGuardaDocumentosCarpeta,
-        userConfig.plantillaEdocument,
-        userConfig.plantillaPdfPublica
+        userConfig
       );
     }
     const scriptObj = runtime.getCurrentScript();

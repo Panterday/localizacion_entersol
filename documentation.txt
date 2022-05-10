@@ -30,6 +30,8 @@ CFDI 4.0
         ENT - Uso de CFDI
         ENT - Forma de pago
         ENT - Método de pago
+        ENT - Nombre legal sat
+        ENT - Exportación
     Campos personalizadas de artículo: 
         ENT - Sat clave prod servicio (Ligado a lista: ENT - Sat clave prod serv)
         ENT - Objeto de impuesto
@@ -62,5 +64,7 @@ CFDI 4.0
         ENT - Sat Objeto Impuesto
         ENT - Sat Tipo Factor
         ENT - Sat clave unidad
+
+        ENT - Fuentes
 
 

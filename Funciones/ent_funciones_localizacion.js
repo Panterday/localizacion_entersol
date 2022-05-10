@@ -160,6 +160,15 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
             plantillaPdfPublica: globalConfigRecord.getValue({
               fieldId: "custrecord_ent_entloc_plantilla_imp_fv",
             }),
+            printColor: globalConfigRecord.getValue({
+              fieldId: "custrecord_ent_entloc_color_format_fv",
+            }),
+            font: globalConfigRecord.getText({
+              fieldId: "custrecord_ent_entloc_fuente_fv",
+            }),
+            fontSize: globalConfigRecord.getText({
+              fieldId: "custrecord_ent_entloc_tam_fuente_fv",
+            }),
             plantillaEdocument: globalConfigRecord.getValue({
               fieldId: "custrecord_ent_entloc_plan_gen_xml_fv",
             }),
@@ -239,6 +248,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     };
   };
   const handleTaxesCalc = (taxList, amount, taxAmount) => {
+    log.debug("TAXLIST", taxList);
     const itemTaxGroupDetails = {
       taxRetDetails: [],
       taxTrasDetails: [],
@@ -276,9 +286,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           Number(tempTotalImporte.toFixed(2)) - taxAmount
         );
         if (diferencia < 0) {
-          taxTempList[0].importe = taxTempList[0].importe + diferencia;
-        } else {
           taxTempList[0].importe = taxTempList[0].importe - diferencia;
+        } else {
+          taxTempList[0].importe = taxTempList[0].importe + diferencia;
         }
       }
       taxTempList.forEach((element) => {
@@ -300,6 +310,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           });
         }
       });
+      log.debug("ITEMTAXGROUPDETAILS", itemTaxGroupDetails);
       return itemTaxGroupDetails;
     } else {
       //Traslado
@@ -317,9 +328,13 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         iepsRate = Number(iepsRate.replace("%", ""));
         const iepsSatTaxCode = keepBefore(iepsTaxCode[0].text, " -");
         //Let's calculate IEPS
-        let importeIepsLinea = amount * (iepsRate / 100);
+        let importeIepsLinea = Number(amount) * (iepsRate / 100);
+        log.debug("IMPORTE IEPS LINEA", typeof importeIepsLinea);
+        log.debug("IMPORTE", typeof amount);
         importeIepsLinea = Number(importeIepsLinea.toFixed(2));
-        nuevaBaseCalculada = Number((amount + importeIepsLinea).toFixed(2));
+        nuevaBaseCalculada = Number(
+          (Number(amount) + importeIepsLinea).toFixed(2)
+        );
         //IVA
         const ivaFound = taxList.find(
           (element) =>
@@ -427,7 +442,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       }
       //Handle tax calc
       const taxesPerItem = handleTaxesCalc(taxList, amount, taxAmount);
-      log.debug("TAXESPERITEM", taxesPerItem);
       return {
         isGroup: 1,
         taxesPerItem,
@@ -449,32 +463,44 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     };
   };
   const handleNewTaxSummary = (taxSummary) => {
-    const newTaxSummary = [];
+    const newTaxSummaryRet = [];
+    const newTaxSummaryTras = [];
     for (let i = 0; i < taxSummary.summaryRet.length; i++) {
       if (i === 0) {
-        newTaxSummary.push({
+        newTaxSummaryRet.push({
           importe: taxSummary.summaryRet[i].importe,
           impuesto: taxSummary.summaryRet[i].impuesto,
         });
       } else {
-        const found = newTaxSummary.find(
+        const found = newTaxSummaryRet.find(
           (element) => element.impuesto === taxSummary.summaryRet[i].impuesto
         );
-        log.debug("FOUND", found);
         if (found) {
-          log.debug("ENTRO EN FOUND", "ENTRO EN FOUND");
-          log.debug("NEWTAXSTATUS", newTaxSummary);
           found.importe =
             Number(found.importe) + Number(taxSummary.summaryRet[i].importe);
         } else {
-          newTaxSummary.push({
+          newTaxSummaryRet.push({
             importe: taxSummary.summaryRet[i].importe,
             impuesto: taxSummary.summaryRet[i].impuesto,
           });
         }
       }
     }
-    return { summaryRet: newTaxSummary, summaryTras: taxSummary.summaryTras };
+    taxSummary.summaryTras.forEach((element) => {
+      if (!element.exempt) {
+        newTaxSummaryTras.push({
+          base: element.base,
+          impuesto: element.impuesto,
+          tipoFactor: element.tipoFactor,
+          tasaOcuota: element.tasaOcuota,
+          importe: element.importe,
+        });
+      }
+    });
+    return {
+      summaryRet: newTaxSummaryRet,
+      summaryTras: newTaxSummaryTras,
+    };
   };
   const handleSatCode = (unit) => {
     let unitList = null;
@@ -494,12 +520,18 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     }
     return unitList;
   };
-  const handleCustomItem = (currentRecord) => {
-    const taxItemDetails = [];
-    const taxSummary = { summaryRet: [], summaryTras: [] };
-    const satUnitCodes = [];
+  const handleSplitDiscountItems = (currentRecord) => {
+    const fullItems = [];
+    const items = [];
+    const discounts = [];
+    let totalDiscount = 0;
     const totalItemLines = currentRecord.getLineCount({ sublistId: "item" });
     for (let i = 0; i < totalItemLines; i++) {
+      const itemType = currentRecord.getSublistValue({
+        sublistId: "item",
+        fieldId: "itemtype",
+        line: i,
+      });
       const taxcodeId = currentRecord.getSublistValue({
         sublistId: "item",
         fieldId: "taxcode",
@@ -520,8 +552,87 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         fieldId: "units",
         line: i,
       });
+      if (itemType === "Discount") {
+        const discline = currentRecord.getSublistValue({
+          sublistId: "item",
+          fieldId: "discline",
+          line: i,
+        });
+        discounts.push({ line: discline, amount, taxAmount });
+      } else {
+        const line = currentRecord.getSublistValue({
+          sublistId: "item",
+          fieldId: "line",
+          line: i,
+        });
+        items.push({
+          line,
+          unit,
+          taxcodeId,
+          amount,
+          taxAmount,
+        });
+      }
+    }
+    items.forEach((item) => {
+      const discountFound = discounts.find(
+        (element) => element.line === item.line
+      );
+      if (discountFound) {
+        log.debug("disCOUNTfOUND", discountFound);
+        const newAmount = (
+          Number(item.amount) + Number(discountFound.amount)
+        ).toFixed(2);
+        const newTaxAmount = (
+          Number(item.taxAmount) + Number(discountFound.taxAmount)
+        ).toFixed(2);
+        fullItems.push({
+          discount: Math.abs(Number(discountFound.amount)),
+          unit: item.unit,
+          taxcodeId: item.taxcodeId,
+          amount: newAmount,
+          taxAmount: newTaxAmount,
+        });
+      } else {
+        fullItems.push({
+          unit: item.unit,
+          taxcodeId: item.taxcodeId,
+          amount: item.amount,
+          taxAmount: item.taxAmount,
+        });
+      }
+    });
+    discounts.forEach((discount) => {
+      totalDiscount += Math.abs(Number(discount.amount));
+    });
+    log.debug("FULLITEMS", fullItems);
+    return {
+      fullItems,
+      totalDiscount: Number(totalDiscount.toFixed(2)),
+    };
+  };
+  const handleCustomItem = (currentRecord) => {
+    const taxItemDetails = [];
+    const taxSummary = { summaryRet: [], summaryTras: [] };
+    const satUnitCodes = [];
+    const discounts = [];
+    const { fullItems: newItems, totalDiscount } =
+      handleSplitDiscountItems(currentRecord);
+    log.debug("TOTALDISCOUNT", totalDiscount);
+    for (let i = 0; i < newItems.length; i++) {
+      const discount = newItems[i].discount;
+      const taxcodeId = newItems[i].taxcodeId;
+      const taxAmount = newItems[i].taxAmount;
+      const amount = newItems[i].amount;
+      const unit = newItems[i].unit;
+      log.debug("TAXCODEID", taxcodeId);
       //Units
       satUnitCodes.push(handleSatCode(unit));
+      //Discounts
+      discounts.push({
+        item: i,
+        discount,
+      });
       //Taxgroup or taxcode
       let taxRecord = null;
       try {
@@ -586,6 +697,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
             );
             if (!exist) {
               taxSummary.summaryTras.push({
+                exempt,
                 base: Number(amount),
                 impuesto: keepBefore(taxcode, " -"),
                 tipoFactor: "Tasa",
@@ -606,10 +718,10 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           });
         }
       } catch (error) {
-        /* log.debug(
+        log.debug(
           "No fue posible cargar un código de impuesto, se procede a cargar un grupo de impuesto",
           error
-        ); */
+        );
         //Try to load taxgroup
         taxRecord = record.load({
           type: "taxgroup",
@@ -622,7 +734,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
             amount,
             taxAmount
           );
-          log.debug("TAXLISTDETAILS", taxListDetails);
           if (taxListDetails.isGroup) {
             let taxRetAuxTemp = null;
             let taxTrasAuxTemp = null;
@@ -734,6 +845,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
               );
               if (!exist) {
                 taxSummary.summaryTras.push({
+                  exempt: taxListDetails.taxesPerItem.exempt,
                   base: Number(taxListDetails.taxesPerItem.base),
                   impuesto: taxListDetails.taxesPerItem.impuesto,
                   tipoFactor: taxListDetails.taxesPerItem.tipoFactor,
@@ -766,12 +878,17 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     }
     const taxTotal = handleTaxTotal(taxSummary);
     const newTaxSummary = handleNewTaxSummary(taxSummary);
-    log.debug("NEWTAXSUMMARY", newTaxSummary);
     return {
       taxItemDetails,
       taxTotal,
       taxSummary: newTaxSummary,
       satUnitCodes,
+      ...(totalDiscount > 0 && {
+        discounts: {
+          totalDiscount,
+          discounts,
+        },
+      }),
     };
   };
   const handleRelatedCfdis = (currentRecord) => {
@@ -1298,7 +1415,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     subsidiaryRecord,
     customerRecord,
     customData,
-    templateId,
+    userConfig,
     folderId,
     pdfName
   ) => {
@@ -1308,11 +1425,20 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       alias: "customData",
       data: customData,
     });
+    renderer.addCustomDataSource({
+      format: render.DataSource.OBJECT,
+      alias: "customColors",
+      data: {
+        ...(userConfig.printColor && { mainColor: userConfig.printColor }),
+        ...(userConfig.font && { font: userConfig.font }),
+        ...(userConfig.fontSize && { fontSize: userConfig.fontSize }),
+      },
+    });
     renderer.addRecord("record", currentRecord);
     renderer.addRecord("subsidiary", subsidiaryRecord);
     renderer.addRecord("customer", customerRecord);
 
-    renderer.setTemplateById(templateId);
+    renderer.setTemplateById(userConfig.plantillaPdfPublica);
     // render PDF
     const newfile = renderer.renderAsPdf();
     newfile.folder = folderId; // ID of folder where file created

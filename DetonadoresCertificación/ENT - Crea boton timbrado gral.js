@@ -53,16 +53,16 @@ define([
 
     //TESTING INLINE HTML
     const hideField = form.addField({
-      id: "custpage_ent_locent_hide_btn",
+      id: "custpage_ent_entloc_hide_certification",
       label: "Hidden",
       type: serverWidget.FieldType.INLINEHTML,
     });
 
     hideField.defaultValue = /* html */ `
           <script>
-            const btnCertificar = document.querySelector("#custpage_ent_locent_button_cert");
-            btnCertificar.addEventListener("click", () => {
-              btnCertificar.style.pointerEvents = "none";
+            const btnCertification = document.querySelector("#custpage_ent_locent_button_cert");
+            btnCertification.addEventListener("click", () => {
+              btnCertification.style.pointerEvents = "none";
             });
           </script>
         `;
@@ -96,9 +96,9 @@ define([
 
     hideField.defaultValue = /* html */ `
           <script>
-            const btnCertificar = document.querySelector("#custpage_ent_entloc_gen_btn");
-            btnCertificar.addEventListener("click", () => {
-              btnCertificar.style.pointerEvents = "none";
+            const btnGenerar = document.querySelector("#custpage_ent_entloc_gen_btn");
+            btnGenerar.addEventListener("click", () => {
+              btnGenerar.style.pointerEvents = "none";
             });
           </script>
         `;
