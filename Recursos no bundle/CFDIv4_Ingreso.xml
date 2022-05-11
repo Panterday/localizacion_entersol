@@ -185,6 +185,7 @@
 			<#if customItem.taxSummary.summaryTras?has_content>
 				<cfdi:Traslados> 
 					<#list customItem.taxSummary.summaryTras as elementSummary>
+						<#if !elementSummary.exempt?has_content> 
 							<cfdi:Traslado 
 								Base="${formatFromString(elementSummary.base)}"
 								Impuesto="${elementSummary.impuesto}" 
@@ -192,6 +193,7 @@
 								TasaOCuota="${formatRate(elementSummary.tasaOcuota)}" 
 								Importe="${formatFromString(elementSummary.importe)}" 
 							/> 
+						</#if>
 					</#list>
 				</cfdi:Traslados> 
 			</#if>
