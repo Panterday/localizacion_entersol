@@ -3,26 +3,6 @@ Cambiar roles a nivel tipo de transacción, no se retira el rol general.
 Considerar lista de plantillas de documento electrónico. 
 Si se llenan los valores en el cliente, usamos esas, si no, usamos las plantillas por defecto. 
 
-
-Considerar los casos base. 
-
-Cambios al formato estándar 
-
-Términos de pago -> Términos 
-Orden 
-Código Descripción ClaveProdS Cant UnidadMedida PrecioUni Impuestos Importe (Quitar descuentos columna si no hay descuentos)
-
-En espacio del lado izquierdo vacío, colocar observaciones y monto en letra. 
-
-Colocar Régimen fiscal del cliente 
-VEINTITRES MIL OCHOCIENTOS VEINTIOCHO 97/100 Pesos Mexicanos -> VEINTITRES MIL OCHOCIENTOS VEINTIOCHO Pesos Mexicanos 97/100 
-
-Emisión -> Lugar de expedición: CP (Eliminar de cabecera) 
-
-Tabla de resumen 
-Primero Subtotal y luego descuentos. 
-Formato de moneda correcto. 
-
 Si el método de pago es PPD obligatoriamente forma de pago es 99-Por definir y 
 si es PUE NO puede ser 99-Por definir. 
 

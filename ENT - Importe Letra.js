@@ -199,11 +199,11 @@ define(["N/record"], (record) => {
 
         totalNumero = Number(totalNumero);
 
-        let numLetra = NumeroALetras(totalNumero, "");
+        let numLetra = NumeroALetras(totalNumero, txtMoneda);
 
         currentRecord.setValue({
           fieldId: "custbody_ent_entloc_monto_letra",
-          value: numLetra + " " + txtMoneda,
+          value: numLetra,
         });
       }
     } catch (error) {

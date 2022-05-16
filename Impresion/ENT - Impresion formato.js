@@ -16,6 +16,7 @@ define(["N/render", "N/record", "funcionesLoc"], (
   ) => {
     try {
       const extraData = funcionesLoc.getExtraCustomData(currentRecord);
+      log.debug("EXTRA DATA", extraData);
       const renderer = render.create();
       renderer.addRecord("record", currentRecord);
       renderer.addRecord("subsidiary", subsidiaryRecord);
@@ -35,6 +36,7 @@ define(["N/render", "N/record", "funcionesLoc"], (
         },
       });
       renderer.setTemplateById(userConfig.plantillaPdfPublica);
+      log.debug("PLANTILLAPDF", userConfig.plantillaPdfPublica);
       // render PDF
       const newfile = renderer.renderAsPdf();
       return {

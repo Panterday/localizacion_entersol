@@ -26,27 +26,11 @@ define(["N/record", "N/url", "N/ui/serverWidget"], (
       //Building target url
       const target = `${suiteletUrl}+${params}`;
 
-      //TESTING INLINE HTML
-      const hideField = form.addField({
-        id: "custpage_ent_entloc_hide_cust_print_4",
-        label: "Hidden",
-        type: serverWidget.FieldType.INLINEHTML,
-      });
-
-      hideField.defaultValue = /* html */ `
-            <script>
-              const btnCustomPrint = document.querySelector("#custpage_ent_entloc_custom_print");
-              btnCustomPrint.addEventListener("click", () => {
-                btnCustomPrint.style.pointerEvents = "none";
-              });
-            </script>
-          `;
-
       //Adding a button to the form
       form.addButton({
         id: "custpage_ent_entloc_custom_print",
         label: "Imprimir Cfdi 4.0",
-        functionName: `window.open("${target}", "_self")`,
+        functionName: `window.open("${target}", "_blank")`,
       });
     }
   };

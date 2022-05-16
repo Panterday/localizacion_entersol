@@ -1,0 +1,327 @@
+<?xml version="1.0"?><!DOCTYPE pdf PUBLIC "-//big.faceless.org//report" "report-1.1.dtd">
+<pdf>
+  <#setting locale="en_US">
+<head>
+    <macrolist>
+        <macro id="nlheader">
+            <table class="header" style="width: 100%;" margin-top="-15px">
+              <tr>
+                <td colspan="2" rowspan="2">
+                  <#if subsidiary.logo?length != 0>
+                    <img src="${subsidiary.logo@url}" width="100px" height="80px" style="float: left; margin: 7px"/>
+                  </#if>
+           		</td>
+				<td colspan="5">
+				<table style="font-size:7pt; width: 100%;">
+      				<tr>
+						<th class="header" background-color="#FFF" color="#000" align="center">${subsidiary.legalname}</th>
+	  				</tr>
+					<tr>
+                      <td align="center" style="font-size:8pt">${subsidiary.federalidnumber}</td>
+                  </tr>
+                  <tr>
+                      <td align="center" style="font-size:8pt"><b>Régimen fiscal: </b> ${subsidiary.custrecord_mx_sat_industry_type} </td>
+                  </tr>
+                  <tr>
+                      <td align="center" style="font-size:8pt">
+                        <p align="center"> <b>Domicilio fiscal: </b>
+                          <#if subsidiary.mainaddress.custrecord_streetname?has_content>
+                            ${subsidiary.mainaddress.custrecord_streetname}
+                          </#if>
+                          <#if subsidiary.mainaddress.custrecord_streetnum?has_content>
+                            No. ${subsidiary.mainaddress.custrecord_streetnum},
+                          </#if>
+                          <#if subsidiary.mainaddress.zip?has_content>
+                            CP: ${subsidiary.mainaddress.zip},
+                          </#if>
+                          <#if subsidiary.mainaddress.custrecord_colonia?has_content>
+                            Col: ${subsidiary.mainaddress.custrecord_colonia},
+                          </#if>
+                          <#if subsidiary.mainaddress.city?has_content>
+                            ${subsidiary.mainaddress.city},
+                          </#if>
+                          <#if subsidiary.mainaddress.country?has_content>
+                            ${subsidiary.mainaddress.country}
+                          </#if>
+                        </p>
+                    </td>
+                  </tr>
+                  <tr>
+					</tr>
+                  <tr>
+                  <td align="center" style="font-size:8pt"><b>Lugar de expedición: </b> ${subsidiary.mainaddress.zip}</td>
+                  </tr>
+                </table>
+				</td>
+				<td colspan="2" align="right">
+				<table border="1 solid #e3e3e3" width="120px">
+                  <tr>
+					<th class="header"  align="center" font-size="9pt"><p color="#000" align="center">Complemento de Pago</p></th>
+				  </tr>
+				  <tr>
+					<td align="center">#${record.tranid}</td>
+				  </tr>
+                  </table>
+				 </td>
+			</tr>
+          </table>
+        </macro>
+      <macro id="nlfooter">
+        <p font-size="7pt"><pagenumber/> de <totalpages/></p>
+      </macro>
+    </macrolist>
+    <style type="text/css">
+      *{
+        font-family: Arial, Helvetica, sans-serif;
+      }
+		table {
+			font-size: 9pt;
+			table-layout: fixed;
+		}
+		table.signatures {
+			font-size: 7pt;
+			table-layout: fixed;
+		}
+        th {
+            font-weight: bold;
+            font-size: 8pt;
+            vertical-align: middle;
+            padding: 5px 6px 3px;
+            background-color: #e3e3e3;
+            color: #333333;
+        }
+        th.header {
+            font-weight: bold;
+            font-size: 10pt;
+            vertical-align: middle;
+            padding: 5px 6px 3px;
+            background-color: #e3e3e3;
+            color: #FFFFFF;
+        }
+        th.border {
+          	text-align: center;
+            font-weight: bold;
+            font-size: 7pt;
+            vertical-align: middle;
+            padding: 5px 6px 3px;
+            background-color: #e3e3e3;
+            color: #000;
+        }
+      	td.linea {
+            padding: 4px 6px;
+            border: 1px;
+            border-style: solid;
+          	border-bottom-width:0px;
+          	border-right-width:0px;
+          	border-left-width:0px;
+          	border-top-width:1px;
+        }
+        td {
+            padding: 4px 6px;
+        }
+      
+      .cellPadding td{
+        padding: 1px 4px;
+      }
+		td p { align:left }
+        b {
+            font-weight: bold;
+            color: #333333;
+        }
+        table.header td {
+            padding: 0px;
+            font-size: 10pt;
+        }
+        table.footer td {
+            padding: 0px;
+            font-size: 8pt;
+        }
+</style>
+</head>
+<body header="nlheader" header-height="7%" footer="nlfooter" footer-height="1%" size="Letter">
+  <table style="width: 100%;">
+    <tr>
+      <td colspan="5">
+        <table class="cellPadding" border="1 solid #e3e3e3" style="width: 100%; font-size:7pt;">-->
+          <tr>
+            <td colspan="8"><b>Facturar a:</b></td>
+          </tr>
+          <tr>
+            <td colspan="2"><b>Nombre:</b></td>
+            <td colspan="6">${record.entity}</td>
+          </tr>
+          <tr>
+            <td colspan="2"><b>Dirección</b></td>
+            <td colspan="6">${record.billingaddress.custrecord_streetname} No. ${record.billingaddress.custrecord_streetnum} ${record.billingaddress.custrecord_colonia} CP: ${record.billingaddress.zip}, ${record.billingaddress.city}, ${record.billingaddress.country}</td>
+          </tr>
+          <tr>
+			<td colspan="2"><b>RFC:</b></td>
+			<td colspan="6">${record.entity.custentity_mx_rfc}</td>
+          </tr>
+          <tr>
+			<td colspan="2"><b>OC:</b></td>
+			<td colspan="6">${record.otherrefnum}</td>
+          </tr>
+          <tr>
+            <td colspan="2"><b>Términos de pago:</b></td>
+            <td colspan="6">${record.terms}</td>
+          </tr>
+          <tr>
+            <td colspan="2"><b>Moneda:</b></td>
+            <td colspan="2">${record.currency} </td>
+            <td colspan="4"><b>TC:</b> ${record.exchangerate?substring(1, record.exchangerate?length)} </td>
+          </tr>
+    </table>
+	</td>
+	<td colspan="5">
+      <table class="cellPadding" border="1 solid #e3e3e3" style="width: 100%; font-size:7pt;">
+        <tr>
+          <td colspan="2"><b>Folio Fiscal:</b></td>
+          <td colspan="5">${record.custbody_mx_cfdi_uuid?upper_case}</td>
+        </tr>
+        <tr>
+          <td colspan="3"><b>Emisión:</b></td>
+		  <td colspan="4">${record.custbody_mx_cfdi_issue_datetime}</td>
+        </tr>
+        <tr>
+		  <td colspan="3"><b>Uso CFDI:</b></td>
+		  <td colspan="4">${record.custbody_mx_cfdi_usage}</td>
+		</tr>
+    	<tr>
+		  <td colspan="3"><b>Número de Serie de CSD:</b></td>
+		  <td colspan="4">${record.custbody_mx_cfdi_issuer_serial}</td>
+		</tr>
+    	<tr>
+          <td colspan="3"><b>Fecha Certificación</b></td>
+          <td colspan="4">${record.custbody_mx_cfdi_certify_timestamp}</td>
+      	</tr>
+		<tr>
+          <td colspan="3"><b>Número de Serie SAT</b></td>
+          <td colspan="4">${record.custbody_mx_cfdi_sat_serial}</td>
+      	</tr>
+        <tr>
+          <td colspan="3"><b>M&eacute;todo Pago:</b></td>
+		  <td colspan="4">${record.custbody_mx_txn_sat_payment_term}</td>
+      	</tr>
+      	<tr>
+		  <td colspan="3"><b>Forma de pago:</b></td>
+		  <td colspan="4">${record.custbody_mx_txn_sat_payment_method}</td>
+        </tr>
+      </table>
+	</td>
+	</tr>
+	</table>
+
+    <!--DOCUMENTO RELACIONADO-->
+  <#if record.custbody_ent_info_cfdi_relacion?has_content>
+  <div>
+  <table style="width: 100%; margin: 6px; font-size: 7pt;">
+    <#list record.custbody_ent_info_cfdi_relacion?split('///') as Factura>
+      <#if Factura?has_content>
+    <tr>
+      <th colspan="8" align="center" font-size="8pt">DOCUMENTO RELACIONADO</th>
+    </tr>
+    <tr>
+      <td colspan="1"><b>Id documento: </b></td>
+      <td colspan="3"> <#if Factura?split("|||")[0]?has_content> ${Factura?split("|||")[0]} </#if></td>
+      <td colspan="2"><b>Moneda del documento relacionado: </b></td>
+      <td colspan="2"><#if Factura?split("|||")[1]?has_content> ${Factura?split("|||")[1]}</#if></td>
+    </tr>
+    <tr>
+      <td colspan="1"><b>Folio: </b></td>
+      <td colspan="3"><#if Factura?split("|||")[2]?has_content> ${Factura?split("|||")[2]}</#if></td>
+      <td colspan="2"><b>Metodo de pago del documento relacionado: </b></td>
+      <td colspan="2"><#if Factura?split("|||")[3]?has_content> ${Factura?split("|||")[3]}</#if></td>
+    </tr>
+    <tr>
+      <td colspan="1"><b>Parcialidad: </b></td>
+      <td colspan="3"><#if Factura?split("|||")[4]?has_content> ${Factura?split("|||")[4]}</#if></td>
+      <td colspan="2"><b>Importe de saldo anterior:</b></td>
+      <td colspan="2"><#if Factura?split("|||")[5]?has_content> ${Factura?split("|||")[5]}</#if></td>
+    </tr>
+    <tr>
+      <td colspan="4"></td>
+      <td colspan="2"><b>Importe pagado: </b></td>
+      <td colspan="2"><#if Factura?split("|||")[6]?has_content> ${Factura?split("|||")[6]}</#if></td>
+    </tr>
+    <tr>
+      <td colspan="4"></td>
+      <td colspan="2"><b>Importe de saldo insoluto: </b></td>
+      <td colspan="2"><#if Factura?split("|||")[7]?has_content> ${Factura?split("|||")[7]}</#if></td>
+    </tr>
+</#if>
+</#list>
+  </table>
+</div>
+</#if>
+          <!--REMUSEN DE FACTURA-->
+<table style="width: 100%; margin-top: 2px;">
+  <tr>
+    <td colspan="8" align="left">
+      Datos Bancarios
+    </td>
+    <td colspan="4" align="right">
+		<table border="1 solid #e3e3e3" style="width:100%; font-size:8;"><tr>
+			<td ><span>SubTotal:</span></td>
+			<td  align="right"><span>${record.subtotal}</span></td>
+			</tr>
+			<tr>
+			<td ><span>Impuestos:</span></td>
+			<td  align="right"><span>${record.taxtotal}</span></td>
+			</tr>
+			<tr>
+			<td ><span>Retencion:</span></td>
+			<td  align="right"><span> Pendiente </span></td>
+			</tr>
+			<tr>
+			<td ><span>Total:</span></td>
+			<td  align="right"><span>${record.total}</span></td>
+			</tr>
+          </table>
+    </td>
+  </tr>
+</table>
+
+<!--SECCION DE OBSERVACIONES-->
+      <table style="width: 100%;">
+        <tr>
+          <td style="font-size:7;"><span>Observaciones:</span> <br /> ${record.memo}</td>
+        </tr>
+      </table>
+
+<!--SECCION DE CODIGO QR Y CADENAS DE XML SAT-->
+<table class="signatures" style="width: 100%; margin-top: 2px;" font-size="5pt">
+  <tr>
+    <#assign qrcodeImage = "data:image/png;base64, " + record.custbody_mx_cfdi_qr_code >
+      <td colspan="2" rowspan="3" align="center" vertical-align="middle"><img style="width: 100px;height:100px" src="${qrcodeImage}" /></td>
+      <td colspan="8"><b>Cadena Original</b>
+	      <p>${record.custbody_mx_cfdi_cadena_original}</p>
+	</td>
+ </tr>
+  <tr>
+	<td colspan="8"><b>Firma CFDI</b>
+	<p>${record.custbody_mx_cfdi_signature}</p>
+	</td>
+ </tr>
+  <tr>
+	<td colspan="8"><b>Firma SAT</b>
+	<p>${record.custbody_mx_cfdi_sat_signature}</p>
+	</td>
+  </tr>
+  </table>
+      <table class="signatures" style="width: 100%;" font-size="7pt">
+        <tr>
+          <td style="line-height:50%" align="center"><b color="red">Favor de revisar los datos de facturación ya que solo haremos cambios dentro de las 24 hrs. siguientes a la emisión del documento.</b></td>
+        </tr>
+        <tr>
+          <td style="line-height:50%" align="center"><b color="blue">Estimado cliente: Nuestras bolsas para empaque al vacio son de grado alimenticio, le informamos que no se aceptarán devoluciones en este tipo de producto.</b></td>
+        </tr>
+        <tr>
+          <td style="line-height:50%" align="center"><b>Facturas en dólares deberán liquidarse en Dólares o en MXN al TC publicado en el DOF del dia de su pago</b></td>
+        </tr>
+        <tr>
+          <td style="line-height:50%" align="center"><b>ESTE DOCUMENTO ES UNA REPRESENTACIÓN IMPRESA DE UN CFDI</b></td>
+        </tr>
+  </table>
+</body>
+</pdf>

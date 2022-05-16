@@ -111,19 +111,24 @@ define(["N/record", "N/search"], (record, search) => {
       sublistId === "recmachcustrecord_ent_entloc_registro_padre" &&
       fieldId === "custrecord_ent_entloc_transaccion"
     ) {
-      log.debug("CHANGING", "CHANGING");
       const refId = currentRecord.getCurrentSublistValue({
         sublistId: "recmachcustrecord_ent_entloc_registro_padre",
         fieldId: fieldId,
       });
-      log.debug("REFID", refId);
-      const uuid = handleUuid(refId);
-      log.debug("UUID", uuid);
-      currentRecord.setCurrentSublistValue({
-        sublistId: "recmachcustrecord_ent_entloc_registro_padre",
-        fieldId: "custrecord_ent_entloc_uuid",
-        value: uuid,
-      });
+      if (refId) {
+        const uuid = handleUuid(refId);
+        currentRecord.setCurrentSublistValue({
+          sublistId: "recmachcustrecord_ent_entloc_registro_padre",
+          fieldId: "custrecord_ent_entloc_uuid",
+          value: uuid,
+        });
+      } else {
+        currentRecord.setCurrentSublistValue({
+          sublistId: "recmachcustrecord_ent_entloc_registro_padre",
+          fieldId: "custrecord_ent_entloc_uuid",
+          value: "",
+        });
+      }
     }
   };
   return {

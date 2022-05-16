@@ -280,7 +280,6 @@ define([
   ) => {
     //Extra custom data
     const extraData = funcionesLoc.getExtraCustomData(currentRecord);
-    log.debug("EXTRADATA", extraData);
     //Global custom data
     const globalData = customData.getDataForInvoice();
     const xmlRenderedObj = renderizaString(
