@@ -166,7 +166,7 @@ define([
         firmaSAT,
         tipoComprobante,
       } = extraCertData;
-
+      log.debug("TIPOCOMPROBANTE", "tipo");
       //Get folder id Based on custom path
       const folderForXml = funcionesLoc.getFolderId(
         subsidiaryId,
@@ -235,6 +235,9 @@ define([
           custbody_ent_entloc_serie_sat: noSerieSAT,
           custbody_ent_entloc_firma_cfdi: firmaCFDI,
           custbody_ent_entloc_firma_sat: firmaSAT,
+          custbody_ent_entloc_tipo_cfdi: tipoComprobante,
+          custbody_ent_entloc_impuestos_items: "",
+          custbody_ent_entloc_cfdis_relacionados: "",
         },
       });
       //Redirección a la transacción
@@ -276,17 +279,22 @@ define([
     subsidiaryRfc,
     subsidiaryId,
     idGuardaDocumentosCarpeta,
-    userConfig
+    userConfig,
+    customXmlCustomerTemplate,
+    customPdfCustomerTemplate
   ) => {
     //Extra custom data
     const extraData = funcionesLoc.getExtraCustomData(currentRecord);
+    log.debug("EXTRADATA", extraData);
     //Global custom data
     const globalData = customData.getDataForInvoice();
     const xmlRenderedObj = renderizaString(
       currentRecord,
       customerRecord,
       subsidiaryRecord,
-      userConfig.plantillaEdocument,
+      customXmlCustomerTemplate
+        ? customXmlCustomerTemplate
+        : userConfig.plantillaEdocument,
       extraData,
       globalData
     );
@@ -394,7 +402,8 @@ define([
             !folderForPdf.error
               ? folderForPdf.tipoArchFolderId
               : idGuardaDocumentosCarpeta,
-            nombreDocumento
+            nombreDocumento,
+            customPdfCustomerTemplate
           );
           //OK
           record.submitFields({
@@ -413,6 +422,7 @@ define([
               custbody_ent_entloc_serie_sat: noSerieSAT,
               custbody_ent_entloc_firma_cfdi: firmaCFDI,
               custbody_ent_entloc_firma_sat: firmaSAT,
+              custbody_ent_entloc_tipo_cfdi: tipoComprobante,
               custbody_ent_entloc_impuestos_items: "",
               custbody_ent_entloc_cfdis_relacionados: "",
             },
@@ -521,6 +531,15 @@ define([
       recordType,
       globalConfig.access
     );
+    //Custom templates
+    const customXmlCustomerTemplate = funcionesLoc.getXmlCustomerTemplate(
+      customerRecord,
+      recordType
+    );
+    const customPdfCustomerTemplate = funcionesLoc.getPdfCustomerTemplate(
+      customerRecord,
+      recordType
+    );
     if (genCert === 0) {
       handleTwoStepsCert(
         currentRecord,
@@ -535,7 +554,9 @@ define([
         subsidiaryRfc,
         subsidiaryId,
         globalConfig.idGuardaDocumentosCarpeta,
-        userConfig.plantillaPdfPublica
+        customPdfCustomerTemplate
+          ? customPdfCustomerTemplate
+          : userConfig.plantillaPdfPublica
       );
     } else {
       //One step certification
@@ -549,7 +570,9 @@ define([
         subsidiaryRfc,
         subsidiaryId,
         globalConfig.idGuardaDocumentosCarpeta,
-        userConfig
+        userConfig,
+        customXmlCustomerTemplate,
+        customPdfCustomerTemplate
       );
     }
     const scriptObj = runtime.getCurrentScript();

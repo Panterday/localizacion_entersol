@@ -195,7 +195,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       return false;
     }
   };
-  const handlePerms = (subsidiary, currentRole) => {
+  const handlePerms = (subsidiary, currentRole, recordType) => {
     //==================================Credentials====================================//
     let internalIdRegMaestro = null;
     let subsidiaryId = null;
@@ -215,6 +215,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           "custrecord_ent_entloc_entorno_prod",
           "custrecord_ent_entloc_carpeta_archivos",
           "custrecord_ent_entloc_roles",
+          "custrecord_ent_entloc_roles_fv",
+          "custrecord_ent_entloc_roles_nc",
+          "custrecord_ent_entloc_roles_pc",
         ],
       });
       buscaGlobalConfig.run().each((result) => {
@@ -233,9 +236,29 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         idGuardaDocumentosCarpeta = result.getValue({
           name: "custrecord_ent_entloc_carpeta_archivos",
         });
-        roles = result.getValue({
-          name: "custrecord_ent_entloc_roles",
-        });
+        switch (recordType) {
+          case "invoice":
+            roles = result.getValue({
+              name: "custrecord_ent_entloc_roles_fv",
+            });
+            break;
+          case "creditmemo":
+            roles = result.getValue({
+              name: "custrecord_ent_entloc_roles_nc",
+            });
+            break;
+          case "customerpayment":
+            roles = result.getValue({
+              name: "custrecord_ent_entloc_roles_pc",
+            });
+            break;
+        }
+        if (!roles) {
+          roles = result.getValue({
+            name: "custrecord_ent_entloc_roles",
+          });
+        }
+        log.debug("ROLES", roles);
       });
     } catch (error) {
       errorInterDescription += "<br /> " + error;
@@ -271,12 +294,12 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       prodMod,
     };
   };
-  const getGlobalConfig = (subsidiaryId) => {
+  const getGlobalConfig = (subsidiaryId, recordType) => {
     //Info for access
     const currentUser = runtime.getCurrentUser();
     const currentRole = currentUser.role;
     //Config record info
-    const globalConfig = handlePerms(subsidiaryId, currentRole);
+    const globalConfig = handlePerms(subsidiaryId, currentRole, recordType);
     return globalConfig;
   };
   const getUserConfig = (globalConfigRecordId, recordType, access) => {
@@ -513,22 +536,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       }
     }
   };
-  const handleTaxCodeDetails = (taxRecord) => {
-    const taxcode = taxRecord.getText({
-      fieldId: "custrecord_ent_entloc_codigo_impuesto",
-    });
-    const rate = taxRecord.getValue({
-      fieldId: "rate",
-    });
-    const exempt = taxRecord.getValue({
-      fieldId: "exempt",
-    });
-    return {
-      taxcode,
-      rate,
-      exempt,
-    };
-  };
   const handleTaxGroupDetails = (taxRecord, amount, taxAmount) => {
     const taxList = [];
     const totalItemLines = taxRecord.codes.length;
@@ -611,24 +618,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       summaryRet: newTaxSummaryRet,
       summaryTras: newTaxSummaryTras,
     };
-  };
-  const handleSatCode = (unit) => {
-    let unitList = null;
-    const unitsObj = search.create({
-      type: "customrecord_ent_entloc_mapeo_unidades",
-      filters: [["custrecord_ent_entloc_clave_unidad_local", "anyof", unit]],
-      columns: ["custrecord_ent_entloc_clave_sat"],
-    });
-    const searchResultCount = unitsObj.runPaged().count;
-    if (searchResultCount > 0) {
-      unitsObj.run().each((result) => {
-        unitList = result.getText({
-          name: "custrecord_ent_entloc_clave_sat",
-        });
-        return true;
-      });
-    }
-    return unitList;
   };
   const handleSplitDiscountItems = (currentRecord) => {
     const fullItems = [];
@@ -725,15 +714,12 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     taxDataBase,
     mapUnitsDataBase
   ) => {
-    const scriptObj = runtime.getCurrentScript();
-    log.debug("REMAIN START", scriptObj.getRemainingUsage());
     let retExist = false;
     let trasExist = false;
     const taxItemDetails = [];
     const taxSummary = { summaryRet: [], summaryTras: [] };
     const satUnitCodes = [];
     const discounts = [];
-    log.debug("REMAIN BEFORE FOR", scriptObj.getRemainingUsage());
     for (let i = 0; i < newItems.length; i++) {
       const discount = newItems[i].discount;
       const taxcodeId = newItems[i].taxcodeId;
@@ -741,10 +727,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       const amount = newItems[i].amount;
       const unit = newItems[i].unit;
       //Units
-      log.debug(
-        "REMAIN BEFORE SATUNITSEARCH " + unit,
-        scriptObj.getRemainingUsage()
-      );
       const tempSatCode = mapUnitsDataBase.find(
         (element) => element.netsuiteCode === unit
       );
@@ -1074,120 +1056,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       }
     }
     return relatedCfdis;
-  };
-  const handleTaxesCalcPayment = (taxList, amount) => {
-    const itemTaxGroupDetails = [];
-    const iepsFound = taxList.find(
-      (element) =>
-        element.custrecord_ent_entloc_codigo_impuesto[0].text === "003 - IEPS"
-    );
-    let nuevaBaseCalculada = null;
-    if (iepsFound) {
-      //IEPS EXISTS!
-      let {
-        rate: iepsRate,
-        custrecord_ent_entloc_codigo_impuesto: iepsTaxCode,
-      } = iepsFound;
-      iepsRate = Number(iepsRate.replace("%", ""));
-      const iepsSatTaxCode = keepBefore(iepsTaxCode[0].text, " -");
-      //Let's calculate IEPS
-      let importeIepsLinea = amount * (iepsRate / 100);
-      importeIepsLinea = Number(importeIepsLinea.toFixed(2));
-      nuevaBaseCalculada = Number((amount + importeIepsLinea).toFixed(2));
-      //IVA
-      const ivaFound = taxList.find(
-        (element) =>
-          element.custrecord_ent_entloc_codigo_impuesto[0].text === "002 - IVA"
-      );
-      if (ivaFound) {
-        //IVA EXISTS!
-        let {
-          rate: ivaRate,
-          custrecord_ent_entloc_codigo_impuesto: ivaTaxCode,
-        } = ivaFound;
-        ivaRate = Number(ivaRate.replace("%", ""));
-        const ivaSatTaxCode = keepBefore(ivaTaxCode[0].text, " -");
-        let importeIvaLinea = nuevaBaseCalculada * (ivaRate / 100);
-        importeIvaLinea = Number(importeIvaLinea.toFixed(2));
-        //==============================================================================//
-        //Save IEPS
-        itemTaxGroupDetails.push({
-          base: amount,
-          impuesto: iepsSatTaxCode,
-          tipoFactor: "Tasa",
-          tasaOcuota: iepsRate,
-          importe: importeIepsLinea,
-        });
-        //Save IVA
-        itemTaxGroupDetails.push({
-          base: nuevaBaseCalculada,
-          impuesto: ivaSatTaxCode,
-          tipoFactor: "Tasa",
-          tasaOcuota: ivaRate,
-          importe: importeIvaLinea,
-        });
-      }
-      return itemTaxGroupDetails;
-    }
-  };
-  const handleTaxGroupDetailsPayment = (taxRecord, amount, porcentajePago) => {
-    const taxList = [];
-    const totalItemLines = taxRecord.getLineCount({
-      sublistId: "taxitem",
-    });
-    const calcAmount = Number(
-      (Number(amount) * (porcentajePago / 100)).toFixed(2)
-    );
-    if (totalItemLines === 1) {
-      //One tax only
-      const taxItemKey = taxRecord.getSublistValue({
-        sublistId: "taxitem",
-        fieldId: "taxitemnkey",
-        line: 0,
-      });
-      const taxDetails = search.lookupFields({
-        type: search.Type.SALES_TAX_ITEM,
-        id: taxItemKey,
-        columns: ["exempt", "rate", "custrecord_ent_entloc_codigo_impuesto"],
-      });
-      const rate = Number(taxDetails.rate.replace("%", ""));
-      const newImporte = Number((calcAmount * (rate / 100)).toFixed(2));
-      return {
-        isGroup: false,
-        taxesPerItem: {
-          isGroup: 0,
-          exempt: taxDetails.exempt,
-          base: calcAmount,
-          impuesto: keepBefore(
-            taxDetails.custrecord_ent_entloc_codigo_impuesto[0].text,
-            " -"
-          ),
-          tipoFactor: "Tasa",
-          tasaOcuota: rate,
-          importe: newImporte,
-        },
-      };
-    } else {
-      for (let i = 0; i < totalItemLines; i++) {
-        const taxItemKey = taxRecord.getSublistValue({
-          sublistId: "taxitem",
-          fieldId: "taxitemnkey",
-          line: i,
-        });
-        const taxDetails = search.lookupFields({
-          type: search.Type.SALES_TAX_ITEM,
-          id: taxItemKey,
-          columns: ["rate", "custrecord_ent_entloc_codigo_impuesto"],
-        });
-        taxList.push(taxDetails);
-      }
-      //Handle tax calc
-      const taxesPerItem = handleTaxesCalcPayment(taxList, calcAmount);
-      return {
-        isGroup: 1,
-        taxesPerItem,
-      };
-    }
   };
   const handleSplitDiscountItemsForPayment = (currentRecord, factor) => {
     const fullItems = [];
@@ -1639,7 +1507,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     customData,
     userConfig,
     folderId,
-    pdfName
+    pdfName,
+    customPdfCustomerTemplate
   ) => {
     const renderer = render.create();
     renderer.addCustomDataSource({
@@ -1660,7 +1529,11 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     renderer.addRecord("subsidiary", subsidiaryRecord);
     renderer.addRecord("customer", customerRecord);
 
-    renderer.setTemplateById(userConfig.plantillaPdfPublica);
+    renderer.setTemplateById(
+      customPdfCustomerTemplate
+        ? customPdfCustomerTemplate
+        : userConfig.plantillaPdfPublica
+    );
     // render PDF
     const newfile = renderer.renderAsPdf();
     newfile.folder = folderId; // ID of folder where file created
@@ -1927,6 +1800,61 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     }
     return impuestosField;
   };
+  const getXmlCustomerTemplate = (customerRecord, recordType) => {
+    let customCustomerTemplateId = null;
+    switch (recordType) {
+      case "invoice":
+        customCustomerTemplateId = customerRecord.getValue({
+          fieldId: "custentity_ent_entloc_plantilla_xml_fv",
+        });
+        break;
+      case "creditmemo":
+        customCustomerTemplateId = customerRecord.getValue({
+          fieldId: "custentity_ent_entloc_plantilla_xml_nc",
+        });
+        break;
+      case "customerpayment":
+        customCustomerTemplateId = customerRecord.getValue({
+          fieldId: "custentity_ent_entloc_plantilla_xml_pc",
+        });
+        break;
+    }
+    if (customCustomerTemplateId) {
+      const customCustomerTemplate = search.lookupFields({
+        type: "customrecord_ent_entloc_plantilla_e_doc",
+        id: customCustomerTemplateId,
+        columns: ["custrecord_ent_entloc_plantilla_e_doc"],
+      });
+      return customCustomerTemplate.custrecord_ent_entloc_plantilla_e_doc;
+    } else {
+      return null;
+    }
+  };
+  const getPdfCustomerTemplate = (customerRecord, recordType) => {
+    let customCustomerTemplateId = null;
+    switch (recordType) {
+      case "invoice":
+        customCustomerTemplateId = customerRecord.getValue({
+          fieldId: "custentity_ent_entloc_plantilla_pdf_fv",
+        });
+        break;
+      case "creditmemo":
+        customCustomerTemplateId = customerRecord.getValue({
+          fieldId: "custentity_ent_entloc_plantilla_pdf_nc",
+        });
+        break;
+      case "customerpayment":
+        customCustomerTemplateId = customerRecord.getValue({
+          fieldId: "custentity_ent_entloc_plantilla_pdf_pc",
+        });
+        break;
+    }
+    if (customCustomerTemplateId) {
+      return customCustomerTemplateId;
+    } else {
+      return null;
+    }
+  };
   return {
     getGlobalConfig,
     getUserConfig,
@@ -1936,5 +1864,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     getFolderId,
     getStringRelated,
     getStringTax,
+    getXmlCustomerTemplate,
+    getPdfCustomerTemplate,
   };
 });

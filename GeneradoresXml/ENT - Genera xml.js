@@ -111,12 +111,16 @@ define([
     );
     //Get record template based on recordtype
     const currentTemplate = userConfig.plantillaEdocument;
+    const customCustomerTemplate = funcionesLoc.getXmlCustomerTemplate(
+      customerRecord,
+      recordType
+    );
     //Render template as string
     const xmlRenderedObj = renderizaString(
       currentRecord,
       customerRecord,
       subsidiaryRecord,
-      currentTemplate
+      customCustomerTemplate ? customCustomerTemplate : currentTemplate
     );
     if (!xmlRenderedObj.error) {
       let xmlDocument = null;

@@ -8,6 +8,10 @@ El nombre de los campos NO deben llevar el prefijo ENT - , únicamente el ID sí
 CFDI 4.0
     Registros personalizados: 
         Configuración localización entersol
+        ENT - Cfdis relacionados
+        ENT - Mapeo de unidades 
+        ENT - Plantilla de documento electrónico 
+        ENT - Sat clave unidad
     Campos personalizados de transacción: 
         ENT – UUID 
         ENT – DOCUMENTO ELECTRÓNICO 
@@ -22,6 +26,23 @@ CFDI 4.0
         ENT - Exportación (Ligado a lista: ENT - Sat exportación)
         ENT - Sat clave prod servicio (Vista del campo Sat clave prod servicio en el artículo)
         ENT - Régimen fiscal receptor
+        ENT - Plantilla de impresión CFDI
+        ENT - PLANTILLA E-DOCUMENT CFDI
+        custbody_ent_entloc_dir_facturar
+        custbody_ent_entloc_ent_metodo_pago
+        custbody_ent_entloc_exportacion
+        custbody_ent_entloc_fecha_cert
+        custbody_ent_entloc_firma_cfdi
+        custbody_ent_entloc_firma_sat
+        custbody_ent_entloc_forma_pago
+        custbody_ent_entloc_monto_letra
+        custbody_ent_entloc_pdf_timbrado
+        custbody_ent_entloc_reg_fis_receptor
+        custbody_ent_entloc_serie_csd
+        custbody_ent_entloc_serie_sat
+        custbody_ent_entloc_uso_cfdi
+        custbody_ent_entloc_uuid
+        ENT - Tipo de comprobante (Ocultos)
     Campos personalizados de subsidiaria: 
         ENT- Régimen fiscal (Ligado a lista: ENT - Sat régimen fiscal)
     Campos personalizadas de cliente: 
@@ -32,10 +53,17 @@ CFDI 4.0
         ENT - Método de pago
         ENT - Nombre legal sat
         ENT - Exportación
+        ENT - Plantilla pdf factura de venta
+        ENT - Plantilla xml factura de venta
+        ENT - Plantilla pdf nota de crédito 
+        ENT - Plantilla xml nota de crédito 
+        ENT - Plantilla pdf pago 
+        ENT - Plantilla xml pago 
     Campos personalizadas de artículo: 
         ENT - Sat clave prod servicio (Ligado a lista: ENT - Sat clave prod serv)
         ENT - Objeto de impuesto
     Campos de línea de artículos
+        custcol_ent_entloc_sat_clave_p_s_hidd
         ENT - Sat clave prod servicio
         ENT - Objeto de impuesto
     Otros campos personalizados (Aplicado a código de impuesto): 

@@ -15,23 +15,27 @@ define(["N/record", "N/url", "N/ui/serverWidget"], (
       const recordType = currentRecord.type;
       const recordId = currentRecord.id;
       const form = context.form;
-      const newRecord = context.newRecord;
-      const suiteletUrl = url.resolveScript({
-        scriptId: "customscript_ent_entloc_impresion_format",
-        deploymentId: "customdeploy_ent_entloc_impresion_format",
+      const uuid = currentRecord.getValue({
+        fieldId: "custbody_ent_entloc_uuid",
       });
-      //Building params string
-      const params = `&id=${recordId}&type=${recordType}&genCert=1`;
+      if (uuid) {
+        const suiteletUrl = url.resolveScript({
+          scriptId: "customscript_ent_entloc_impresion_format",
+          deploymentId: "customdeploy_ent_entloc_impresion_format",
+        });
+        //Building params string
+        const params = `&id=${recordId}&type=${recordType}&genCert=1`;
 
-      //Building target url
-      const target = `${suiteletUrl}+${params}`;
+        //Building target url
+        const target = `${suiteletUrl}+${params}`;
 
-      //Adding a button to the form
-      form.addButton({
-        id: "custpage_ent_entloc_custom_print",
-        label: "Imprimir Cfdi 4.0",
-        functionName: `window.open("${target}", "_blank")`,
-      });
+        //Adding a button to the form
+        form.addButton({
+          id: "custpage_ent_entloc_custom_print",
+          label: "Imprimir Cfdi 4.0",
+          functionName: `window.open("${target}", "_blank")`,
+        });
+      }
     }
   };
   return {

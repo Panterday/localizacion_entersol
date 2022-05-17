@@ -130,7 +130,10 @@ define([
         fieldId: "custbody_ent_entloc_estado_certifica",
       });
       //Global config
-      const globalConfig = funcionesLoc.getGlobalConfig(subsidiaryId);
+      const globalConfig = funcionesLoc.getGlobalConfig(
+        subsidiaryId,
+        recordType
+      );
       //User config
       const userConfig = funcionesLoc.getUserConfig(
         globalConfig.internalIdRegMaestro,
