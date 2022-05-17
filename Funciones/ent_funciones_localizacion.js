@@ -195,7 +195,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       return false;
     }
   };
-  const handlePerms = (subsidiary, currentRole, recordType) => {
+  const handlePerms = (subsidiary, currentRole, recordType, esTraslado) => {
     //==================================Credentials====================================//
     let internalIdRegMaestro = null;
     let subsidiaryId = null;
@@ -218,6 +218,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           "custrecord_ent_entloc_roles_fv",
           "custrecord_ent_entloc_roles_nc",
           "custrecord_ent_entloc_roles_pc",
+          "custrecord_ent_entloc_roles_ft",
         ],
       });
       buscaGlobalConfig.run().each((result) => {
@@ -252,13 +253,19 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
               name: "custrecord_ent_entloc_roles_pc",
             });
             break;
+          default:
+            if (esTraslado) {
+              roles = result.getValue({
+                name: "custrecord_ent_entloc_roles_ft",
+              });
+            }
+            break;
         }
         if (!roles) {
           roles = result.getValue({
             name: "custrecord_ent_entloc_roles",
           });
         }
-        log.debug("ROLES", roles);
       });
     } catch (error) {
       errorInterDescription += "<br /> " + error;
@@ -294,12 +301,17 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       prodMod,
     };
   };
-  const getGlobalConfig = (subsidiaryId, recordType) => {
+  const getGlobalConfig = (subsidiaryId, recordType, esTraslado) => {
     //Info for access
     const currentUser = runtime.getCurrentUser();
     const currentRole = currentUser.role;
     //Config record info
-    const globalConfig = handlePerms(subsidiaryId, currentRole, recordType);
+    const globalConfig = handlePerms(
+      subsidiaryId,
+      currentRole,
+      recordType,
+      esTraslado
+    );
     return globalConfig;
   };
   const getUserConfig = (globalConfigRecordId, recordType, access) => {
@@ -381,12 +393,13 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
               fieldId: "custrecord_ent_entloc_plan_gen_xml_pc",
             }),
           };
-        default:
-          break;
       }
     } else {
       return false;
     }
+  };
+  const getUserConfigTras = () => {
+    return "Working";
   };
   const handleFolioSerie = (tranid) => {
     const serie = tranid.replace(/[^a-z]/gi, "");
@@ -1858,6 +1871,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
   return {
     getGlobalConfig,
     getUserConfig,
+    getUserConfigTras,
     getPdfRendered,
     getExtraCustomData,
     getCertExtraData,

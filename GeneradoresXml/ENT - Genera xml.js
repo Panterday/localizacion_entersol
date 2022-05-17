@@ -102,7 +102,7 @@ define([
       });
     }
     //Global config
-    const globalConfig = funcionesLoc.getGlobalConfig(subsidiaryId);
+    const globalConfig = funcionesLoc.getGlobalConfig(subsidiaryId, recordType);
     //User config
     const userConfig = funcionesLoc.getUserConfig(
       globalConfig.internalIdRegMaestro,
