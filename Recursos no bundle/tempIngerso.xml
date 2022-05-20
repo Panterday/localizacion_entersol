@@ -1,0 +1,10 @@
+<#if customItem.taxSummary.summaryRet?has_content>
+				<cfdi:Retenciones> 
+					<#list customItem.taxSummary.summaryRet as elementSummary>
+							<cfdi:Retencion 
+								Impuesto="${elementSummary.impuesto}" 
+								Importe="${formatFromString(elementSummary.importe)}" 
+							/> 
+					</#list>
+				</cfdi:Retenciones> 
+			</#if>

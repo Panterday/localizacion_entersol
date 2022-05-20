@@ -1,0 +1,596 @@
+<?xml version="1.0"?><!DOCTYPE pdf PUBLIC "-//big.faceless.org//report" "report-1.1.dtd">
+<pdf>
+  <#setting locale = "es_MX">
+    <#if custom??>
+            <#if custom.certData?has_content>
+                <#assign "certData"=custom.certData>
+                    <#else>
+                        <#assign "certData"=record>
+            </#if>
+            <#assign "satCodes"=custom.satcodes>
+                <#if custom.multiCurrencyFeature=="true">
+                    <#assign "currencyCode"=record.currencysymbol>
+                        <#assign exchangeRate=record.exchangerate?string.number>
+                            <#else>
+                                <#assign "currencyCode"="MXN">
+                                    <#assign exchangeRate=1>
+                </#if>
+                <#if customer.isperson=="T">
+                    <#assign customerName=customer.firstname + ' ' + customer.lastname>
+                        <#else>
+                            <#assign "customerName"=customer.companyname>
+                </#if>
+                <#assign "summary"=custom.summary>
+                    <#assign "totalAmount"=summary.subtotal - summary.totalDiscount>
+                        <#assign "companyTaxRegNumber"=custom.companyInfo.rfc>
+                            <#assign
+                                currencySymbolMap={"USD":"$","CAD":"$","EUR":"€","AED":"د.إ.‏","AFN":"؋","ALL":"Lek","AMD":"դր.","ARS":"$","AUD":"$","AZN":"ман.","BAM":"KM","BDT":"৳","BGN":"лв.","BHD":"د.ب.‏","BIF":"FBu","BND":"$","BOB":"Bs","BRL":"R$","BWP":"P","BYR":"BYR","BZD":"$","CDF":"FrCD","CHF":"CHF","CLP":"$","CNY":"CN¥","COP":"$","CRC":"₡","CVE":"CV$","CZK":"Kč","DJF":"Fdj","DKK":"kr","DOP":"RD$","DZD":"د.ج.‏","EEK":"kr","EGP":"ج.م.‏","ERN":"Nfk","ETB":"Br","GBP":"£","GEL":"GEL","GHS":"GH₵","GNF":"FG","GTQ":"Q","HKD":"$","HNL":"L","HRK":"kn","HUF":"Ft","IDR":"Rp","ILS":"₪","INR":"টকা","IQD":"د.ع.‏","IRR":"﷼","ISK":"kr","JMD":"$","JOD":"د.أ.‏","JPY":"￥","KES":"Ksh","KHR":"៛","KMF":"FC","KRW":"₩","KWD":"د.ك.‏","KZT":"тңг.","LBP":"ل.ل.‏","LKR":"SL
+                                Re","LTL":"Lt","LVL":"Ls","LYD":"د.ل.‏","MAD":"د.م.‏","MDL":"MDL","MGA":"MGA","MKD":"MKD","MMK":"K","MOP":"MOP$","MUR":"MURs","MXN":"$","MYR":"RM","MZN":"MTn","NAD":"N$","NGN":"₦","NIO":"C$","NOK":"kr","NPR":"नेरू","NZD":"$","OMR":"ر.ع.‏","PAB":"B/.","PEN":"S/.","PHP":"₱","PKR":"₨","PLN":"zł","PYG":"₲","QAR":"ر.ق.‏","RON":"RON","RSD":"дин.","RUB":"руб.","RWF":"FR","SAR":"ر.س.‏","SDG":"SDG","SEK":"kr","SGD":"$","SOS":"Ssh","SYP":"ل.س.‏","THB":"฿","TND":"د.ت.‏","TOP":"T$","TRY":"TL","TTD":"$","TWD":"NT$","TZS":"TSh","UAH":"₴","UGX":"USh","UYU":"$","UZS":"UZS","VEF":"Bs.F.","VND":"₫","XAF":"FCFA","XOF":"CFA","YER":"ر.ي.‏","ZAR":"R","ZMK":"ZK"}>
+                                <#function fmtc value>
+                                    <#assign dst=currencySymbolMap[currencyCode] + value?number?string["0.00"]>
+                                        <#return dst>
+                                </#function>
+    </#if>
+  <#setting locale = "es_MX"> 
+  <#assign zeros = "0.00">
+  <#assign total = 0>
+  <#assign totalIeps = 0>
+<head>
+    <macrolist>
+        <macro id="nlheader">
+            <table class="header" style="width: 100%;" margin-top="-15px">
+              <tr>
+                        <td colspan="2" rowspan="2">
+                          <#assign srcLogo = subsidiary.logo@url>
+                            <#if srcLogo?has_content>
+                            	<img width="150px" height="50px" src="${srcLogo}" />                              
+                            </#if>
+                        </td>
+				<td colspan="5">
+                            <table style="font-size:7pt; width: 100%;">
+                                <tr>
+                                    <th class="header" background-color="#FFF" color="#000" align="center">
+                                        <!--${subsidiary.legalname}--> ${subsidiary.name}
+                                    </th>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="font-size:8pt">
+                                        <p align="center">
+                                            ${subsidiary.mainaddress_text}
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="font-size:8pt"><b>${subsidiary.federalidnumber}</b>
+                                    </td>
+                                </tr>
+                                <tr>                                   
+                                </tr>
+                                <tr>
+                                    <td align="center" style="font-size:8pt"><b>Lugar de expedición: </b>
+                                        ${record.subsidiary.zip}</td>
+                                </tr>
+                               <tr>
+                                    <td align="center" style="font-size:8pt"><b>Régimen fiscal: </b>
+                                        ${record.subsidiary.custrecord_ent_entloc_regimen_fiscal}</td>
+                                </tr>
+                            </table>
+                        </td>
+				<td colspan="2" align="right">
+				<table border="1 solid #e3e3e3" width="120px">
+                  <tr>
+					<th class="header"  align="center" font-size="9pt"><span>Nota de Crédito</span></th>
+				  </tr>
+				  <tr>
+					<td align="center">#${record.tranid}</td>
+				  </tr>
+                  </table>
+				 </td>
+			</tr>
+          </table>
+        </macro>
+      <macro id="nlfooter">
+                <table width="100%">
+                    <tr>
+                        <td width="30%" align="left" >               
+                            <p font-size="7pt">
+                            <pagenumber /> de
+                            <totalpages />
+                        </p></td>
+                        <td width="70%" style="font-size:7pt;" align="left">
+                            <b>ESTE DOCUMENTO ES UNA REPRESENTACIÓN IMPRESA DE UN CFDI</b>
+                        </td>
+                    </tr>
+                </table>      </macro>
+    </macrolist>
+    <style type="text/css">
+      *{
+        font-family: Arial, Helvetica, sans-serif;
+      }
+		table {
+			font-size: 9pt;
+			table-layout: fixed;
+		}
+		table.signatures {
+			font-size: 7pt;
+			table-layout: fixed;
+		}
+        th {
+            font-weight: bold;
+            font-size: 8pt;
+            vertical-align: middle;
+            padding: 5px 6px 3px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        th.header {
+            font-weight: bold;
+            font-size: 10pt;
+            vertical-align: middle;
+            padding: 5px 6px 3px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        th.border {
+          	text-align: center;
+            font-weight: bold;
+            font-size: 7pt;
+            vertical-align: middle;
+            padding: 5px 6px 3px;
+            background-color: #FFFFFF;
+            color: #000000;
+          	border-bottom-width: 1px;
+            border-color: #e3e3e3; 
+        }
+      	td.linea {
+            padding: 4px 6px;
+            border: 1px;
+            border-style: solid;
+          	border-bottom-width:0px;
+          	border-right-width:0px;
+          	border-left-width:0px;
+          	border-top-width:1px;
+        }
+        td {
+            padding: 4px 6px;
+        }
+      
+      .cellPadding td{
+        padding: 1px 4px;
+      }
+		td p { align:left }
+        b {
+            font-weight: bold;
+            color: #333333;
+        }
+        table.header td {
+            padding: 0px;
+            font-size: 10pt;
+        }
+        table.footer td {
+            padding: 0px;
+            font-size: 8pt;
+        }
+</style>
+</head>
+<body header="nlheader" header-height="9%" footer="nlfooter" footer-height="1%" size="Letter">
+     <table style="width: 100%; padding-top: 15px;">
+            <tr>
+                <td colspan="5">
+                    <table class="cellPadding" border="1 solid #e3e3e3" style="width: 100%; font-size:7pt;">-->
+                        <tr>
+                            <td colspan="8"><b>Facturar a:</b></td>
+
+                        </tr>
+                        <tr>
+                            <td colspan="2"><b>Nombre:</b></td>
+                            <td colspan="6">${record.entity.firstname} ${record.entity.middlename} ${record.entity.lastname}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2"><b>Dirección</b></td>
+                            <td colspan="6">
+                              	<#assign nombre = record.entity.billaddressee>
+                              	<#assign direccion = record.custbody_ent_entloc_dir_facturar?replace(nombre, ' ')>
+                                ${direccion}
+                          	</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2"><b>RFC:</b></td>
+                            <td colspan="6"><b>${record.entity.custentity_ent_entloc_rfc}</b></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2"><b>OC:</b></td>
+                            <td colspan="6">${record.otherrefnum}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2"><b>Términos de pago:</b></td>
+                            <td colspan="6">${record.terms}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2"><b>Moneda:</b></td>
+                            <td colspan="2">${record.currencysymbol} </td>
+                            <td colspan="4"><b>TC:</b> ${record.exchangerate?substring(1, record.exchangerate?length)}
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td colspan="5">
+                    <table class="cellPadding" border="1 solid #e3e3e3" style="width: 100%; font-size:7pt;">
+                        <tr>
+                            <td colspan="2"><b>Folio Fiscal:</b></td>
+                            <td colspan="5">
+                                <#if certData??>
+                                    <#if certData.custbody_mx_cfdi_uuid?has_content>
+                                        ${certData.custbody_mx_cfdi_uuid?upper_case}</#if>
+                                <#else>
+                                  	${record.custbody_ent_entloc_uuid?upper_case}
+                                </#if>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3"><b>Emisión:</b></td>
+                            <td colspan="4">${record.subsidiary.city}, <#if certData??>
+                                <#if certData.custbody_mx_cfdi_issue_datetime?has_content>
+                                        ${certData.custbody_mx_cfdi_issue_datetime}</#if>
+                              	<#else>
+                                  		${record.custbody_mx_cfdi_issue_datetime}
+                                </#if>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3"><b>Uso CFDI:</b></td>
+                            <td colspan="4">
+                                <#if customData??>
+                                    ${customData.certData.extraCertData.usoCFDI}
+                                <#else>
+                                  	${record.custbody_ent_entloc_uso_CFDI}
+                                </#if>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3"><b>Número de Serie de CSD:</b></td>
+                            <td colspan="4">
+                                <#if customData??>
+                                  ${customData.certData.extraCertData.noSerieCSD}
+
+                                <#else>
+                                  		 ${record.custbody_ent_entloc_serie_csd}
+                                </#if>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3"><b>Fecha Certificación:</b></td>
+                            <td colspan="4">
+                                <#if customData??>
+                                    ${customData.certData.extraCertData.fechaTimbrado}
+                                <#else>
+									${record.custbody_ent_entloc_fecha_cert}
+                                </#if>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3"><b>Número de Serie SAT:</b></td>
+                            <td colspan="4">
+                                <#if customData??>
+                                    ${customData.certData.extraCertData.noSerieSAT}
+                                <#else>
+                                  	${record.custbody_ent_entloc_serie_sat}
+                                </#if>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3"><b>M&eacute;todo Pago:</b></td>
+                          		<#if customData??>
+                                  <td colspan="4">${customData.certData.extraCertData.metodoPago}</td>
+                                <#else>  
+                                  <td colspan="4">${record.custbody_ent_entloc_ent_metodo_pago}</td>
+                                </#if>
+                        </tr>
+                        <tr>
+                            <td colspan="3"><b>Forma de pago:</b></td>
+							<#if customData??>
+                                  <td colspan="4">${customData.certData.extraCertData.formaPago}</td>
+                            <#else>  
+                                  <td colspan="4">${record.custbody_ent_entloc_forma_pago}</td>
+                            </#if>
+                        </tr>
+                        <tr><td>&nbsp;</td></tr>
+          				<tr><td>&nbsp;</td></tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+  
+      <!--Tabla Relaciones CFDI -->
+      <table border="1 solid #e3e3e3" width="100%" margin="6px">
+              			<thead>
+                            <tr style="font-size:9;">
+                              <th class="border" colspan="5" align="center">Tipo de Relacion </th>
+                              <th class="border" colspan="5" align="center">Transacción </th>
+                                <th class="border" colspan="5" align="center">UUID</th>
+                          </tr>
+          				</thead>
+          <#if customData??>
+                      	<tr style="font-size:8;">
+                          <#assign relatedCfdis = customData.extraData.customRecordData.relatedCfdis>
+                            <td align="left" colspan="5">${relatedCfdis.tipoRelacion}</td>
+                            <#list relatedCfdis.transacciones as trans>
+                              <td align="center" colspan="5">${trans.transaccion}</td>
+                              <td align="right" colspan="5">${trans.uuid}</td>
+                            </#list>
+          				</tr>
+          <#else>                          
+            <#list record.custbody_ent_entloc_cfdis_relacionados?split("|||") as relacion>
+				<tr style="font-size:8;">
+					<#assign relaciones = [] />
+               		<#assign relaciones = relaciones + [relacion] />                                
+              		<#list relacion?split("///") as cfdi>
+                      <td align="center" colspan="5">
+                      ${cfdi}
+                      </td>
+              		</#list>
+             	</tr>
+            </#list>
+          </#if>
+      </table>  
+  
+  
+      <!--Tabla Items-->
+      <#if record.item?has_content>
+            <table border="1 solid #e3e3e3" width="100%" margin="6px">
+                <#list record.item as item>
+                    <#if item_index==0>
+                        <thead>
+                            <tr style="font-size:9;">
+                                <th class="border" colspan="3" align="left">Código</th>
+                                <th class="border" colspan="4" align="center">Impuestos</th>
+                                <th class="border" colspan="5" align="center">Descripción</th>
+                                <th class="border" colspan="2" align="center">Clave<br /> Prod. <br /> Servicio</th>
+                                <th class="border" colspan="2" align="center">Cant</th>
+                                <th class="border" colspan="2" align="center">Unidad <br /> Medida</th>
+                                <th class="border" colspan="2" align="right">Precio</th>
+                                <th class="border" colspan="2" align="center">Desc.</th>
+                                <th class="border" colspan="3" align="right">Importe</th>
+                            </tr>
+                        </thead>
+                    </#if>
+                    <#if item.itemtype != "Discount">
+                        <tr style="font-size:7;">
+                            <td colspan="3">${item.item}</td>
+							<#if customData??>
+                              <#assign customItem = customData.extraData.customItem>
+                              <#if customItem.taxItemDetails?has_content>
+                                  <#if customItem.taxItemDetails[item?index].isGroup?number == 0>
+                                      <#if customItem.taxItemDetails[item?index].impuesto == "002">
+                                      	<#assign taxName = "IVA">
+                                      <#elseif customItem.taxItemDetails[item?index].impuesto == "003">
+                                      	<#assign taxName = "IEPS">
+                                      </#if>
+									  <td align="center" colspan="4">
+									 	 ${taxName} ${customItem.taxItemDetails[item?index].tasaOcuota}% ${customItem.taxItemDetails[item?index].importe?number?string.currency}
+									  </td>
+                                  <#else>
+									<td align="center" colspan="4">  
+                                      <#list customItem.taxItemDetails[item?index].taxesPerItem as taxElement>
+                                      	<#if taxElement.impuesto == "002">
+                                      		<#assign taxName = "IVA">
+                                      	<#elseif taxElement.impuesto == "003">
+                                      		<#assign taxName = "IEPS">
+                                      	</#if>
+                                          ${taxName} ${taxElement.tasaOcuota}% ${taxElement.importe?number?string.currency} <br />
+                                      </#list>
+                                     </td>
+
+                                  </#if>
+                              </#if>
+                            <#else>
+                                  <#assign taxesTotal = [] />
+                                  <#assign taxes = [] />
+                              	  <#list record.item as item>
+                                  <#list record.custbody_ent_entloc_impuestos_items?split("##") as taxTotal>
+                                    <#assign taxesTotal = taxesTotal + [taxTotal] />
+                                  </#list>
+                                    </#list>
+                                  <#list taxesTotal[0]?split("///") as tax>
+                                     <#assign taxes = taxes + [tax] />
+                                  </#list>
+                           	  <td align="center" colspan="4">
+                                <#assign printTax = [] />
+                                <#list record.item as item>
+                                  <#list taxes as tax>
+                                    <#assign printTax = printTax + [tax]/>
+                                  </#list>                                  
+                                </#list>
+                                ${printTax[item?index]}
+                              </td>
+                             </#if>
+                            <td colspan="5">${item.description}<br />${item.custcol_codigo_cliente_abq_ja}</td>
+                            <td align="center" colspan="2">${item.custcol_ent_entloc_sat_clv_pro_view?keep_before("-")}</td>
+                            <td align="center" colspan="2">${item.quantity}</td>
+                            <td align="center" colspan="2">${item.units}</td>
+                            <td align="right" colspan="2">${item.rate}</td>
+                          	<#if item.custcol_ent_descuento_linea?has_content>
+                              <td align="center" colspan="2">${item.custcol_ent_descuento_linea?number?string.currency}</td>
+                            <#else>
+                              <td align="center" colspan="2">$0.00</td>
+                            </#if>
+                            <td align="right" colspan="3">${item.amount}</td>
+                        </tr>
+                       <#if item.custcol_ent_num_pedimento?has_content>
+                          	<#list item.custcol_ent_num_pedimento?split("|||") as pedimento>
+                				<tr line-height="0.1px">
+                                  	<td colspan="3"></td>
+                          			<td align="left" colspan="10" font-size="7" ><b>Pedimento: </b>${pedimento}</td>
+                        		</tr>
+            				</#list>                            
+                        </#if>         
+                    </#if>
+                </#list>
+            </table>
+        </#if>
+                                    
+  <!--DOCUMENTO RELACIONADO-->
+  <#if record.custbody_ent_info_cfdis_relacion?has_content>
+  <div>
+  <table style="width: 100%; margin: 6px; font-size: 7pt;">
+    <#list record.custbody_ent_info_cfdis_relacion?split('///') as Factura>
+      <#if Factura?has_content>
+    <tr>
+      <th colspan="8" align="center" font-size="8pt">DOCUMENTO RELACIONADO</th>
+    </tr>
+    <tr>
+      <td colspan="1"><b>Id documento: </b></td>
+      <td colspan="3"> <#if Factura?split("|||")[0]?has_content> ${Factura?split("|||")[0]} </#if></td>
+    </tr>
+    <tr>
+      <td colspan="1"><b>Tipo de Relación: </b></td>
+      <td colspan="3"><#if Factura?split("|||")[2]?has_content> ${Factura?split("|||")[1]}</#if></td>
+    </tr>
+</#if>
+</#list>
+  </table>
+</div>
+</#if>
+                                    
+<!--REMUSEN DE FACTURA-->
+        <table style="width: 100%; margin-top: 2px;">
+          <#assign totalTax = []/>
+          <#list record.item as item>
+            <#list taxesTotal[1]?split("//") as total>
+              <#assign totalTax = totalTax + [total] />
+            </#list>
+          </#list>
+          <tr>
+                <td colspan="8" />
+                <td colspan="4" align="right">
+                    <table border="1 solid #e3e3e3" style="width:100%; font-size:8;">
+                        <tr>
+                          <td><b>Descuento:</b></td>
+                            <td align="right"><span></span></td>
+                        </tr>
+                      	<tr>
+                            <td><b>SubTotal:</b></td>
+                            <td align="right"><span>${record.subtotal}</span></td>
+                        </tr>
+                        <tr>
+                      		<td colspan="2"><b>Impuestos Trasladados</b></td>
+                      	</tr>
+                      	<tr>
+                        <#if customData??>
+                          <#list customData.extraData.customItem.taxSummary as taxSummary>
+                            <#if taxSummary.impuesto == "002">
+                              <td><b>IVA ${taxSummary.tasaOcuota}%</b></td>
+                              <td align="right">${taxSummary.importe?number?string.currency}</td>
+                            </#if>
+  	                   	  </#list>
+                        <#else>
+                      		<td><b>${totalTax[0]}</b></td>
+                          	<td align="right">${totalTax[1]}</td>
+                        </#if>
+                        </tr>
+                        <tr>
+                        <#if customData??>
+                          <#list customData.extraData.customItem.taxSummary as taxSummary>
+                            <#if taxSummary.impuesto == "003">
+                              <td><b>IEPS ${taxSummary.tasaOcuota}%</b></td>
+                              <td align="right">${taxSummary.importe?number?string.currency}</td>
+                            </#if>
+   	                      </#list>	
+                        <#else>
+                          <td><b>${totalTax[2]}</b></td>
+                          <td align="right">${totalTax[3]}
+                          </td>
+                        </#if>     
+	                     </tr>
+                        <tr>
+                            <td><b>Total Impuestos:</b></td>
+                              <#if customData??>
+                              	<td align="right"> ${customData.extraData.customItem.taxTotal?number?string.currency}</td>
+  							  <#else>
+								<td align="right"><span>${totalTax[4]}</span></td>
+                              </#if>
+                        </tr>
+                        <tr>
+                            <td><b>Total:</b></td>
+                            <td align="right"><span>${record.total}</span></td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+
+<!--SECCION DE OBSERVACIONES-->
+      <table style="width: 100%;" border="1 solid #e3e3e3">
+            <tr>
+                <td style="font-size:7;"><span>Observaciones:</span> <br /> ${record.memo}</td>
+            </tr>
+               <#if record.custbody_ent_cfdis_relacionados?has_content>
+                 <tr margin-top="2px">
+            <td>
+                  <#list record.custbody_ent_cfdis_relacionados?split("|||") as cfdi>
+                     <#assign element = [] />
+                     <#list cfdi?split("///") as infoCfdi>
+                       <#assign element = element + [infoCfdi] />
+                     </#list>
+                          <p font-size="8" line-height="1px"><b>Tipo Relación: </b>${element[1]} <b>UUID: </b>${element[0]}</p>                 
+                   </#list>
+              </td>
+          </tr>
+               </#if>
+            
+        </table>
+
+<!--SECCION DE CODIGO QR Y CADENAS DE XML SAT-->
+        <table class="signatures" style="width: 100%; margin-top: 2px;" font-size="5pt">
+            <tr>
+                <#if customData??>
+                    <#assign qrcodeImage= customData.certData.validexQr>
+                        <td colspan="2" rowspan="3" align="center" vertical-align="middle"><img
+                                style="width: 100px;height:100px" src="${qrcodeImage}" /></td>
+                        <td colspan="8"><b>Cadena Original</b>
+                            <p>
+                                    ${customData.certData.validexCadenaOriginal}
+                            </p>
+                        </td>
+                <#else>
+					<#assign qrcodeImage= record.custbody_ent_entloc_cadena_qr>
+                        <td colspan="2" rowspan="3" align="center" vertical-align="middle"><img
+                                style="width: 100px;height:100px" src="${qrcodeImage}" /></td>
+                        <td colspan="8"><b>Cadena Original</b>
+                            <p>
+                                    ${record.custbody_ent_entloc_cadena_original}
+                            </p>
+                        </td>
+                </#if>
+            </tr>
+            <tr>
+                <td colspan="8"><b>Firma CFDI</b>
+                    <p>
+                        <#if customData??>
+                            ${customData.certData.extraCertData.firmaCFDI}
+                        <#else>
+                          	${record.custbody_ent_entloc_firma_cfdi}
+                        </#if>
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="8"><b>Firma SAT</b>
+                    <p>
+                        <#if customData??>
+                            ${customData.certData.extraCertData.firmaSAT}
+                        <#else>
+							${record.custbody_ent_entloc_firma_sat}
+                        </#if>
+                    </p>
+                </td>
+            </tr>
+        </table>
+        <table class="signatures" style="width: 100%;" font-size="7pt">
+            <tr>
+
+            </tr>
+        </table>
+</body>
+</pdf>

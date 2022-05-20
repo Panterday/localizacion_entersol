@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--Setting locale for MEXICO-->
+<#setting locale = "es_MX">
+<!--Certification date-->
+<#assign aDateTime = .now>
+<!--Zeros number-->
+<#assign zeros = "0.00">
+<#assign customItem = customData.extraData.customItem>
+<#assign customRecordData = customData.extraData.customRecordData>
+<#function getAttrPair attr value1 value2>
+   <#if value1?has_content>
+    <#assign result="${attr}=\"${value1}\"">
+    <#return result>
+  <#else>
+	<#assign result="${attr}=\"${value2}\"">
+    <#return result>
+  </#if>  
+</#function>
+<#function getNodePair node attr value>
+   <#if value?has_content>
+    <#assign result="<${node} ${attr}=\"${value}\" />">
+    <#return result>
+  </#if>  
+</#function>
+<!--Transform a string from $0,0.00 to 0.00-->
+<#function formatFromCurrency amount>
+	<#assign result = amount?keep_after("$")?replace(",", "")?number?string[zeros]>
+	<#return result>
+</#function>
+<#function formatFromString amount>
+	<#assign result = amount?number?string[zeros]>
+	<#return result>
+</#function>
+<#function formatRate amount>
+	<#assign result = ((amount?number)/100)?string[zeros]>
+	<#return result>
+</#function>
+<cfdi:Comprobante 
+    xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd http://www.sat.gob.mx/Pagos20 http://www.sat.gob.mx/sitio_internet/cfd/Pagos/Pagos20.xsd" 
+    xmlns:pago20="http://www.sat.gob.mx/Pagos20" 
+    xmlns:cfdi="http://www.sat.gob.mx/cfd/4" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    Version="4.0" 
+    Serie="${customRecordData.serie}" 
+	Folio="${customRecordData.folio}" 
+    Fecha="${aDateTime?string.iso_nz?keep_before(".")}" 
+    SubTotal="0" 
+    Moneda="XXX" 
+    Total="0.00" 
+    TipoDeComprobante="P" 
+    Exportacion="${record.custbody_ent_entloc_exportacion?keep_before(" -")}"
+    LugarExpedicion="${customData.extraData.customSubsidiaryData.address.zip}"
+>
+    <#if customRecordData.relatedCfdis?has_content>
+		<#list customRecordData.relatedCfdis as relatedCfdi>
+			<cfdi:CfdiRelacionados TipoRelacion="${relatedCfdi.tipoRelacion?keep_before(" -")}">
+				<#list relatedCfdi.transacciones as transaccion>
+					<cfdi:CfdiRelacionado UUID="${transaccion.uuid}"/>
+				</#list>
+			</cfdi:CfdiRelacionados>
+		</#list>
+	</#if>
+	<cfdi:Emisor 
+        Rfc="${subsidiary.federalidnumber}" 
+        Nombre="${subsidiary.name}" 
+		RegimenFiscal="${subsidiary.custrecord_ent_entloc_regimen_fiscal?keep_before(" -")}"
+    />
+	<cfdi:Receptor 
+		Rfc="${customer.custentity_ent_entloc_rfc}" 
+		Nombre="${customer.firstname} ${customer.middlename} ${customer.lastname}" 
+		DomicilioFiscalReceptor="${customer.billzip}" 
+		RegimenFiscalReceptor="${record.custbody_ent_entloc_reg_fis_receptor?keep_before(" -")}" 
+		UsoCFDI="${record.custbody_ent_entloc_uso_cfdi?keep_before(" -")}"
+	/> 
+	<cfdi:Conceptos>
+        <cfdi:Concepto ClaveProdServ="84111506" Cantidad="1" ClaveUnidad="ACT" Descripcion="Pago" ValorUnitario="0" Importe="0" ObjetoImp="01" />
+    </cfdi:Conceptos>
+	<cfdi:Complemento>
+		<pago20:Pagos Version="2.0">
+			<pago20:Totales 
+				MontoTotalPagos="3065.71" 
+				TotalTrasladosBaseIVA16="2642.86" 
+				TotalTrasladosImpuestoIVA16="422.85" 
+			/>
+				<pago20:Pago FechaPago="2022-04-25T16:30:00" FormaDePagoP="01" MonedaP="MXN" Monto="2382.9" TipoCambioP="1">
+					<pago20:DoctoRelacionado 
+						EquivalenciaDR="1" 
+						IdDocumento="a2b12ab1-5a89-48e8-b787-83d9d5852319" 
+						ImpPagado="2382.9" 
+						ImpSaldoAnt="23828.97" 
+						ImpSaldoInsoluto="21446.07" 
+						MonedaDR="MXN" 
+						NumParcialidad="1" 
+						ObjetoImpDR="02">
+						<pago20:ImpuestosDR>
+							<pago20:TrasladosDR>
+								<pago20:TrasladoDR BaseDR="831.78" ImporteDR="133.08" ImpuestoDR="002" TasaOCuotaDR="0.160000" TipoFactorDR="Tasa"/>
+								<pago20:TrasladoDR BaseDR="834.99" ImporteDR="133.60" ImpuestoDR="002" TasaOCuotaDR="0.160000" TipoFactorDR="Tasa"/>
+								<pago20:TrasladoDR BaseDR="387.45" ImporteDR="61.99" ImpuestoDR="002" TasaOCuotaDR="0.160000" TipoFactorDR="Tasa"/>
+								<pago20:TrasladoDR BaseDR="355.46" ImporteDR="31.99" ImpuestoDR="003" TasaOCuotaDR="0.090000" TipoFactorDR="Tasa"/>
+							</pago20:TrasladosDR>
+						</pago20:ImpuestosDR>
+					</pago20:DoctoRelacionado>
+					<pago20:ImpuestosP>
+						<pago20:TrasladosP>
+							<pago20:TrasladoP BaseP="2054.22" ImporteP="328.67" ImpuestoP="002" TasaOCuotaP="0.160000" TipoFactorP="Tasa"/>
+							<pago20:TrasladoP BaseP="355.46" ImporteP="31.99" ImpuestoP="003" TasaOCuotaP="0.090000" TipoFactorP="Tasa"/>
+						</pago20:TrasladosP>
+					</pago20:ImpuestosP>
+				</pago20:Pago>
+				<pago20:Pago FechaPago="2022-04-25T16:30:00" FormaDePagoP="01" MonedaP="MXN" Monto="682.81" TipoCambioP="1">
+					<pago20:DoctoRelacionado 
+						EquivalenciaDR="1" 
+						IdDocumento="799982a8-2d8e-4c8b-b3bb-9ec907a413ca" 
+						ImpPagado="682.81" 
+						ImpSaldoAnt="6828.11" 
+						ImpSaldoInsoluto="6145.30" 
+						MonedaDR="MXN" 
+						NumParcialidad="1" 
+						ObjetoImpDR="02">
+						<pago20:ImpuestosDR>
+							<pago20:TrasladosDR>
+								<pago20:TrasladoDR BaseDR="124.77" ImporteDR="19.96" ImpuestoDR="002" TasaOCuotaDR="0.160000" TipoFactorDR="Tasa"/>
+								<pago20:TrasladoDR BaseDR="129.87" ImporteDR="20.78" ImpuestoDR="002" TasaOCuotaDR="0.160000" TipoFactorDR="Tasa"/>
+								<pago20:TrasladoDR BaseDR="334.00" ImporteDR="53.44" ImpuestoDR="002" TasaOCuotaDR="0.160000" TipoFactorDR="Tasa"/>
+							</pago20:TrasladosDR>
+						</pago20:ImpuestosDR>
+					</pago20:DoctoRelacionado>
+					<pago20:ImpuestosP>
+						<pago20:TrasladosP>
+							<pago20:TrasladoP BaseP="588.64" ImporteP="94.18" ImpuestoP="002" TasaOCuotaP="0.160000" TipoFactorP="Tasa"/>
+						</pago20:TrasladosP>
+					</pago20:ImpuestosP>
+				</pago20:Pago>
+		</pago20:Pagos>
+	</cfdi:Complemento>
+</cfdi:Comprobante>

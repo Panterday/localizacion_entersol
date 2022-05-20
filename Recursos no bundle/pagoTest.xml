@@ -1,0 +1,97 @@
+<cfdi:Comprobante 
+	xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd http://www.sat.gob.mx/Pagos20 http://www.sat.gob.mx/sitio_internet/cfd/Pagos/Pagos20.xsd" 
+    xmlns:pago20="http://www.sat.gob.mx/Pagos20" 
+    xmlns:cfdi="http://www.sat.gob.mx/cfd/4" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    Version="4.0" 
+    Serie="${customRecordData.serie}" 
+	Folio="${customRecordData.folio}" 
+    Fecha="${aDateTime?string.iso_nz?keep_before(".")}" 
+    SubTotal="0" 
+    Moneda="XXX" 
+    Total="0.00" 
+    TipoDeComprobante="P" 
+    Exportacion="${record.custbody_ent_entloc_exportacion?keep_before(" -")}"
+    LugarExpedicion="${customData.extraData.customSubsidiaryData.address.zip}"
+>
+  	<cfdi:Emisor 
+        Rfc="${subsidiary.federalidnumber}" 
+        Nombre="${subsidiary.name}" 
+		RegimenFiscal="${subsidiary.custrecord_ent_entloc_regimen_fiscal?keep_before(" -")}"
+    />
+	<cfdi:Receptor 
+		Rfc="${customer.custentity_ent_entloc_rfc}" 
+		Nombre="${customer.firstname} ${customer.middlename} ${customer.lastname}" 
+		DomicilioFiscalReceptor="${customer.billzip}" 
+		RegimenFiscalReceptor="${record.custbody_ent_entloc_reg_fis_receptor?keep_before(" -")}" 
+		UsoCFDI="${record.custbody_ent_entloc_uso_cfdi?keep_before(" -")}"
+	/>
+	<cfdi:Conceptos>
+		<cfdi:Concepto Cantidad="1" ClaveProdServ="84111506" ClaveUnidad="ACT" Descripcion="Pago" Importe="0" ObjetoImp="01" ValorUnitario="0"/>
+	</cfdi:Conceptos>
+	<cfdi:Complemento>
+            <pago20:Pagos Version="2.0">
+			<pago20:Totales MontoTotalPagos="3000" TotalRetencionesIEPS="3.04" TotalRetencionesISR="3.04" TotalRetencionesIVA="3.04" TotalTrasladosBaseIVA0="0" TotalTrasladosBaseIVA16="200" TotalTrasladosBaseIVA8="0" TotalTrasladosBaseIVAExento="0" TotalTrasladosImpuestoIVA0="0" TotalTrasladosImpuestoIVA16="31.84" TotalTrasladosImpuestoIVA8="0"/>
+			<pago20:Pago CtaBeneficiario="123456789101114558" CtaOrdenante="123456789101112131" FechaPago="2017-08-29T15:28:41" FormaDePagoP="03" MonedaP="MXN" Monto="1500" NomBancoOrdExt="BANK OF TOKY" NumOperacion="00005" RfcEmisorCtaBen="MES420823153" RfcEmisorCtaOrd="XEXX010101000" TipoCambioP="1">
+				<pago20:DoctoRelacionado EquivalenciaDR="1" Folio="000123" IdDocumento="970e5496-0fe0-11e7-93ae-92361f002672" ImpPagado="5000" ImpSaldoAnt="10000" ImpSaldoInsoluto="5000" MonedaDR="USD" NumParcialidad="1" ObjetoImpDR="02" Serie="adad33533">
+					<pago20:ImpuestosDR>
+						<pago20:RetencionesDR>
+							<pago20:RetencionDR BaseDR="10" ImporteDR="1.52" ImpuestoDR="002" TasaOCuotaDR="0.160000" TipoFactorDR="Tasa"/>
+							<pago20:RetencionDR BaseDR="10" ImporteDR="1.52" ImpuestoDR="001" TasaOCuotaDR="0.160000" TipoFactorDR="Tasa"/>
+							<pago20:RetencionDR BaseDR="10" ImporteDR="1.52" ImpuestoDR="003" TasaOCuotaDR="0.160000" TipoFactorDR="Cuota"/>
+						</pago20:RetencionesDR>
+						<pago20:TrasladosDR>
+							<pago20:TrasladoDR BaseDR="100" ImporteDR="15.92" ImpuestoDR="002" TasaOCuotaDR="0.160000" TipoFactorDR="Tasa"/>
+							<pago20:TrasladoDR BaseDR="100" ImporteDR="15.92" ImpuestoDR="003" TasaOCuotaDR="0.030000" TipoFactorDR="Tasa"/>
+						</pago20:TrasladosDR>
+					</pago20:ImpuestosDR>
+				</pago20:DoctoRelacionado>
+				<pago20:DoctoRelacionado EquivalenciaDR="1" Folio="000123" IdDocumento="870e5496-0fe0-11e7-93ae-92361f002672" ImpPagado="5000" ImpSaldoAnt="10000" ImpSaldoInsoluto="5000" MonedaDR="USD" NumParcialidad="1" ObjetoImpDR="01" Serie="adad33533"/>
+				<pago20:DoctoRelacionado EquivalenciaDR="1" Folio="000123" IdDocumento="770e5496-0fe0-11e7-93ae-92361f002672" ImpPagado="5000" ImpSaldoAnt="10000" ImpSaldoInsoluto="5000" MonedaDR="USD" NumParcialidad="1" ObjetoImpDR="01" Serie="adad33533"/>
+				<pago20:ImpuestosP>
+					<pago20:RetencionesP>
+						<pago20:RetencionP ImporteP="1.52" ImpuestoP="002"/>
+						<pago20:RetencionP ImporteP="1.52" ImpuestoP="001"/>
+						<pago20:RetencionP ImporteP="1.52" ImpuestoP="003"/>
+					</pago20:RetencionesP>
+					<pago20:TrasladosP>
+						<pago20:TrasladoP BaseP="100" ImporteP="15.92" ImpuestoP="002" TasaOCuotaP="0.160000" TipoFactorP="Tasa"/>
+						<pago20:TrasladoP BaseP="0" ImporteP="0" ImpuestoP="002" TasaOCuotaP="0.080000" TipoFactorP="Tasa"/>
+						<pago20:TrasladoP BaseP="0" ImporteP="0" ImpuestoP="002" TasaOCuotaP="0.000000" TipoFactorP="Tasa"/>
+						<pago20:TrasladoP BaseP="100" ImporteP="15.92" ImpuestoP="003" TasaOCuotaP="0.030000" TipoFactorP="Tasa"/>
+					</pago20:TrasladosP>
+				</pago20:ImpuestosP>
+			</pago20:Pago>
+			<pago20:Pago CtaBeneficiario="123456789101114558" CtaOrdenante="123456789101112131" FechaPago="2017-08-29T15:28:41" FormaDePagoP="03" MonedaP="MXN" Monto="1500" NomBancoOrdExt="BANK OF TOKY" NumOperacion="00005" RfcEmisorCtaBen="MES420823153" RfcEmisorCtaOrd="XEXX010101000" TipoCambioP="1">
+				<pago20:DoctoRelacionado EquivalenciaDR="1" Folio="000123" IdDocumento="970e5496-0fe0-11e7-93ae-92361f002672" ImpPagado="5000" ImpSaldoAnt="10000" ImpSaldoInsoluto="5000" MonedaDR="USD" NumParcialidad="1" ObjetoImpDR="02" Serie="adad33533">
+					<pago20:ImpuestosDR>
+						<pago20:RetencionesDR>
+							<pago20:RetencionDR BaseDR="10" ImporteDR="1.52" ImpuestoDR="002" TasaOCuotaDR="0.160000" TipoFactorDR="Tasa"/>
+							<pago20:RetencionDR BaseDR="10" ImporteDR="1.52" ImpuestoDR="001" TasaOCuotaDR="0.160000" TipoFactorDR="Tasa"/>
+							<pago20:RetencionDR BaseDR="10" ImporteDR="1.52" ImpuestoDR="003" TasaOCuotaDR="0.160000" TipoFactorDR="Cuota"/>
+						</pago20:RetencionesDR>
+						<pago20:TrasladosDR>
+							<pago20:TrasladoDR BaseDR="100" ImporteDR="15.92" ImpuestoDR="002" TasaOCuotaDR="0.160000" TipoFactorDR="Tasa"/>
+							<pago20:TrasladoDR BaseDR="100" ImporteDR="15.92" ImpuestoDR="003" TasaOCuotaDR="0.030000" TipoFactorDR="Tasa"/>
+						</pago20:TrasladosDR>
+					</pago20:ImpuestosDR>
+				</pago20:DoctoRelacionado>
+				<pago20:DoctoRelacionado EquivalenciaDR="1" Folio="000123" IdDocumento="870e5496-0fe0-11e7-93ae-92361f002672" ImpPagado="5000" ImpSaldoAnt="10000" ImpSaldoInsoluto="5000" MonedaDR="USD" NumParcialidad="1" ObjetoImpDR="01" Serie="adad33533"/>
+				<pago20:DoctoRelacionado EquivalenciaDR="1" Folio="000123" IdDocumento="770e5496-0fe0-11e7-93ae-92361f002672" ImpPagado="5000" ImpSaldoAnt="10000" ImpSaldoInsoluto="5000" MonedaDR="USD" NumParcialidad="1" ObjetoImpDR="01" Serie="adad33533"/>
+				<pago20:ImpuestosP>
+					<pago20:RetencionesP>
+						<pago20:RetencionP ImporteP="1.52" ImpuestoP="002"/>
+						<pago20:RetencionP ImporteP="1.52" ImpuestoP="001"/>
+						<pago20:RetencionP ImporteP="1.52" ImpuestoP="003"/>
+					</pago20:RetencionesP>
+					<pago20:TrasladosP>
+						<pago20:TrasladoP BaseP="100" ImporteP="15.92" ImpuestoP="002" TasaOCuotaP="0.160000" TipoFactorP="Tasa"/>
+						<pago20:TrasladoP BaseP="0" ImporteP="0" ImpuestoP="002" TasaOCuotaP="0.080000" TipoFactorP="Tasa"/>
+						<pago20:TrasladoP BaseP="0" ImporteP="0" ImpuestoP="002" TasaOCuotaP="0.000000" TipoFactorP="Tasa"/>
+						<pago20:TrasladoP BaseP="100" ImporteP="15.92" ImpuestoP="003" TasaOCuotaP="0.030000" TipoFactorP="Tasa"/>
+					</pago20:TrasladosP>
+				</pago20:ImpuestosP>
+			</pago20:Pago>
+		</pago20:Pagos>	
+	</cfdi:Complemento>
+</cfdi:Comprobante>

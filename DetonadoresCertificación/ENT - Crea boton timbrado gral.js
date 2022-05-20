@@ -53,16 +53,16 @@ define([
 
     //TESTING INLINE HTML
     const hideField = form.addField({
-      id: "custpage_ent_locent_hide_btn",
+      id: "custpage_ent_entloc_hide_certification",
       label: "Hidden",
       type: serverWidget.FieldType.INLINEHTML,
     });
 
     hideField.defaultValue = /* html */ `
           <script>
-            const btnCertificar = document.querySelector("#custpage_ent_locent_button_cert");
-            btnCertificar.addEventListener("click", () => {
-              btnCertificar.style.pointerEvents = "none";
+            const btnCertification = document.querySelector("#custpage_ent_locent_button_cert");
+            btnCertification.addEventListener("click", () => {
+              btnCertification.style.pointerEvents = "none";
             });
           </script>
         `;
@@ -96,9 +96,9 @@ define([
 
     hideField.defaultValue = /* html */ `
           <script>
-            const btnCertificar = document.querySelector("#custpage_ent_entloc_gen_btn");
-            btnCertificar.addEventListener("click", () => {
-              btnCertificar.style.pointerEvents = "none";
+            const btnGenerar = document.querySelector("#custpage_ent_entloc_gen_btn");
+            btnGenerar.addEventListener("click", () => {
+              btnGenerar.style.pointerEvents = "none";
             });
           </script>
         `;
@@ -130,7 +130,10 @@ define([
         fieldId: "custbody_ent_entloc_estado_certifica",
       });
       //Global config
-      const globalConfig = funcionesLoc.getGlobalConfig(subsidiaryId);
+      const globalConfig = funcionesLoc.getGlobalConfig(
+        subsidiaryId,
+        recordType
+      );
       //User config
       const userConfig = funcionesLoc.getUserConfig(
         globalConfig.internalIdRegMaestro,
@@ -175,7 +178,7 @@ define([
       //Credit memo
       if (recordType === "creditmemo") {
         /* handleGenerationButton(uuid, recordType, recordId, form); */
-        /* if (userConfig.aplica && !uuid) {
+        /*  if (userConfig.aplica && !uuid) {
           if (userConfig.habilitaCertDosPasos) {
             if (xmlPrev && !estatusCert) {
               handleCertButton(recordId, recordType, form);
@@ -186,6 +189,7 @@ define([
             handleCertButton(recordId, recordType, form);
           }
         } */
+        handleGenerationButton(recordType, recordId, form);
         handleCertButton(recordId, recordType, form);
       }
     }

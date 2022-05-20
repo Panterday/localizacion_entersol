@@ -287,7 +287,7 @@ define([
     customPdfCustomerTemplate
   ) => {
     //Extra custom data
-    const extraData = funcionesLoc.getExtraCustomData(
+    const extraData = funcionesLoc.getExtraCustomDataTraslado(
       currentRecord,
       subsidiaryRecord
     );
@@ -326,6 +326,7 @@ define([
           prodMod
         );
         const validexBodyResponse = JSON.parse(validexResponse.body);
+        log.debug("VALIDEXRESPONSE", validexBodyResponse);
         if (validexResponse.code === 200) {
           const validexXmlResponse = validexBodyResponse.base64.replace(
             "data:text/xml;base64,",
@@ -392,11 +393,11 @@ define([
 
           //Get json to string Tax and Related CFDI
           /* const stringRelatedCfdi = funcionesLoc.getStringRelated(
-            customFullData.extraData
-          );
-          const stringTaxesItem = funcionesLoc.getStringTax(
-            customFullData.extraData
-          ); */
+              customFullData.extraData
+            );
+            const stringTaxesItem = funcionesLoc.getStringTax(
+              customFullData.extraData
+            ); */
 
           //Create PDF
           const idPdfToSave = funcionesLoc.getPdfRendered(
@@ -418,11 +419,11 @@ define([
             values: {
               custbody_ent_entloc_estado_certifica: "",
               custbody_ent_entloc_estado_gen_xml: "",
-              custbody_ent_entloc_doc_prev: xmlIdToSave,
+              custbody_ent_entloc_edoc_traslado: xmlIdToSave,
               custbody_ent_entloc_uuid: validexUUID,
               custbody_ent_entloc_cadena_qr: validexQr,
               custbody_ent_entloc_cadena_original: validexCadenaOriginal,
-              custbody_ent_entloc_pdf_timbrado: idPdfToSave,
+              custbody_ent_entloc_pdf_timbrado_tras: idPdfToSave,
               custbody_ent_entloc_serie_csd: noSerieCSD,
               custbody_ent_entloc_fecha_cert: fechaTimbrado,
               custbody_ent_entloc_serie_sat: noSerieSAT,
@@ -532,7 +533,7 @@ define([
     //Global config
     const globalConfig = funcionesLoc.getGlobalConfig(subsidiaryId, recordType);
     //User config
-    const userConfig = funcionesLoc.getUserConfig(
+    const userConfig = funcionesLoc.getUserConfigTras(
       globalConfig.internalIdRegMaestro,
       recordType,
       globalConfig.access

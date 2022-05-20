@@ -35,17 +35,17 @@ define([
     let renderedTemplate = null;
     const renderXml = render.create();
     //Extra custom data
-    const extraData = funcionesLoc.getExtraCustomData(
+    const extraData = funcionesLoc.getExtraCustomDataTraslado(
       currentRecord,
       subsidiaryRecord
     );
+    log.debug("EXTRADATA", extraData);
     //Global custom data
     const globalData = customData.getDataForInvoice();
     const customFullData = {
       globalData,
       extraData,
     };
-    log.debug("RENDER", customFullData);
     //Add custom data source
     renderXml.addCustomDataSource({
       format: render.DataSource.OBJECT,
@@ -58,13 +58,11 @@ define([
     renderXml.addRecord("subsidiary", subsidiaryRecord);
     //Add customer record
     renderXml.addRecord("customer", customerRecord);
-    log.debug("CUSTOMER RECORD", customerRecord);
     //Add template
     renderXml.templateContent = currentTemplate;
     //Try to render
     try {
       renderedTemplate = renderXml.renderAsString();
-      log.debug("RENDERED TEMPLATE FUNC", renderedTemplate);
       return {
         error: false,
         renderedTemplate,
@@ -107,7 +105,7 @@ define([
     //Global config
     const globalConfig = funcionesLoc.getGlobalConfig(subsidiaryId, recordType);
     //User config
-    const userConfig = funcionesLoc.getUserConfig(
+    const userConfig = funcionesLoc.getUserConfigTras(
       globalConfig.internalIdRegMaestro,
       recordType,
       globalConfig.access
@@ -129,7 +127,6 @@ define([
       let xmlDocument = null;
       try {
         //Render XML
-        log.debug("XML TO RENDER", xmlRenderedObj.renderedTemplate);
         xmlDocument = xml.Parser.fromString({
           text: xmlRenderedObj.renderedTemplate,
         });
@@ -153,7 +150,7 @@ define([
           type: recordType,
           id: recordId,
           values: {
-            custbody_ent_entloc_doc_prev: fileXmlId,
+            custbody_ent_entloc_edoc_traslado: fileXmlId,
             custbody_ent_entloc_estado_gen_xml: "",
             custbody_ent_entloc_estado_certifica: "",
           },
@@ -171,7 +168,7 @@ define([
           values: {
             custbody_ent_entloc_estado_gen_xml:
               "Generation error: " + error.message,
-            custbody_ent_entloc_doc_prev: "",
+            custbody_ent_entloc_edoc_traslado: "",
           },
         });
         redirect.toRecord({
@@ -187,7 +184,7 @@ define([
         values: {
           custbody_ent_entloc_estado_gen_xml:
             "Generation error: " + xmlRenderedObj.details,
-          custbody_ent_entloc_doc_prev: "",
+          custbody_ent_entloc_edoc_traslado: "",
         },
       });
       redirect.toRecord({
