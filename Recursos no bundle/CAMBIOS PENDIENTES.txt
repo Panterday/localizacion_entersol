@@ -1,0 +1,21 @@
+Si el método de pago es PPD obligatoriamente forma de pago es 99-Por definir y 
+si es PUE NO puede ser 99-Por definir. 
+
+Corregir mes en ruta de archivos
+
+Prevenir eliminación de un CFDI timbrado.
+
+Corregir que no se arrastren los datos de timbrado a las otras transacciones. 
+
+Logo nota de crédito 
+
+Se encima cabecera formato 
+
+PAGO 
+
+Método de pago por defecto PUE 
+Quitar uso CFDI
+
+Revisar parcialidad
+
+

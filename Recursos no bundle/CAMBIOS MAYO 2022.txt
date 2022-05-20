@@ -1,6 +1,0 @@
-Si el método de pago es PPD obligatoriamente forma de pago es 99-Por definir y 
-si es PUE NO puede ser 99-Por definir. 
-
-
-
-
