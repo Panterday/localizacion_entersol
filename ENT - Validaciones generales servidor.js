@@ -8,6 +8,29 @@ define([], () => {
   const beforeLoad = (context) => {
     if (context.type === context.UserEventType.COPY) {
       const newRecord = context.newRecord;
+      const uuid = newRecord.getValue({
+        fieldId: "custbody_ent_entloc_uuid",
+      });
+      if (uuid) {
+        const form = context.form;
+        const voidButton = form.getButton({
+          id: "void",
+        });
+        if (voidButton) {
+          if (uuid || customUuid) {
+            voidButton.isDisabled = true;
+            if (estadoCancelacion === "Cancelado") {
+              voidButton.isDisabled = false;
+            }
+          }
+        }
+      }
+    }
+    if (
+      context.type === context.UserEventType.COPY ||
+      context.type === context.UserEventType.CREATE
+    ) {
+      const newRecord = context.newRecord;
       log.debug("COPY", "COPY");
       newRecord.setValue({
         fieldId: "custbody_ent_entloc_uuid",

@@ -43,6 +43,17 @@
 	<#assign result = ((amount?number)/100)?string["0.000000"]>
 	<#return result>
 </#function>
+<#function formatExchangeRate amount>
+	<#assign result = amount?keep_after("$")?replace(",", "")?number?string["0.0000"]>
+	<#return result>
+</#function>
+<#function getExchangeRate currency>
+	<#if currency != "MXN" && currency != "XXX">
+		<#assign exchangeRateNumber = formatExchangeRate(record.exchangerate)>
+		<#assign result = "TipoCambio=\"${exchangeRateNumber}\"">
+		<#return result>
+	</#if>
+</#function>
 <cfdi:Comprobante 
 	xmlns:cfdi="http://www.sat.gob.mx/cfd/4" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
@@ -54,6 +65,7 @@
 	FormaPago="${record.custbody_ent_entloc_forma_pago?keep_before(" -")}" 
 	SubTotal="${formatFromCurrency(record.subtotal)}" 
 	Moneda="${record.currencysymbol}" 
+	${getAttrExist("Descuento", formatFromString(customItem.discounts.totalDiscount))}
 	Total="${formatFromCurrency(record.total)}" 
 	TipoDeComprobante="E" 
 	MetodoPago="${record.custbody_ent_entloc_ent_metodo_pago?keep_before(" -")}" 
@@ -91,7 +103,7 @@
 				Importe="${formatFromCurrency(item.amount)}"
 				${getAttrPair("ClaveProdServ", item.custcol_ent_entloc_sat_clv_pro_view?keep_before(" -"), item.custcol_ent_entloc_sat_clave_p_s_hidd?keep_before(" -"))}
 				ClaveUnidad="${customItem.satUnitCodes[item?index]?keep_before(" -")}" 
-				ObjetoImp="${item.custcol_ent_entloc_obj_impuesto?keep_before(" -")}"
+				ObjetoImp="${customItem.objImpuesto[item?index]?keep_before(" -")}"
 			>
 				<#if customItem.taxItemDetails?has_content>
 					<cfdi:Impuestos> 

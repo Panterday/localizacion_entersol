@@ -12,38 +12,10 @@ define([
   "N/ui/message",
   "funcionesLoc",
 ], (url, serverWidget, search, record, runtime, message, funcionesLoc) => {
-  const keepBefore = (str, element) => {
-    if (str) {
-      const index = str.indexOf(element);
-      if (index === -1) {
-        return null;
-      } else {
-        const newStr = str.slice(0, index);
-        return newStr;
-      }
-    } else {
-      return null;
-    }
-  };
-  const dynamicButtonLabel = (recordType) => {
-    let buttonLabel = "";
-    switch (recordType) {
-      case "invoice":
-        buttonLabel = "Certificar factura de ingreso";
-        break;
-      case "customerpayment":
-        buttonLabel = "Certificar pago del cliente";
-        break;
-      case "creditmemo":
-        buttonLabel = "Certificar nota de crédito";
-        break;
-    }
-    return buttonLabel;
-  };
   const handleCertButton = (recordId, recordType, form) => {
     const suiteletUrl = url.resolveScript({
-      scriptId: "customscript_ent_entloc_certifica_cfdi",
-      deploymentId: "customdeploy_ent_entloc_certifica_cfdi",
+      scriptId: "customscript_ent_entloc_cert_cfdi_tras",
+      deploymentId: "customdeploy_ent_entloc_cert_cfdi_tras",
     });
     //Building params string
     const params = `&id=${recordId}&type=${recordType}&genCert=0`;
@@ -66,20 +38,18 @@ define([
               });
             </script>
           `;
-    //Dynaminc button label
-    let buttonLabel = dynamicButtonLabel(recordType);
 
     //Adding a button to the form
     form.addButton({
       id: "custpage_ent_entloc_cert_traslado",
-      label: buttonLabel,
+      label: "Certificar factura de traslado",
       functionName: `window.open("${target}", "_self")`,
     });
   };
   const handleGenerationButton = (recordType, recordId, form) => {
     const suiteletUrl = url.resolveScript({
-      scriptId: "customscript_ent_entloc_genera_xml_previ",
-      deploymentId: "customdeploy_ent_entloc_genera_xml_p_imp",
+      scriptId: "customscript_ent_entloc_gen_xml_prev_tra",
+      deploymentId: "customdeploy_ent_entloc_gen_xml_prev_tra",
     });
     //Building params string
     const params = `&id=${recordId}&type=${recordType}&genCert=1`;
@@ -135,60 +105,27 @@ define([
         recordType,
         true
       );
-      log.debug("GLOBALCONFI", globalConfig);
       //User config
-      const userConfig = funcionesLoc.getUserConfigTras();
+      const userConfig = funcionesLoc.getUserConfigTras(
+        globalConfig.internalIdRegMaestro,
+        recordType,
+        globalConfig.access
+      );
       log.debug("USER CONFIG", userConfig);
-      //Invoice
-      if (recordType === "invoice") {
-        /* handleGenerationButton(uuid, recordType, recordId, form); */
-        if (userConfig.aplica && !uuid) {
-          if (userConfig.habilitaCertDosPasos) {
-            if (xmlPrev && !estatusCert) {
-              handleCertButton(recordId, recordType, form);
-            } else {
-              handleGenerationButton(recordType, recordId, form);
-            }
-          } else {
+      /* handleGenerationButton(uuid, recordType, recordId, form); */
+      /* if (userConfig.aplica && !uuid) {
+        if (userConfig.habilitaCertDosPasos) {
+          if (xmlPrev && !estatusCert) {
             handleCertButton(recordId, recordType, form);
+          } else {
+            handleGenerationButton(recordType, recordId, form);
           }
+        } else {
+          handleCertButton(recordId, recordType, form);
         }
-        /* handleCertButton(recordId, recordType, form);
-          handleGenerationButton(recordType, recordId, form); */
-      }
-      //Customer payment
-      if (recordType === "customerpayment") {
-        /* handleGenerationButton(uuid, recordType, recordId, form); */
-        /* if (userConfig.aplica && !uuid) {
-            if (userConfig.habilitaCertDosPasos) {
-              if (xmlPrev && !estatusCert) {
-                handleCertButton(recordId, recordType, form);
-              } else {
-                handleGenerationButton(recordType, recordId, form);
-              }
-            } else {
-              handleCertButton(recordId, recordType, form);
-            }
-          } */
-        handleGenerationButton(recordType, recordId, form);
-        handleCertButton(recordId, recordType, form);
-      }
-      //Credit memo
-      if (recordType === "creditmemo") {
-        /* handleGenerationButton(uuid, recordType, recordId, form); */
-        /* if (userConfig.aplica && !uuid) {
-            if (userConfig.habilitaCertDosPasos) {
-              if (xmlPrev && !estatusCert) {
-                handleCertButton(recordId, recordType, form);
-              } else {
-                handleGenerationButton(recordType, recordId, form);
-              }
-            } else {
-              handleCertButton(recordId, recordType, form);
-            }
-          } */
-        handleCertButton(recordId, recordType, form);
-      }
+      } */
+      handleCertButton(recordId, recordType, form);
+      handleGenerationButton(recordType, recordId, form);
     }
   };
   return {

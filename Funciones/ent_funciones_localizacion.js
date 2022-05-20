@@ -9,6 +9,180 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
   runtime,
   render
 ) => {
+  const handleMontoEnLetra = (num, moneda) => {
+    function Unidades(num) {
+      switch (num) {
+        case 1:
+          return "UNO";
+        case 2:
+          return "DOS";
+        case 3:
+          return "TRES";
+        case 4:
+          return "CUATRO";
+        case 5:
+          return "CINCO";
+        case 6:
+          return "SEIS";
+        case 7:
+          return "SIETE";
+        case 8:
+          return "OCHO";
+        case 9:
+          return "NUEVE";
+      }
+
+      return "";
+    } //Unidades()
+
+    function Decenas(num) {
+      var decena = Math.floor(num / 10);
+      var unidad = num - decena * 10;
+
+      switch (decena) {
+        case 1:
+          switch (unidad) {
+            case 0:
+              return "DIEZ";
+            case 1:
+              return "ONCE";
+            case 2:
+              return "DOCE";
+            case 3:
+              return "TRECE";
+            case 4:
+              return "CATORCE";
+            case 5:
+              return "QUINCE";
+            default:
+              return "DIECI" + Unidades(unidad);
+          }
+        case 2:
+          switch (unidad) {
+            case 0:
+              return "VEINTE";
+            default:
+              return "VEINTI" + Unidades(unidad);
+          }
+        case 3:
+          return DecenasY("TREINTA", unidad);
+        case 4:
+          return DecenasY("CUARENTA", unidad);
+        case 5:
+          return DecenasY("CINCUENTA", unidad);
+        case 6:
+          return DecenasY("SESENTA", unidad);
+        case 7:
+          return DecenasY("SETENTA", unidad);
+        case 8:
+          return DecenasY("OCHENTA", unidad);
+        case 9:
+          return DecenasY("NOVENTA", unidad);
+        case 0:
+          return Unidades(unidad);
+      }
+    } //Unidades()
+
+    function DecenasY(strSin, numUnidades) {
+      if (numUnidades > 0) return strSin + " Y " + Unidades(numUnidades);
+
+      return strSin;
+    } //DecenasY()
+
+    function Centenas(num) {
+      centenas = Math.floor(num / 100);
+      decenas = num - centenas * 100;
+
+      switch (centenas) {
+        case 1:
+          if (decenas > 0) return "CIENTO " + Decenas(decenas);
+          return "CIEN";
+        case 2:
+          return "DOSCIENTOS " + Decenas(decenas);
+        case 3:
+          return "TRESCIENTOS " + Decenas(decenas);
+        case 4:
+          return "CUATROCIENTOS " + Decenas(decenas);
+        case 5:
+          return "QUINIENTOS " + Decenas(decenas);
+        case 6:
+          return "SEISCIENTOS " + Decenas(decenas);
+        case 7:
+          return "SETECIENTOS " + Decenas(decenas);
+        case 8:
+          return "OCHOCIENTOS " + Decenas(decenas);
+        case 9:
+          return "NOVECIENTOS " + Decenas(decenas);
+      }
+
+      return Decenas(decenas);
+    } //Centenas()
+
+    function Seccion(num, divisor, strSingular, strPlural) {
+      cientos = Math.floor(num / divisor);
+      resto = num - cientos * divisor;
+
+      letras = "";
+
+      if (cientos > 0)
+        if (cientos > 1) letras = Centenas(cientos) + " " + strPlural;
+        else letras = strSingular;
+
+      if (resto > 0) letras += "";
+
+      return letras;
+    } //Seccion()
+
+    function Miles(num) {
+      divisor = 1000;
+      cientos = Math.floor(num / divisor);
+      resto = num - cientos * divisor;
+
+      strMiles = Seccion(num, divisor, "UN MIL ", "MIL ");
+      strCentenas = Centenas(resto);
+
+      if (strMiles == "") return strCentenas;
+
+      return strMiles + " " + strCentenas;
+    } //Miles()
+
+    function Millones(num) {
+      divisor = 1000000;
+      cientos = Math.floor(num / divisor);
+      resto = num - cientos * divisor;
+
+      strMillones = Seccion(num, divisor, "UN MILLON ", " MILLONES");
+      strMiles = Miles(resto);
+
+      if (strMillones == "") return strMiles;
+
+      return strMillones + " " + strMiles;
+    } //Millones()
+
+    function NumeroALetras(num, moneda) {
+      var data = {
+        numero: num,
+        enteros: Math.floor(num),
+        centavos: Math.round(num * 100) - Math.floor(num) * 100,
+        letrasCentavos: "",
+      };
+      data.letrasCentavos =
+        data.centavos === 0 ? "00/100" : data.centavos + "/100";
+
+      if (data.enteros == 0) return "CERO" + " " + moneda;
+
+      return Millones(data.enteros) + " " + moneda + " " + data.letrasCentavos;
+    }
+    //MAIN
+    let txtMoneda = null;
+    if (moneda === "MXN") {
+      txtMoneda = "Pesos Mexicanos";
+    } else if (moneda === "USD") {
+      txtMoneda = "Dólares";
+    }
+    const main = NumeroALetras(num, txtMoneda);
+    return main;
+  };
   const handleTaxGroupData = () => {
     const taxGroupData = [];
     const taxCodeData = [];
@@ -23,6 +197,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         "taxgroup",
         "custrecord_ent_entloc_codigo_impuesto",
         "exempt",
+        "custrecord_ent_entloc_obj_impuesto",
       ],
     });
     //Tax code
@@ -34,6 +209,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         "rate",
         "exempt",
         "custrecord_ent_entloc_codigo_impuesto",
+        "custrecord_ent_entloc_obj_impuesto",
       ],
     });
     taxGroupDetailsSearch.run().each((result) => {
@@ -60,6 +236,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       const customCode = result.getText({
         name: "custrecord_ent_entloc_codigo_impuesto",
       });
+      const objetoImpuesto = result.getText({
+        name: "custrecord_ent_entloc_obj_impuesto",
+      });
       if (taxGroupData.length === 0) {
         taxGroupElementAux.taxGroupId = taxGroupId;
         taxGroupElementAux.codes.push({
@@ -67,6 +246,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           rate,
           exempt,
           customCode,
+          objetoImpuesto,
         });
         taxGroupData.push(taxGroupElementAux);
       } else {
@@ -79,6 +259,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
             rate,
             exempt,
             customCode,
+            objetoImpuesto,
           });
         } else {
           taxGroupElementAux.taxGroupId = taxGroupId;
@@ -87,6 +268,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
             rate,
             exempt,
             customCode,
+            objetoImpuesto,
           });
           taxGroupData.push(taxGroupElementAux);
         }
@@ -108,11 +290,15 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       const customCode = result.getText({
         name: "custrecord_ent_entloc_codigo_impuesto",
       });
+      const objetoImpuesto = result.getText({
+        name: "custrecord_ent_entloc_obj_impuesto",
+      });
       taxCodeData.push({
         taxCodeId,
         rate,
         exempt,
         customCode,
+        objetoImpuesto,
       });
       return true;
     });
@@ -398,8 +584,48 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       return false;
     }
   };
-  const getUserConfigTras = () => {
-    return "Working";
+  const getUserConfigTras = (globalConfigRecordId, recordType, access) => {
+    if (access) {
+      const globalConfigRecord = record.load({
+        type: "customrecord_ent_entloc_config_registro",
+        id: globalConfigRecordId,
+      });
+      let aplica = null;
+      const plantillaEdocument = globalConfigRecord.getValue({
+        fieldId: "custrecord_ent_entloc_plan_gen_xml_ft",
+      });
+      const habilitaCertDosPasos = globalConfigRecord.getValue({
+        fieldId: "custrecord_ent_entloc_hab_cert_2_ft",
+      });
+      const plantillaPdfPublica = globalConfigRecord.getValue({
+        fieldId: "custrecord_ent_entloc_plantilla_imp_ft",
+      });
+      switch (recordType) {
+        case "itemfulfillment":
+          aplica = globalConfigRecord.getValue({
+            fieldId: "custrecord_ent_entloc_ejec_ped_ov_ft",
+          });
+          break;
+        case "salesorder":
+          aplica = globalConfigRecord.getValue({
+            fieldId: "custrecord_ent_entloc_orden_venta_ft",
+          });
+          break;
+        case "transferorder":
+          aplica = globalConfigRecord.getValue({
+            fieldId: "custrecord_ent_entloc_orden_traslado_ft",
+          });
+          break;
+      }
+      return {
+        aplica,
+        habilitaCertDosPasos,
+        plantillaPdfPublica,
+        plantillaEdocument,
+      };
+    } else {
+      return false;
+    }
   };
   const handleFolioSerie = (tranid) => {
     const serie = tranid.replace(/[^a-z]/gi, "");
@@ -438,7 +664,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       nuevoImporteIepsLinea: Number(importeIepsLinea.toFixed(2)),
     };
   };
-  const handleTaxesCalc = (taxList, amount, taxAmount) => {
+  const handleTaxesCalc = (taxList, amount, taxAmount, isPayment) => {
     const itemTaxGroupDetails = {
       taxRetDetails: [],
       taxTrasDetails: [],
@@ -525,8 +751,20 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           let importeIvaLinea = nuevaBaseCalculada * (ivaRate / 100);
           importeIvaLinea = Number(importeIvaLinea.toFixed(2));
           //Correct tax
-          const { nuevoImporteIvaLinea, nuevoImporteIepsLinea } =
-            handleTaxCorrection(importeIvaLinea, importeIepsLinea, taxAmount);
+          let nuevoImporteIvaLinea = null;
+          let nuevoImporteIepsLinea = null;
+          if (isPayment) {
+            nuevoImporteIvaLinea = importeIvaLinea;
+            nuevoImporteIepsLinea = importeIepsLinea;
+          } else {
+            const taxCorrectionResponse = handleTaxCorrection(
+              importeIvaLinea,
+              importeIepsLinea,
+              taxAmount
+            );
+            nuevoImporteIvaLinea = taxCorrectionResponse.nuevoImporteIvaLinea;
+            nuevoImporteIepsLinea = taxCorrectionResponse.nuevoImporteIepsLinea;
+          }
           //==============================================================================//
           //Save IEPS
           itemTaxGroupDetails.taxTrasDetails.push({
@@ -549,7 +787,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       }
     }
   };
-  const handleTaxGroupDetails = (taxRecord, amount, taxAmount) => {
+  const handleTaxGroupDetails = (taxRecord, amount, taxAmount, isPayment) => {
     const taxList = [];
     const totalItemLines = taxRecord.codes.length;
     if (totalItemLines === 1) {
@@ -570,7 +808,12 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       };
     } else {
       //Handle tax calc
-      const taxesPerItem = handleTaxesCalc(taxRecord, amount, taxAmount);
+      const taxesPerItem = handleTaxesCalc(
+        taxRecord,
+        amount,
+        taxAmount,
+        isPayment
+      );
       return {
         isGroup: 1,
         taxesPerItem,
@@ -725,7 +968,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     newItems,
     totalDiscount,
     taxDataBase,
-    mapUnitsDataBase
+    mapUnitsDataBase,
+    isPayment
   ) => {
     let retExist = false;
     let trasExist = false;
@@ -733,6 +977,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     const taxSummary = { summaryRet: [], summaryTras: [] };
     const satUnitCodes = [];
     const discounts = [];
+    const objImpuesto = [];
     for (let i = 0; i < newItems.length; i++) {
       const discount = newItems[i].discount;
       const taxcodeId = newItems[i].taxcodeId;
@@ -757,13 +1002,16 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           (taxCodeElement) => taxCodeElement.taxCodeId === Number(taxcodeId)
         );
         if (taxRecord) {
+          //Objeto de impuesto
+          objImpuesto.push(taxRecord.objetoImpuesto);
           let taxTrasDetails = null;
           let taxRetDetails = null;
           const { customCode: taxcode, rate, exempt } = taxRecord;
           let newRate = Number(rate.replace("%", ""));
+          const rateRetTemp = newRate;
           newRate = newRate < 0 ? newRate * -1 : newRate;
           let newTaxAmount = taxAmount < 0 ? taxAmount * -1 : taxAmount;
-          if (rate < 0) {
+          if (rateRetTemp < 0) {
             retExist = true;
             //Es retención
             taxRetDetails = {
@@ -840,10 +1088,13 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
             (taxCodeElement) => taxCodeElement.taxGroupId === Number(taxcodeId)
           );
           if (taxRecord) {
+            //Objeto de impuesto
+            objImpuesto.push(taxRecord.codes[0].objetoImpuesto);
             const taxListDetails = handleTaxGroupDetails(
               taxRecord,
               amount,
-              taxAmount
+              taxAmount,
+              isPayment
             );
             if (taxListDetails.isGroup) {
               let taxRetAuxTemp = null;
@@ -1015,16 +1266,23 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           discounts,
         },
       }),
+      objImpuesto,
     };
   };
-  const handleDataForFvNc = (currentRecord, taxDataBase, mapUnitsDataBase) => {
+  const handleDataForFvNc = (
+    currentRecord,
+    taxDataBase,
+    mapUnitsDataBase,
+    isPayment
+  ) => {
     const { fullItems: newItems, totalDiscount } =
       handleSplitDiscountItems(currentRecord);
     return handleCustomItem(
       newItems,
       totalDiscount,
       taxDataBase,
-      mapUnitsDataBase
+      mapUnitsDataBase,
+      isPayment
     );
   };
   const handleRelatedCfdis = (currentRecord) => {
@@ -1176,7 +1434,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     invoiceRecord,
     paymentAmount,
     taxDataBase,
-    mapUnitsDataBase
+    mapUnitsDataBase,
+    isPayment
   ) => {
     const currentRecord = invoiceRecord;
     const invoiceAmount = invoiceRecord.getValue({
@@ -1191,7 +1450,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       newItems,
       totalDiscount,
       taxDataBase,
-      mapUnitsDataBase
+      mapUnitsDataBase,
+      isPayment
     );
     return itemFullSummary;
   };
@@ -1350,7 +1610,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
   const handleDataForPayment = (
     currentRecord,
     taxDataBase,
-    mapUnitsDataBase
+    mapUnitsDataBase,
+    isPayment
   ) => {
     let taxesForPayment = [];
     let totalPaymentTaxesList = [];
@@ -1400,7 +1661,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           invoiceRelated,
           amount,
           taxDataBase,
-          mapUnitsDataBase
+          mapUnitsDataBase,
+          isPayment
         );
         totalPaymentTaxesList.push(resultTaxes.taxSummary);
         totalPaymentAmount += Number(amount);
@@ -1425,40 +1687,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       totalPaymentAmount: Number(totalPaymentAmount.toFixed(2)),
     };
   };
-  const getExtraCustomData = (currentRecord) => {
-    //Get taxGroup data
-    const taxDataBase = handleTaxGroupData();
-    //Get mapUnit data
-    const mapUnitsDataBase = handleSatMappingUnits();
-    let total = currentRecord.getValue({
-      fieldId: "total",
-    });
-    let subtotal = currentRecord.getValue({
-      fieldId: "subtotal",
-    });
-    const subsidiaryId = currentRecord.getValue({
-      fieldId: "subsidiary",
-    });
-    const tranid = currentRecord.getValue({
-      fieldId: "tranid",
-    });
-    const recordType = currentRecord.type;
-    let customItem = null;
-    let totalTaxesForPayment = null;
-    let totalPaymentAmount = 0;
-
-    //Custom transaction
-    const { serie, folio } = handleFolioSerie(tranid);
-    //Summary
-    total = Number(total).toFixed(2);
-    subtotal = Number(subtotal).toFixed(2);
-    //Custom subsidiary
+  const handleSubsidiaryAddressFields = (currentSubsidiary) => {
     let currentSubsidiaryAddress = null;
     const subsidiaryAddressObj = {};
-    const currentSubsidiary = record.load({
-      type: "subsidiary",
-      id: subsidiaryId,
-    });
     const SubsidiaryMainAddressId = currentSubsidiary.getValue({
       fieldId: "mainaddress",
     });
@@ -1471,15 +1702,54 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         const cpSubsidiaria = currentSubsidiaryAddress.getValue({
           fieldId: "zip",
         });
+        const calleSubsidiaria = currentSubsidiaryAddress.getValue({
+          fieldId: "custrecord_streetname",
+        });
         subsidiaryAddressObj.zip = cpSubsidiaria;
+        subsidiaryAddressObj.street = calleSubsidiaria;
       }
     }
+    return subsidiaryAddressObj;
+  };
+  const getExtraCustomData = (currentRecord, currentSubsidiary) => {
+    //Get taxGroup data
+    const taxDataBase = handleTaxGroupData();
+    //Get mapUnit data
+    const mapUnitsDataBase = handleSatMappingUnits();
+    let total = currentRecord.getValue({
+      fieldId: "total",
+    });
+    let subtotal = currentRecord.getValue({
+      fieldId: "subtotal",
+    });
+    const tranid = currentRecord.getValue({
+      fieldId: "tranid",
+    });
+    const recordType = currentRecord.type;
+    //Monto en letra
+    const currency = currentRecord.getText({
+      fieldId: "currencysymbol",
+    });
+    const montoEnLetra = handleMontoEnLetra(total, currency);
+
+    let customItem = null;
+    let totalTaxesForPayment = null;
+    let totalPaymentAmount = 0;
+
+    //Custom transaction
+    const { serie, folio } = handleFolioSerie(tranid);
+    //Summary
+    total = Number(total).toFixed(2);
+    subtotal = Number(subtotal).toFixed(2);
+    //Custom subsidiary
+    const subsidiaryAddress = handleSubsidiaryAddressFields(currentSubsidiary);
     //Custom item
     if (recordType === "customerpayment") {
       const dataForPayment = handleDataForPayment(
         currentRecord,
         taxDataBase,
-        mapUnitsDataBase
+        mapUnitsDataBase,
+        true
       );
       customItem = dataForPayment.taxesForPayment;
       totalTaxesForPayment = dataForPayment.totalPaymentTaxes;
@@ -1488,7 +1758,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       customItem = handleDataForFvNc(
         currentRecord,
         taxDataBase,
-        mapUnitsDataBase
+        mapUnitsDataBase,
+        false
       );
     }
     //Related CFDIS
@@ -1498,19 +1769,26 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         serie,
         folio,
         ...(relatedCfdis && { relatedCfdis }),
+        montoEnLetra,
       },
       summary: {
         total,
         subtotal,
       },
       customSubsidiaryData: {
-        address: subsidiaryAddressObj,
+        address: subsidiaryAddress,
       },
       customItem,
       ...(recordType === "customerpayment" && {
         totalTaxesForPayment,
         totalPaymentAmount,
       }),
+    };
+  };
+  const getExtraCustomDataTraslado = (currentRecord, currentSubsidiary) => {
+    const subsidiaryAddress = handleSubsidiaryAddressFields(currentSubsidiary);
+    return {
+      customRecordData: subsidiaryAddress,
     };
   };
   const getPdfRendered = (
@@ -1874,6 +2152,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     getUserConfigTras,
     getPdfRendered,
     getExtraCustomData,
+    getExtraCustomDataTraslado,
     getCertExtraData,
     getFolderId,
     getStringRelated,

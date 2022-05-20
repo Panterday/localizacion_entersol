@@ -43,6 +43,10 @@ CFDI 4.0
         custbody_ent_entloc_uso_cfdi
         custbody_ent_entloc_uuid
         ENT - Tipo de comprobante (Ocultos)
+
+        ENT - TrasUUID
+        ENT - Documento electrónico traslado
+        ENT - Pdf timbrado traslado
     Campos personalizados de subsidiaria: 
         ENT- Régimen fiscal (Ligado a lista: ENT - Sat régimen fiscal)
     Campos personalizadas de cliente: 
@@ -61,15 +65,17 @@ CFDI 4.0
         ENT - Plantilla xml pago 
     Campos personalizadas de artículo: 
         ENT - Sat clave prod servicio (Ligado a lista: ENT - Sat clave prod serv)
-        ENT - Objeto de impuesto
     Campos de línea de artículos
         custcol_ent_entloc_sat_clave_p_s_hidd
         ENT - Sat clave prod servicio
-        ENT - Objeto de impuesto
     Otros campos personalizados (Aplicado a código de impuesto): 
         ENT - Código de impuesto (Ligado a lista: ENT - Sat código de impuesto)
+        ENT - Objeto de impuesto
     Formularios: 
         Factura de venta Entersol localización
+        Nota de crédito Entersol localización
+        Pago Entersol localización
+        Ejecución de pedido de artículos Entersol Localización
     Centros y fichas: 
 		Transacción:
         	CFDI 4.0

@@ -131,7 +131,79 @@ define(["N/record", "N/search"], (record, search) => {
       }
     }
   };
+  const pageInit = (context) => {
+    try {
+      const currentRecord = context.currentRecord;
+      const customerId = currentRecord.getValue({
+        fieldId: "entity",
+      });
+      const customerRecord = record.load({
+        type: "customer",
+        id: customerId,
+      });
+      const usoCfdiFac = customerRecord.getValue({
+        fieldId: "custbody_ent_entloc_uso_cfdi",
+      });
+      const metodoPagoFac = customerRecord.getValue({
+        fieldId: "custbody_ent_entloc_ent_metodo_pago",
+      });
+
+      log.debug("CUSTOMER RECORD", customerRecord);
+
+      const formaPagoFac = customerRecord.getValue({
+        fieldId: "custbody_ent_entloc_forma_pago",
+      });
+
+      const regimenFiscalFac = customerRecord.getValue({
+        fieldId: "custbody_ent_entloc_reg_fis_receptor",
+      });
+
+      if (!usoCfdiFac) {
+        const usoCfdiCliente = customerRecord.getValue({
+          fieldId: "custentity_ent_uso_de_cfdi",
+        });
+
+        currentRecord.setValue({
+          fieldId: "custbody_ent_entloc_uso_cfdi",
+          value: usoCfdiCliente,
+        });
+      }
+      if (!metodoPagoFac) {
+        log.debug("EXECUTE CHANGE", "changed");
+        const metodoPagoCliente = customerRecord.getValue({
+          fieldId: "custentity_ent_metodo_de_pago",
+        });
+
+        currentRecord.setValue({
+          fieldId: "custbody_ent_entloc_ent_metodo_pago",
+          value: metodoPagoCliente,
+        });
+      }
+      if (!formaPagoFac) {
+        const formaPagoCliente = customerRecord.getValue({
+          fieldId: "custentity_ent_uso_de_cfdi",
+        });
+
+        currentRecord.setValue({
+          fieldId: "custbody_ent_entloc_forma_pago",
+          value: formaPagoCliente,
+        });
+      }
+      if (!regimenFiscalFac) {
+        const regimenFiscalCliente = customerRecord.getValue({
+          fieldId: "custentity_ent_entloc_regimen_fiscal",
+        });
+        currentRecord.setValue({
+          fieldId: "custbody_ent_entloc_reg_fis_receptor",
+          value: regimenFiscalCliente,
+        });
+      }
+    } catch (error) {
+      log.debug("ERROR", error);
+    }
+  };
   return {
     fieldChanged,
+    pageInit,
   };
 });

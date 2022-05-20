@@ -1,32 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
+<#setting locale = "es_MX">
+<#assign aDateTime = .now>
 <cfdi:Comprobante 
     xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd" 
     Version="4.0" 
     Serie="Serie" 
     Folio="Folio" 
-    Fecha="2021-12-28T00:18:10" 
+    Fecha="${aDateTime?string.iso_nz?keep_before(".")}" 
     CondicionesDePago="CondicionesDePago" 
     SubTotal="0" 
     Descuento="0" 
-    Moneda="AMD" 
+    Moneda="${record.currencycode}" 
     TipoCambio="1" 
     Total="0" 
     TipoDeComprobante="T" 
     Exportacion="01" 
-    LugarExpedicion="20000" 
+    LugarExpedicion="${subsidiary.zip}" 
     xmlns:cfdi="http://www.sat.gob.mx/cfd/4" 
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<cfdi:Emisor 
-        Rfc="IIA040805DZ4" 
-        Nombre="INDISTRIA ILUMINADORA DE ALMACENES SA DE CV" 
-        RegimenFiscal="601"
+        Rfc="${subsidiary.federalidnumber}" 
+		Nombre="${subsidiary.name}" 
+		RegimenFiscal="${subsidiary.custrecord_ent_entloc_regimen_fiscal?keep_before(" -")}"
     />
 	<cfdi:Receptor 
-        Rfc="URE180429TM6" 
-        Nombre="UNIVERSIDAD ROBOTICA ESPAÑOLA SA DE CV" 
-        DomicilioFiscalReceptor="65000" 
-        RegimenFiscalReceptor="601" 
-        UsoCFDI="G01"
+        Rfc="${customer.custentity_ent_entloc_rfc}"
+		Nombre="${customer.custentity_ent_entloc_nombre_legal_sat}" 
+		DomicilioFiscalReceptor="${customer.billzip}" 
+		RegimenFiscalReceptor="${record.custbody_ent_entloc_reg_fis_receptor?keep_before(" -")}" 
+		UsoCFDI="${record.custbody_ent_entloc_uso_cfdi?keep_before(" -")}"
     />
 	<cfdi:Conceptos>
 		<cfdi:Concepto 
@@ -39,15 +41,15 @@
             ValorUnitario="0.00" 
             Importe="0.00" 
             ObjetoImp="01">
-			<cfdi:InformacionAduanera NumeroPedimento="21  47  3807  8003832"/>
-			<cfdi:Parte 
+			<!--<cfdi:InformacionAduanera NumeroPedimento="21  47  3807  8003832"/>-->
+			<!--<cfdi:Parte 
                 ClaveProdServ="50211503" 
                 ValorUnitario="200.00" 
                 Importe="200.00" 
                 Cantidad="1" 
                 Unidad="Pieza" 
                 NoIdentificacion="123" 
-                Descripcion="cosas"/>
+                Descripcion="cosas"/>-->
 		</cfdi:Concepto>
 	</cfdi:Conceptos>
 </cfdi:Comprobante>

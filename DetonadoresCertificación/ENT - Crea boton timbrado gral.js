@@ -178,7 +178,7 @@ define([
       //Credit memo
       if (recordType === "creditmemo") {
         /* handleGenerationButton(uuid, recordType, recordId, form); */
-        /* if (userConfig.aplica && !uuid) {
+        /*  if (userConfig.aplica && !uuid) {
           if (userConfig.habilitaCertDosPasos) {
             if (xmlPrev && !estatusCert) {
               handleCertButton(recordId, recordType, form);
@@ -189,6 +189,7 @@ define([
             handleCertButton(recordId, recordType, form);
           }
         } */
+        handleGenerationButton(recordType, recordId, form);
         handleCertButton(recordId, recordType, form);
       }
     }
