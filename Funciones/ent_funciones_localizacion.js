@@ -1950,7 +1950,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     try {
       const fechaTimbradoObj = new Date(fechaTimbrado);
       const año = fechaTimbradoObj.getFullYear();
-      const mes = fechaTimbradoObj.getMonth();
+      const mes = fechaTimbradoObj.getMonth() + 1;
       let mesText = mes + "";
       if (mesText.length === 1) {
         mesText = "0" + mes;
