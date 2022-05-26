@@ -6,24 +6,18 @@
 CREATE, EDIT, VIEW, COPY, PRINT, EMAIL, QUICKVIEW*/
 define([], () => {
   const beforeLoad = (context) => {
-    if (context.type === context.UserEventType.COPY) {
+    if (context.type === context.UserEventType.EDIT) {
+      log.debug("INSIDE", "INSIDE");
       const newRecord = context.newRecord;
       const uuid = newRecord.getValue({
         fieldId: "custbody_ent_entloc_uuid",
       });
       if (uuid) {
         const form = context.form;
-        const voidButton = form.getButton({
-          id: "void",
+        const deleteButton = form.getButton({
+          id: "delete",
         });
-        if (voidButton) {
-          if (uuid || customUuid) {
-            voidButton.isDisabled = true;
-            if (estadoCancelacion === "Cancelado") {
-              voidButton.isDisabled = false;
-            }
-          }
-        }
+        deleteButton.isDisabled = true;
       }
     }
     if (

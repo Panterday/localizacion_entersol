@@ -9,6 +9,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
   runtime,
   render
 ) => {
+  const enviaCfdiMail = (recordType, recordId) => {};
   const handleMontoEnLetra = (num, moneda) => {
     function Unidades(num) {
       switch (num) {
@@ -649,14 +650,14 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       importeIvaLinea > 0 && importeIvaLinea > importeIepsLinea
         ? (importeIvaLinea = importeIvaLinea - diferenciaImpuesto)
         : importeIepsLinea > 0
-        ? importeIepsLinea - diferenciaImpuesto
+        ? (importeIepsLinea = importeIepsLinea - diferenciaImpuesto)
         : null;
     } else {
       //Sumar diferencia a un impuesto
       importeIvaLinea > 0 && importeIvaLinea > importeIepsLinea
         ? (importeIvaLinea = importeIvaLinea + diferenciaImpuesto)
         : importeIepsLinea > 0
-        ? importeIepsLinea + diferenciaImpuesto
+        ? (importeIepsLinea = importeIepsLinea + diferenciaImpuesto)
         : null;
     }
     return {
@@ -830,8 +831,12 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       totalRetenciones += Number(element.importe);
     });
     return {
-      totalTraslados: Number(totalTraslados.toFixed(2)),
-      totalRetenciones: Number(totalRetenciones.toFixed(2)),
+      ...(totalTraslados > 0 && {
+        totalTraslados: Number(totalTraslados.toFixed(2)),
+      }),
+      ...(totalRetenciones > 0 && {
+        totalRetenciones: Number(totalRetenciones.toFixed(2)),
+      }),
     };
   };
   const handleNewTaxSummary = (taxSummary) => {
@@ -871,8 +876,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       });
     });
     return {
-      summaryRet: newTaxSummaryRet,
-      summaryTras: newTaxSummaryTras,
+      ...(newTaxSummaryRet.length > 0 && { summaryRet: newTaxSummaryRet }),
+      ...(newTaxSummaryTras.length > 0 && { summaryTras: newTaxSummaryTras }),
     };
   };
   const handleSplitDiscountItems = (currentRecord) => {
@@ -1455,11 +1460,15 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     );
     return itemFullSummary;
   };
-  const handleDocRelData = (invoiceRelated, paymentId) => {
+  //Get related invoices data for payment
+  const handleDocRelData = (
+    invoiceRelated,
+    paymentId,
+    importePagado,
+    docToEquivalence
+  ) => {
     const totalLinkLines = invoiceRelated.getLineCount({ sublistId: "links" });
-    let numParcialidad = 1;
-    let internalCounter = 0;
-    let tempIndex = 0;
+    let numParcialidad = 0;
     let saldoAnterior = 0;
     let paymentLinkListTotal = 0;
     const invoiceTranId = invoiceRelated.getValue({
@@ -1494,21 +1503,22 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         Number(currentPaymentId) === Number(paymentId) &&
         currentPaymentType === "Pago"
       ) {
-        tempIndex = i;
-        numParcialidad = internalCounter + 1;
-        internalCounter++;
+        numParcialidad++;
         break;
       } else if (currentPaymentType === "Pago") {
         paymentLinkListTotal += Number(currentPaymentTotal);
+        numParcialidad++;
       }
     }
     saldoAnterior = Number(invoiceTotal) - paymentLinkListTotal;
     return {
       invoiceTranId,
+      importePagado,
       saldoAnterior: Number(saldoAnterior.toFixed(2)),
       numParcialidad,
       invoiceUuid,
       invoiceCurrency,
+      docToEquivalence,
     };
   };
   const handleTotalTaxesForPayment = (resultTaxes) => {
@@ -1517,25 +1527,29 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     let resultRetTaxesList = [];
     let paymentRetTaxesTotals = [];
     resultTaxes.forEach((invoice) => {
-      invoice.summaryTras.forEach((trasTaxElement) => {
-        resultTrasTaxesList.push({
-          ...(trasTaxElement.exempt && { exempt: trasTaxElement.exempt }),
-          base: trasTaxElement.base,
-          impuesto: trasTaxElement.impuesto,
-          tipoFactor: trasTaxElement.tipoFactor,
-          tasaOcuota: trasTaxElement.tasaOcuota,
-          importe: trasTaxElement.importe,
+      if (invoice.summaryTras) {
+        invoice.summaryTras.forEach((trasTaxElement) => {
+          resultTrasTaxesList.push({
+            ...(trasTaxElement.exempt && { exempt: trasTaxElement.exempt }),
+            base: trasTaxElement.base,
+            impuesto: trasTaxElement.impuesto,
+            tipoFactor: trasTaxElement.tipoFactor,
+            tasaOcuota: trasTaxElement.tasaOcuota,
+            importe: trasTaxElement.importe,
+          });
         });
-      });
-      invoice.summaryRet.forEach((retTaxElement) => {
-        resultRetTaxesList.push({
-          base: retTaxElement.base,
-          impuesto: retTaxElement.impuesto,
-          tipoFactor: retTaxElement.tipoFactor,
-          tasaOcuota: retTaxElement.tasaOcuota,
-          importe: retTaxElement.importe,
+      }
+      if (invoice.summaryRet) {
+        invoice.summaryRet.forEach((retTaxElement) => {
+          resultRetTaxesList.push({
+            base: retTaxElement.base,
+            impuesto: retTaxElement.impuesto,
+            tipoFactor: retTaxElement.tipoFactor,
+            tasaOcuota: retTaxElement.tasaOcuota,
+            importe: retTaxElement.importe,
+          });
         });
-      });
+      }
     });
     for (let i = 0; i < resultTrasTaxesList.length; i++) {
       if (paymentTrasTaxesTotals.length === 0) {
@@ -1607,6 +1621,58 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       paymentRetTaxesTotals,
     };
   };
+  const handleCurrencySymbol = (currencyId) => {
+    const currencySymbol = search.lookupFields({
+      type: search.Type.CURRENCY,
+      id: currencyId,
+      columns: ["symbol"],
+    });
+    return currencySymbol.symbol;
+  };
+  const handleDocToEquivalence = (
+    paymentCurrency,
+    invoiceCurrency,
+    invoiceExchangeRate
+  ) => {
+    if (invoiceCurrency === paymentCurrency) {
+      return 1;
+    } else if (paymentCurrency === "MXN") {
+      return Number((1 / (invoiceExchangeRate + 0.001)).toFixed(6));
+    } else {
+      return 20.1234;
+    }
+  };
+  const handleRecalcAmountsForPayment = (customItem) => {
+    customItem.forEach((item) => {
+      if (item.taxes.trasExist) {
+        log.debug("TRASENTRO", "TRASENTRO");
+        //Recalculo de traslados
+        item.taxes.taxSummary.summaryTras.forEach((summaryElement) => {
+          summaryElement.base = (
+            Number(summaryElement.base) / Number(item.docToRel.docToEquivalence)
+          ).toFixed(2);
+          summaryElement.importe = (
+            Number(summaryElement.importe) /
+            Number(item.docToRel.docToEquivalence)
+          ).toFixed(2);
+        });
+      }
+      if (item.taxes.retExist) {
+        //Recalculo de retenciones
+        item.taxes.taxSummary.summaryRet.forEach((summaryElement) => {
+          summaryElement.base = (
+            Number(summaryElement.base) / Number(item.docToRel.docToEquivalence)
+          ).toFixed(2);
+          summaryElement.importe = (
+            Number(summaryElement.importe) /
+            Number(item.docToRel.docToEquivalence)
+          ).toFixed(2);
+        });
+      }
+    });
+    log.debug("CUSTOMITEMFUNCTIONFUNCTION", customItem);
+    return customItem;
+  };
   const handleDataForPayment = (
     currentRecord,
     taxDataBase,
@@ -1624,9 +1690,10 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     const paymentForm = currentRecord.getText({
       fieldId: "custbody_ent_entloc_forma_pago",
     });
-    const currency = currentRecord.getText({
-      fieldId: "currencysymbol",
+    const currencyId = currentRecord.getValue({
+      fieldId: "custbody_ent_entloc_moneda_pago",
     });
+    const currency = handleCurrencySymbol(currencyId);
     const exchangeRate = currentRecord.getValue({
       fieldId: "exchangerate",
     });
@@ -1652,10 +1719,24 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           fieldId: "internalid",
           line: i,
         });
+        const invoiceCurrency = currentRecord.getSublistValue({
+          sublistId: "apply",
+          fieldId: "currency",
+          line: i,
+        });
         const invoiceRelated = record.load({
           type: "invoice",
           id: internalInvoiceId,
         });
+        const invoiceExchangeRate = invoiceRelated.getValue({
+          fieldId: "exchangerate",
+        });
+        //Equivalencia
+        const docToEquivalence = handleDocToEquivalence(
+          currency,
+          invoiceCurrency,
+          invoiceExchangeRate
+        );
         //Taxes summary for payment
         const resultTaxes = handleTaxesForPayment(
           invoiceRelated,
@@ -1665,24 +1746,33 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           isPayment
         );
         totalPaymentTaxesList.push(resultTaxes.taxSummary);
-        totalPaymentAmount += Number(amount);
+        totalPaymentAmount += Number(
+          (amount / Number(docToEquivalence)).toFixed(2)
+        );
         taxesForPayment.push({
           taxes: resultTaxes,
-          docToRel: handleDocRelData(invoiceRelated, paymentId),
+          docToRel: handleDocRelData(
+            invoiceRelated,
+            paymentId,
+            amount,
+            docToEquivalence
+          ),
           paymentData: {
-            pago: amount,
-            aPagar: total,
+            monto: Number((amount / Number(docToEquivalence)).toFixed(2)),
             paymentDate,
             paymentForm,
             currency,
-            exchangeRate,
+            ...(currency === invoiceCurrency || currency === "MXN"
+              ? { exchangeRate: 1 }
+              : { exchangeRate }),
           },
         });
       }
     }
+    const recalcAmounts = handleRecalcAmountsForPayment(taxesForPayment);
     const totalPaymentTaxes = handleTotalTaxesForPayment(totalPaymentTaxesList);
     return {
-      taxesForPayment,
+      taxesForPayment: recalcAmounts,
       totalPaymentTaxes,
       totalPaymentAmount: Number(totalPaymentAmount.toFixed(2)),
     };

@@ -16,6 +16,7 @@ define([
   "N/xml",
   "customData",
   "funcionesLoc",
+  "funcionesMail",
 ], (
   record,
   render,
@@ -28,7 +29,8 @@ define([
   encode,
   xml,
   customData,
-  funcionesLoc
+  funcionesLoc,
+  funcionesMail
 ) => {
   const handlePostRequest = (body, permisosValidex, prodMod) => {
     const validexResponse = https.post({
@@ -441,6 +443,11 @@ define([
               showCertMessage: true,
             },
           });
+          //Envía correo
+          const responseMail = funcionesMail.enviaCfdiMail(
+            recordType,
+            recordId
+          );
         } else {
           //error
           record.submitFields({

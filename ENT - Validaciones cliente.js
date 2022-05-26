@@ -45,20 +45,16 @@ define(["N/record", "N/search"], (record, search) => {
           type: "customer",
           id: customerId,
         });
-        const usoCfdiFac = customerRecord.getValue({
+        const usoCfdiFac = currentRecord.getValue({
           fieldId: "custbody_ent_entloc_uso_cfdi",
         });
-        const metodoPagoFac = customerRecord.getValue({
+        const metodoPagoFac = currentRecord.getValue({
           fieldId: "custbody_ent_entloc_ent_metodo_pago",
         });
-
-        log.debug("CUSTOMER RECORD", customerRecord);
-
-        const formaPagoFac = customerRecord.getValue({
+        const formaPagoFac = currentRecord.getValue({
           fieldId: "custbody_ent_entloc_forma_pago",
         });
-
-        const regimenFiscalFac = customerRecord.getValue({
+        const regimenFiscalFac = currentRecord.getValue({
           fieldId: "custbody_ent_entloc_reg_fis_receptor",
         });
 
@@ -73,7 +69,6 @@ define(["N/record", "N/search"], (record, search) => {
           });
         }
         if (!metodoPagoFac) {
-          log.debug("EXECUTE CHANGE", "changed");
           const metodoPagoCliente = customerRecord.getValue({
             fieldId: "custentity_ent_metodo_de_pago",
           });
@@ -141,23 +136,18 @@ define(["N/record", "N/search"], (record, search) => {
         type: "customer",
         id: customerId,
       });
-      const usoCfdiFac = customerRecord.getValue({
+      const usoCfdiFac = currentRecord.getValue({
         fieldId: "custbody_ent_entloc_uso_cfdi",
       });
-      const metodoPagoFac = customerRecord.getValue({
+      const metodoPagoFac = currentRecord.getValue({
         fieldId: "custbody_ent_entloc_ent_metodo_pago",
       });
-
-      log.debug("CUSTOMER RECORD", customerRecord);
-
-      const formaPagoFac = customerRecord.getValue({
+      const formaPagoFac = currentRecord.getValue({
         fieldId: "custbody_ent_entloc_forma_pago",
       });
-
-      const regimenFiscalFac = customerRecord.getValue({
+      const regimenFiscalFac = currentRecord.getValue({
         fieldId: "custbody_ent_entloc_reg_fis_receptor",
       });
-
       if (!usoCfdiFac) {
         const usoCfdiCliente = customerRecord.getValue({
           fieldId: "custentity_ent_uso_de_cfdi",
@@ -169,7 +159,6 @@ define(["N/record", "N/search"], (record, search) => {
         });
       }
       if (!metodoPagoFac) {
-        log.debug("EXECUTE CHANGE", "changed");
         const metodoPagoCliente = customerRecord.getValue({
           fieldId: "custentity_ent_metodo_de_pago",
         });

@@ -16,8 +16,10 @@ define(["N/render", "N/record", "funcionesLoc"], (
     customPdfCustomerTemplate
   ) => {
     try {
-      const extraData = funcionesLoc.getExtraCustomData(currentRecord);
-      log.debug("EXTRADATA", extraData);
+      const extraData = funcionesLoc.getExtraCustomData(
+        currentRecord,
+        subsidiaryRecord
+      );
       const renderer = render.create();
       renderer.addRecord("record", currentRecord);
       renderer.addRecord("subsidiary", subsidiaryRecord);
