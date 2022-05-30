@@ -414,6 +414,16 @@ define([
             customPdfCustomerTemplate
           );
           //OK
+          //Envía correo
+          const responseMail = funcionesMail.enviaCfdiMail(
+            currentRecord,
+            subsidiaryRecord,
+            customerRecord,
+            idPdfToSave,
+            xmlIdToSave,
+            validexUUID,
+            true
+          );
           record.submitFields({
             type: recordType,
             id: recordId,
@@ -443,11 +453,6 @@ define([
               showCertMessage: true,
             },
           });
-          //Envía correo
-          const responseMail = funcionesMail.enviaCfdiMail(
-            recordType,
-            recordId
-          );
         } else {
           //error
           record.submitFields({

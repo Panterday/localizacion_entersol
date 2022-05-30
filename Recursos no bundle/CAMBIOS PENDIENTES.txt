@@ -18,15 +18,10 @@ RfcEmisorCtaOrd
 ...
 SelloPago
 
-EquivalenciaDR colocar solo si los tipos de moneda son diferentes. 
-
-Usar moneda pago del nuevo campo moneda pago para el pago. 
-
 Llenar campo de moneda con el tipo de moneda de la cuenta, se puede cambiar. 
 
 Para el valor objeto de impuesto del DR, usar bandera. 
 
 Limpiar campo fecha
 
-Si moneda pago de Factura es USD y Pago es MXN, calcular monto de acuerdo al tipo de cambio. 
 

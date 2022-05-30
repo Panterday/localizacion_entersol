@@ -28,7 +28,9 @@
 	<#assign taxesAttrList = "">
 	<#list totalTaxesForPayment.paymentTrasTaxesTotals as totalTax>
 		<#if totalTax.impuesto == "002" && totalTax.tasaOcuota == "16">
-			<#assign taxesAttrList= taxesAttrList + " " + "TotalTrasladosBaseIVA16=\"${totalTax.base}\" TotalTrasladosImpuestoIVA16=\"${totalTax.importe}\"">
+			<#assign baseRounded = totalTax.base?number?string["0.00"]>
+			<#assign amountRounded = totalTax.importe?number?string["0.00"]>
+			<#assign taxesAttrList= taxesAttrList + " " + "TotalTrasladosBaseIVA16=\"${baseRounded}\" TotalTrasladosImpuestoIVA16=\"${amountRounded}\"">
 		<#elseif totalTax.impuesto == "002" && totalTax.tasaOcuota == "8">
 			<#assign taxesAttrList= taxesAttrList + " " + "TotalTrasladosBaseIVA8=\"${totalTax.base}\" TotalTrasladosImpuestoIVA8=\"${totalTax.importe}\"">
 		<#elseif totalTax.impuesto == "002" && totalTax.tasaOcuota == "0">

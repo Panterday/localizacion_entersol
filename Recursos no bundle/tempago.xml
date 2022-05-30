@@ -28,7 +28,9 @@
 	<#assign taxesAttrList = "">
 	<#list totalTaxesForPayment.paymentTrasTaxesTotals as totalTax>
 		<#if totalTax.impuesto == "002" && totalTax.tasaOcuota == "16">
-			<#assign taxesAttrList= taxesAttrList + " " + "TotalTrasladosBaseIVA16=\"17347.38\" TotalTrasladosImpuestoIVA16=\"2775.62\"">
+			<#assign baseRounded = totalTax.base?number?string["0.00"]>
+			<#assign amountRounded = totalTax.importe?number?string["0.00"]>
+			<#assign taxesAttrList= taxesAttrList + " " + "TotalTrasladosBaseIVA16=\"${baseRounded}\" TotalTrasladosImpuestoIVA16=\"${amountRounded}\"">
 		<#elseif totalTax.impuesto == "002" && totalTax.tasaOcuota == "8">
 			<#assign taxesAttrList= taxesAttrList + " " + "TotalTrasladosBaseIVA8=\"${totalTax.base}\" TotalTrasladosImpuestoIVA8=\"${totalTax.importe}\"">
 		<#elseif totalTax.impuesto == "002" && totalTax.tasaOcuota == "0">
@@ -108,14 +110,14 @@
 	<cfdi:Complemento>
 		<pago20:Pagos Version="2.0">
 			<pago20:Totales 
-				MontoTotalPagos="20124.36"
+				MontoTotalPagos="${totalPaymentAmount}"
 				${getTrasTaxAttr()} 
 				${getRetTaxAttr()} 
 			/>
 			<#list customItem as item>
-				<pago20:Pago FechaPago="${record.createddate?string.iso_nz?keep_before(".")}" FormaDePagoP="${item.paymentData.paymentForm?keep_before(" -")}" MonedaP="${item.paymentData.currency}" Monto="20124.36" TipoCambioP="${item.paymentData.exchangeRate}"> 
+				<pago20:Pago FechaPago="${record.createddate?string.iso_nz?keep_before(".")}" FormaDePagoP="${item.paymentData.paymentForm?keep_before(" -")}" MonedaP="${item.paymentData.currency}" Monto="${item.paymentData.monto}" TipoCambioP="${item.paymentData.exchangeRate}"> 
 					<pago20:DoctoRelacionado 
-						EquivalenciaDR="${item.docToRel.equivalenciaDr}" 
+						EquivalenciaDR="${item.docToRel.docToEquivalence}" 
 						IdDocumento="${item.docToRel.invoiceUuid}" 
 						ImpPagado="${item.docToRel.importePagado}" 
 						ImpSaldoAnt="${item.docToRel.saldoAnterior}" 
@@ -158,8 +160,10 @@
 						</pago20:ImpuestosDR>
 					</pago20:DoctoRelacionado>
 					<pago20:ImpuestosP>
-						<pago20:TrasladoP BaseP="15915.96" ImporteP="1432.182378" ImpuestoP="003" TasaOCuotaP="0.090000" TipoFactorP="Tasa"/>
-						<pago20:TrasladoP BaseP="17348.21" ImporteP="2775.620562" ImpuestoP="002" TasaOCuotaP="0.160000" TipoFactorP="Tasa"/>
+							<pago20:TrasladosP>
+								<pago20:TrasladoP BaseP="13181.66" ImporteP="1186.33" ImpuestoP="003" TasaOCuotaP="0.090000" TipoFactorP="Tasa"/>
+								<pago20:TrasladoP BaseP="14368.00" ImporteP="2299.00" ImpuestoP="002" TasaOCuotaP="0.160000" TipoFactorP="Tasa"/>
+							</pago20:TrasladosP>
 					</pago20:ImpuestosP>
 				</pago20:Pago>
 			</#list>

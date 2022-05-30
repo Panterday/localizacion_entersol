@@ -1522,35 +1522,45 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     };
   };
   const handleTotalTaxesForPayment = (resultTaxes) => {
+    log.debug("RESULTTAXES", resultTaxes);
     let resultTrasTaxesList = [];
     let paymentTrasTaxesTotals = [];
     let resultRetTaxesList = [];
     let paymentRetTaxesTotals = [];
     resultTaxes.forEach((invoice) => {
-      if (invoice.summaryTras) {
-        invoice.summaryTras.forEach((trasTaxElement) => {
+      if (invoice.resultTaxes.summaryTras) {
+        invoice.resultTaxes.summaryTras.forEach((trasTaxElement) => {
           resultTrasTaxesList.push({
             ...(trasTaxElement.exempt && { exempt: trasTaxElement.exempt }),
-            base: trasTaxElement.base,
+            base: (
+              Number(trasTaxElement.base) * invoice.globalExchangeRate
+            ).toFixed(2),
             impuesto: trasTaxElement.impuesto,
             tipoFactor: trasTaxElement.tipoFactor,
             tasaOcuota: trasTaxElement.tasaOcuota,
-            importe: trasTaxElement.importe,
+            importe: (
+              Number(trasTaxElement.importe) * invoice.globalExchangeRate
+            ).toFixed(2),
           });
         });
       }
-      if (invoice.summaryRet) {
-        invoice.summaryRet.forEach((retTaxElement) => {
+      if (invoice.resultTaxes.summaryRet) {
+        invoice.resultTaxes.summaryRet.forEach((retTaxElement) => {
           resultRetTaxesList.push({
-            base: retTaxElement.base,
+            base: (
+              Number(retTaxElement.base) * invoice.globalExchangeRate
+            ).toFixed(2),
             impuesto: retTaxElement.impuesto,
             tipoFactor: retTaxElement.tipoFactor,
             tasaOcuota: retTaxElement.tasaOcuota,
-            importe: retTaxElement.importe,
+            importe: (
+              Number(retTaxElement.importe) * invoice.globalExchangeRate
+            ).toFixed(2),
           });
         });
       }
     });
+    log.debug("RESULTAXESAFTERCALC", resultTrasTaxesList);
     for (let i = 0; i < resultTrasTaxesList.length; i++) {
       if (paymentTrasTaxesTotals.length === 0) {
         paymentTrasTaxesTotals.push({
@@ -1622,39 +1632,76 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     };
   };
   const handleCurrencySymbol = (currencyId) => {
-    const currencySymbol = search.lookupFields({
-      type: search.Type.CURRENCY,
-      id: currencyId,
-      columns: ["symbol"],
-    });
-    return currencySymbol.symbol;
+    if (currencyId) {
+      const currencySymbol = search.lookupFields({
+        type: search.Type.CURRENCY,
+        id: currencyId,
+        columns: ["symbol"],
+      });
+      return currencySymbol.symbol;
+    } else {
+      return null;
+    }
   };
-  const handleDocToEquivalence = (
+  const handleGlobalExchangeRate = (
     paymentCurrency,
     invoiceCurrency,
-    invoiceExchangeRate
+    customExchangeRate
   ) => {
     if (invoiceCurrency === paymentCurrency) {
       return 1;
     } else if (paymentCurrency === "MXN") {
-      return Number((1 / (invoiceExchangeRate + 0.001)).toFixed(6));
+      return 1;
     } else {
-      return 20.1234;
+      return customExchangeRate;
+    }
+  };
+  const handleDocToEquivalence = (
+    paymentCurrency,
+    invoiceCurrency,
+    exchangeRate,
+    customExchangeRate
+  ) => {
+    if (invoiceCurrency === paymentCurrency) {
+      return 1;
+    } else if (paymentCurrency === "MXN") {
+      return Number((1 / exchangeRate + 0.001).toFixed(4));
+    } else {
+      return customExchangeRate;
+    }
+  };
+  const handleConvertedDecimals = (base, noDecimals) => {
+    const esEntero = Number.isInteger(base);
+    const stringBase = base + "";
+    const intPart = keepBefore(stringBase, ".");
+    const decimalPart = keepAfter(stringBase, ".");
+    let newDecimalPart = "";
+    if (decimalPart) {
+      for (let i = 0; i < noDecimals; i++) {
+        newDecimalPart += decimalPart[i];
+      }
+    }
+    if (esEntero) {
+      return base.toFixed(noDecimals);
+    } else {
+      return intPart + "." + newDecimalPart;
     }
   };
   const handleRecalcAmountsForPayment = (customItem) => {
     customItem.forEach((item) => {
       if (item.taxes.trasExist) {
-        log.debug("TRASENTRO", "TRASENTRO");
         //Recalculo de traslados
         item.taxes.taxSummary.summaryTras.forEach((summaryElement) => {
-          summaryElement.base = (
-            Number(summaryElement.base) / Number(item.docToRel.docToEquivalence)
-          ).toFixed(2);
-          summaryElement.importe = (
+          const currentBase =
+            Number(summaryElement.base) /
+            Number(item.docToRel.docToEquivalence);
+          const currentAmount =
             Number(summaryElement.importe) /
-            Number(item.docToRel.docToEquivalence)
-          ).toFixed(2);
+            Number(item.docToRel.docToEquivalence);
+          const convertedBase = handleConvertedDecimals(currentBase, 2);
+          const convertedAmount = handleConvertedDecimals(currentAmount, 2);
+          summaryElement.base = convertedBase;
+          summaryElement.importe = convertedAmount;
         });
       }
       if (item.taxes.retExist) {
@@ -1662,15 +1709,14 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         item.taxes.taxSummary.summaryRet.forEach((summaryElement) => {
           summaryElement.base = (
             Number(summaryElement.base) / Number(item.docToRel.docToEquivalence)
-          ).toFixed(2);
+          ).toFixed(6);
           summaryElement.importe = (
             Number(summaryElement.importe) /
             Number(item.docToRel.docToEquivalence)
-          ).toFixed(2);
+          ).toFixed(6);
         });
       }
     });
-    log.debug("CUSTOMITEMFUNCTIONFUNCTION", customItem);
     return customItem;
   };
   const handleDataForPayment = (
@@ -1696,6 +1742,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     const currency = handleCurrencySymbol(currencyId);
     const exchangeRate = currentRecord.getValue({
       fieldId: "exchangerate",
+    });
+    const customExchangeRate = currentRecord.getValue({
+      fieldId: "custbody_ent_entloc_tipo_cambio_pago",
     });
     for (let i = 0; i < totalApplyLines; i++) {
       const apply = currentRecord.getSublistValue({
@@ -1728,14 +1777,18 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           type: "invoice",
           id: internalInvoiceId,
         });
-        const invoiceExchangeRate = invoiceRelated.getValue({
-          fieldId: "exchangerate",
-        });
+        //Exchange rate
+        const globalExchangeRate = handleGlobalExchangeRate(
+          currency,
+          invoiceCurrency,
+          customExchangeRate
+        );
         //Equivalencia
         const docToEquivalence = handleDocToEquivalence(
           currency,
           invoiceCurrency,
-          invoiceExchangeRate
+          exchangeRate,
+          customExchangeRate
         );
         //Taxes summary for payment
         const resultTaxes = handleTaxesForPayment(
@@ -1745,7 +1798,10 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           mapUnitsDataBase,
           isPayment
         );
-        totalPaymentTaxesList.push(resultTaxes.taxSummary);
+        totalPaymentTaxesList.push({
+          resultTaxes: resultTaxes.taxSummary,
+          globalExchangeRate,
+        });
         totalPaymentAmount += Number(
           (amount / Number(docToEquivalence)).toFixed(2)
         );
@@ -1764,7 +1820,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
             currency,
             ...(currency === invoiceCurrency || currency === "MXN"
               ? { exchangeRate: 1 }
-              : { exchangeRate }),
+              : { exchangeRate: customExchangeRate }),
           },
         });
       }
@@ -1774,7 +1830,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     return {
       taxesForPayment: recalcAmounts,
       totalPaymentTaxes,
-      totalPaymentAmount: Number(totalPaymentAmount.toFixed(2)),
+      totalPaymentAmount: Number(
+        (totalPaymentAmount * exchangeRate * customExchangeRate).toFixed(2)
+      ),
     };
   };
   const handleSubsidiaryAddressFields = (currentSubsidiary) => {

@@ -4,7 +4,14 @@
  */
 
 define(["N/https", "N/url", "N/record"], (https, url, record) => {
-  const enviaCfdiMail = (recordType, recordId) => {
+  const enviaCfdiMail = (
+    currentRecord,
+    subsidiaryRecord,
+    customerRecord,
+    idPdf,
+    idXml,
+    envioAutomatico
+  ) => {
     log.debug("TESTING MAIL", "TESTING MAIL");
   };
   return {
