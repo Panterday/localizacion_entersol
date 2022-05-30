@@ -1,19 +1,27 @@
 Si el método de pago es PPD obligatoriamente forma de pago es 99-Por definir y 
 si es PUE NO puede ser 99-Por definir. 
 
-Prevenir eliminación de un CFDI timbrado.
+**Corregir que no se arrastren los datos de timbrado a las otras transacciones. 
 
-Corregir que no se arrastren los datos de timbrado a las otras transacciones. 
+Cancelación
+Convertir el proceso de cancelación a la nueva versión.
 
-Logo nota de crédito 
+Factura de traslado 
+Resolver el tema de artículos de tipo kit (Es opcional, no se considera.)
 
-Se encima cabecera formato 
+Al crear pago no trajo los campos del cliente.
 
-PAGO 
+Ingresar número de caracteres de la serie
 
-Método de pago por defecto PUE 
-Quitar uso CFDI
+NumOperacion 
+RfcEmisorCtaOrd
+...
+SelloPago
 
-Revisar parcialidad
+Llenar campo de moneda con el tipo de moneda de la cuenta, se puede cambiar. 
+
+Para el valor objeto de impuesto del DR, usar bandera. 
+
+Limpiar campo fecha
 
 

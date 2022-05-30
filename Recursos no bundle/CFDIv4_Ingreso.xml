@@ -59,12 +59,25 @@
 		<#return result>
 	</#if>
 </#function>
+<#function formatStringDate value>
+	<#assign stringDate = aDateTime?string.iso_nz>	
+	<#return value?date?iso_utc+"T"+stringDate?keep_after("T")?keep_before(".")>
+</#function>
+<#function formatDate value>
+	<#return value?string.iso_nz>
+</#function>
+<#assign cfdiDate = .now>
+<#if record.custbody_ent_entloc_nueva_fecha_cfdi4?has_content>
+	<#assign cfdiDate = formatDate(record.custbody_ent_entloc_nueva_fecha_cfdi4)>
+<#else>
+	<#assign cfdiDate = formatStringDate(record.trandate)>
+</#if>
 <cfdi:Comprobante 
 	xmlns:cfdi="http://www.sat.gob.mx/cfd/4" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
 	xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd" 
 	Version="4.0" 
-	Fecha="${aDateTime?string.iso_nz?keep_before(".")}" 
+	Fecha="${cfdiDate}"
 	Serie="${customRecordData.serie}" 
 	Folio="${customRecordData.folio}" 
 	FormaPago="${record.custbody_ent_entloc_forma_pago?keep_before(" -")}" 
@@ -88,7 +101,7 @@
 	</#if>
 	<cfdi:Emisor 
 		Rfc="${subsidiary.federalidnumber}" 
-		Nombre="${subsidiary.name}" 
+		Nombre="${subsidiary.custrecord_ent_entloc_razon_social}" 
 		RegimenFiscal="${subsidiary.custrecord_ent_entloc_regimen_fiscal?keep_before(" -")}"
 	/> 
 	<cfdi:Receptor 

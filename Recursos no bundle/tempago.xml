@@ -160,24 +160,10 @@
 						</pago20:ImpuestosDR>
 					</pago20:DoctoRelacionado>
 					<pago20:ImpuestosP>
-						<#if item.taxes.retExist?has_content>
-							<pago20:RetencionesP>
-								<#list item.taxes.taxSummary.summaryRet as summaryElement>
-									<pago20:RetencionP ImporteP="${summaryElement.importe}" ImpuestoP="${summaryElement.impuesto}"/>
-								</#list>
-							</pago20:RetencionesP>
-						</#if>
-						<#if item.taxes.trasExist?has_content>
 							<pago20:TrasladosP>
-								<#list item.taxes.taxSummary.summaryTras as summaryElement>
-									<#if summaryElement.exempt?has_content>
-										<pago20:TrasladoP BaseP="${summaryElement.base}" ImpuestoP="${summaryElement.impuesto}" TipoFactorP="Exento"/>
-									<#else>
-										<pago20:TrasladoP BaseP="${summaryElement.base}" ImporteP="${summaryElement.importe}" ImpuestoP="${summaryElement.impuesto}" TasaOCuotaP="${formatRate(summaryElement.tasaOcuota)}" TipoFactorP="${summaryElement.tipoFactor}"/>
-									</#if>
-								</#list>
+								<pago20:TrasladoP BaseP="13181.66" ImporteP="1186.33" ImpuestoP="003" TasaOCuotaP="0.090000" TipoFactorP="Tasa"/>
+								<pago20:TrasladoP BaseP="14368.00" ImporteP="2299.00" ImpuestoP="002" TasaOCuotaP="0.160000" TipoFactorP="Tasa"/>
 							</pago20:TrasladosP>
-						</#if>
 					</pago20:ImpuestosP>
 				</pago20:Pago>
 			</#list>

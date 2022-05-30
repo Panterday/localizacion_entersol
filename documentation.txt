@@ -43,12 +43,17 @@ CFDI 4.0
         custbody_ent_entloc_uso_cfdi
         custbody_ent_entloc_uuid
         ENT - Tipo de comprobante (Ocultos)
+        ENT - Cambiar fecha de timbrado por
+
+        ENT - Moneda pago
+        ENT - Monto moneda pago
 
         ENT - TrasUUID
         ENT - Documento electrónico traslado
         ENT - Pdf timbrado traslado
     Campos personalizados de subsidiaria: 
         ENT- Régimen fiscal (Ligado a lista: ENT - Sat régimen fiscal)
+        ENT - Razón social CFDI 4.0
     Campos personalizadas de cliente: 
         ENT - Rfc
 		ENT - Régimen fiscal

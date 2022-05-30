@@ -16,6 +16,7 @@ define([
   "N/xml",
   "customData",
   "funcionesLoc",
+  "funcionesMail",
 ], (
   record,
   render,
@@ -28,7 +29,8 @@ define([
   encode,
   xml,
   customData,
-  funcionesLoc
+  funcionesLoc,
+  funcionesMail
 ) => {
   const handlePostRequest = (body, permisosValidex, prodMod) => {
     const validexResponse = https.post({
@@ -412,6 +414,16 @@ define([
             customPdfCustomerTemplate
           );
           //OK
+          //Envía correo
+          const responseMail = funcionesMail.enviaCfdiMail(
+            currentRecord,
+            subsidiaryRecord,
+            customerRecord,
+            idPdfToSave,
+            xmlIdToSave,
+            validexUUID,
+            true
+          );
           record.submitFields({
             type: recordType,
             id: recordId,
