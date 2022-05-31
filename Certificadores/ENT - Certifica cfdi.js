@@ -414,6 +414,7 @@ define([
             customPdfCustomerTemplate
           );
           //OK
+          let envioAutomatico = true;
           //Envía correo
           const responseMail = funcionesMail.enviaCfdiMail(
             currentRecord,
@@ -422,8 +423,11 @@ define([
             idPdfToSave,
             xmlIdToSave,
             validexUUID,
-            true
+            envioAutomatico
           );
+          log.debug('Response Mail', responseMail);
+          const {errorEmail, msjError} = responseMail;
+
           record.submitFields({
             type: recordType,
             id: recordId,
@@ -443,6 +447,7 @@ define([
               custbody_ent_entloc_tipo_cfdi: tipoComprobante,
               custbody_ent_entloc_impuestos_items: "",
               custbody_ent_entloc_cfdis_relacionados: "",
+              custbody_ent_mail_estado_correo: msjError, 
             },
           });
           //Redirección a la transacción
@@ -451,6 +456,7 @@ define([
             id: recordId,
             parameters: {
               showCertMessage: true,
+              ...(!errorEmail ? {showEmailMessage: true} : {errorEmailMessage: true})
             },
           });
         } else {

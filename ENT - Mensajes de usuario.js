@@ -10,6 +10,8 @@ define(["N/record", "N/ui/message"], (record, message) => {
     showGenMessage,
     errorCertMessage,
     errorGenMessage,
+    showEmailMessage,
+    errorEmailMessage,
     form
   ) => {
     if (showCertMessage) {
@@ -47,7 +49,24 @@ define(["N/record", "N/ui/message"], (record, message) => {
           "El documento no se pudo certificar, consulte la subficha CFDI 4.0",
         duration: 5000,
       });
-    }
+    } else if (showEmailMessage) {
+      //Show success message cert
+      form.addPageInitMessage({
+        type: message.Type.CONFIRMATION,
+        title: "Correo enviado con éxito",
+        message: "El correo ha sido enviado con éxito.",
+        duration: 5000,
+      });
+    } else if (errorEmailMessage) {
+      //Show error message
+      form.addPageInitMessage({
+        type: message.Type.ERROR,
+        title: "Error en el envío de correo",
+        message:
+          "El correo no se pudo enviar, consulte la subficha CFDI 4.0 - Información de errores de Correo CFDI",
+        duration: 5000,
+      });
+    } 
   };
   const beforeLoad = (context) => {
     if (context.type === context.UserEventType.VIEW) {
@@ -57,12 +76,16 @@ define(["N/record", "N/ui/message"], (record, message) => {
       const showGenMessage = context.request.parameters.showGenMessage;
       const errorCertMessage = context.request.parameters.errorCertMessage;
       const errorGenMessage = context.request.parameters.errorGenMessage;
+      const showEmailMessage = context.request.parameters.showEmailMessage;
+      const errorEmailMessage = context.request.parameters.errorEmailMessage;
       //User Message
       handleUserMessage(
         showCertMessage,
         showGenMessage,
         errorCertMessage,
         errorGenMessage,
+        showEmailMessage,
+        errorEmailMessage,
         context.form
       );
     }
