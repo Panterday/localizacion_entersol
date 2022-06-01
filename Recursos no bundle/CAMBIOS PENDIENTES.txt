@@ -18,10 +18,25 @@ RfcEmisorCtaOrd
 ...
 SelloPago
 
-Llenar campo de moneda con el tipo de moneda de la cuenta, se puede cambiar. 
-
 Para el valor objeto de impuesto del DR, usar bandera. 
 
 Limpiar campo fecha
 
+
+Agregar campo de usuario de pruebas VALIDEX 
+
+Nombre plantillas PDF
+CFDI 4.0 STD PLANTIILA NOTA DE CREDITO
+Número de caracteres de serie
+
+Corregir Mayúsculas
+Configuración Localización Entersol
+
+Quitar los ENT a las listas 
+
+Validar campos de CFDI desde ORDEN DE VENTA
+
+Nuevos nombres botones
+Generar XML CFDI 4.0
+Certificar XML CFDI 4.0
 

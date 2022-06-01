@@ -6,7 +6,36 @@
 to one of the following values:
 copy, create, edit*/
 define(["N/record", "N/search"], (record, search) => {
+  const getCurrencyAccount = (currenRecord) => {
+    let accountRecord = null;
+    let accountCurrency = null;
+    const accountId = currenRecord.getValue({
+      fieldId: "account",
+    });
+    if (accountId) {
+      accountRecord = record.load({
+        type: "account",
+        id: accountId,
+      });
+      accountCurrency = accountRecord.getValue({
+        fieldId: "currency",
+      });
+    }
+    return accountCurrency;
+  };
   const paymentPageInit = (currentRecord) => {
+    //Account currency
+    const currencyAccount = getCurrencyAccount(currentRecord);
+    if (
+      !currentRecord.getValue({
+        fieldId: "custbody_ent_entloc_moneda_pago",
+      })
+    ) {
+      currentRecord.setValue({
+        fieldId: "custbody_ent_entloc_moneda_pago",
+        value: currencyAccount,
+      });
+    }
     const totalApplyLines = currentRecord.getLineCount({ sublistId: "apply" });
     const exchangeRate = currentRecord.getValue({
       fieldId: "custbody_ent_entloc_tipo_cambio_pago",

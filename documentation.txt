@@ -7,100 +7,96 @@ El nombre de los campos NO deben llevar el prefijo ENT - , únicamente el ID sí
     Nombres de campos: 
 CFDI 4.0
     Registros personalizados: 
-        Configuración localización entersol
-        ENT - Cfdis relacionados
-        ENT - Mapeo de unidades 
-        ENT - Plantilla de documento electrónico 
-        ENT - Sat clave unidad
+        *Configuración localización entersol
+        *ENT - Cfdis relacionados
+        *ENT - Mapeo de unidades 
+        *ENT - Plantilla de documento electrónico 
+        *ENT - Sat clave unidad
     Campos personalizados de transacción: 
-        ENT – UUID 
-        ENT – DOCUMENTO ELECTRÓNICO 
-        ENT – ESTADO GENERACIÓN XML 
-        ENT – ESTADO CERTIFICACIÓN
-        ENT – Cadena original (Ocultos)
-        ENT – Cadena QR (Ocultos)
-        ENT - PDF TIMBRADO
-        ENT - Método de pago (Ligado a lista: ENT - Sat método de pago)
-		ENT - USO CFDI (Ligado a lista: ENT - Sat USO CFDI)
-        ENT - Sat forma de pago (Ligado a lista: ENT - Sat forma de pago)
-        ENT - Exportación (Ligado a lista: ENT - Sat exportación)
-        ENT - Sat clave prod servicio (Vista del campo Sat clave prod servicio en el artículo)
-        ENT - Régimen fiscal receptor
-        ENT - Plantilla de impresión CFDI
-        ENT - PLANTILLA E-DOCUMENT CFDI
-        custbody_ent_entloc_dir_facturar
-        custbody_ent_entloc_ent_metodo_pago
-        custbody_ent_entloc_exportacion
-        custbody_ent_entloc_fecha_cert
-        custbody_ent_entloc_firma_cfdi
-        custbody_ent_entloc_firma_sat
-        custbody_ent_entloc_forma_pago
-        custbody_ent_entloc_monto_letra
-        custbody_ent_entloc_pdf_timbrado
-        custbody_ent_entloc_reg_fis_receptor
-        custbody_ent_entloc_serie_csd
-        custbody_ent_entloc_serie_sat
-        custbody_ent_entloc_uso_cfdi
-        custbody_ent_entloc_uuid
-        ENT - Tipo de comprobante (Ocultos)
-        ENT - Cambiar fecha de timbrado por
+        *ENT – UUID 
+        *ENT – DOCUMENTO ELECTRÓNICO 
+        *ENT – ESTADO GENERACIÓN XML 
+        *ENT – ESTADO CERTIFICACIÓN
+        *ENT – Cadena original (Ocultos)
+        *ENT – Cadena QR (Ocultos)
+        *ENT - PDF TIMBRADO
+        *ENT - Método de pago (Ligado a lista: ENT - Sat método de pago)
+		*ENT - USO CFDI (Ligado a lista: ENT - Sat USO CFDI)
+        *ENT - Sat forma de pago (Ligado a lista: ENT - Sat forma de pago)
+        *ENT - Exportación (Ligado a lista: ENT - Sat exportación)
+        *ENT - Régimen fiscal receptor
+        
+        *custbody_ent_entloc_dir_facturar
+       
+        *custbody_ent_entloc_fecha_cert
+        *custbody_ent_entloc_firma_cfdi
+        *custbody_ent_entloc_firma_sat
+        
+        *custbody_ent_entloc_serie_csd
+        *custbody_ent_entloc_serie_sat
+        
+        *ENT - Tipo de comprobante (Ocultos)
+        *ENT - Cambiar fecha de timbrado por
 
-        ENT - Moneda pago
-        ENT - Monto moneda pago
+        *ENT - Moneda pago
+        *ENT - Tipo de cambio pago 
 
-        ENT - TrasUUID
-        ENT - Documento electrónico traslado
-        ENT - Pdf timbrado traslado
+        *ENT - TrasUUID
+        *ENT - Documento electrónico traslado
+        *ENT - Pdf timbrado traslado
+
+        ENT - Número de operación
+        ENT - Rfc emisor cuenta ordenante
     Campos personalizados de subsidiaria: 
-        ENT- Régimen fiscal (Ligado a lista: ENT - Sat régimen fiscal)
-        ENT - Razón social CFDI 4.0
+        *ENT- Régimen fiscal (Ligado a lista: ENT - Sat régimen fiscal)
+        *ENT - Razón social CFDI 4.0
     Campos personalizadas de cliente: 
-        ENT - Rfc
-		ENT - Régimen fiscal
-        ENT - Uso de CFDI
-        ENT - Forma de pago
-        ENT - Método de pago
-        ENT - Nombre legal sat
-        ENT - Exportación
-        ENT - Plantilla pdf factura de venta
-        ENT - Plantilla xml factura de venta
-        ENT - Plantilla pdf nota de crédito 
-        ENT - Plantilla xml nota de crédito 
-        ENT - Plantilla pdf pago 
-        ENT - Plantilla xml pago 
+        *ENT - Rfc
+		*ENT - Régimen fiscal
+        *ENT - Uso de CFDI
+        *ENT - Forma de pago
+        *ENT - Método de pago
+        *ENT - Nombre legal sat
+        *ENT - Exportación
+        *ENT - Plantilla pdf factura de venta
+        *ENT - Plantilla xml factura de venta
+        *ENT - Plantilla pdf nota de crédito 
+        *ENT - Plantilla xml nota de crédito 
+        *ENT - Plantilla pdf pago 
+        *ENT - Plantilla xml pago 
     Campos personalizadas de artículo: 
-        ENT - Sat clave prod servicio (Ligado a lista: ENT - Sat clave prod serv)
+        *ENT - Sat clave prod servicio (Ligado a lista: ENT - Sat clave prod serv)
     Campos de línea de artículos
-        custcol_ent_entloc_sat_clave_p_s_hidd
-        ENT - Sat clave prod servicio
+        *custcol_ent_entloc_sat_clave_p_s_hidd
+        *ENT - Sat clave prod servicio
     Otros campos personalizados (Aplicado a código de impuesto): 
-        ENT - Código de impuesto (Ligado a lista: ENT - Sat código de impuesto)
-        ENT - Objeto de impuesto
+        *ENT - Código de impuesto (Ligado a lista: ENT - Sat código de impuesto)
+        *ENT - Objeto de impuesto
     Formularios: 
-        Factura de venta Entersol localización
-        Nota de crédito Entersol localización
-        Pago Entersol localización
-        Ejecución de pedido de artículos Entersol Localización
+        *Factura de venta Entersol localización
+        *Nota de crédito Entersol localización
+        *Pago Entersol localización
+        *Ejecución de pedido de artículos Entersol Localización
     Centros y fichas: 
-		Transacción:
+		*Transacción:
         	CFDI 4.0
-		Cliente: 
+		*Cliente: 
 			CFDI 4.0
 
     Comienzo de mapeo de XML para la certificación en dos pasos. 
     Comienzo de carga de catálogos. 
 
     Listas personalizadas 
-        ENT - Sat Método de pago
-        ENT - Sat forma de pago
-        ENT - Sat exportación
-        ENT - Sat régimen fiscal
-        ENT - Sat código de impuesto
-        ENT - Sat Periodicidad
-        ENT - Sat Meses
-        ENT - Sat Tipo relacion
-        ENT - Sat Uso de CFDI
-        ENT - Sat Objeto Impuesto
-        ENT - Sat Tipo Factor
-        ENT - Sat clave unidad
+        *ENT - Sat Método de pago
+        *ENT - Sat forma de pago
+        *ENT - Sat exportación
+        *ENT - Sat régimen fiscal
+        *ENT - Sat código de impuesto
+        *ENT - Sat Periodicidad
+        *ENT - Sat Meses
+        *ENT - Sat Tipo relacion
+        *ENT - Sat Uso de CFDI
+        *ENT - Sat Objeto Impuesto
+        *ENT - Sat Tipo Factor
+     
 

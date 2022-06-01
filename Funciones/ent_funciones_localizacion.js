@@ -9,7 +9,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
   runtime,
   render
 ) => {
-  const enviaCfdiMail = (recordType, recordId) => {};
   const handleMontoEnLetra = (num, moneda) => {
     function Unidades(num) {
       switch (num) {
@@ -375,7 +374,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           return false;
         }
       } catch (error) {
-        log.debug("GLOBAL FUNCTIONS ERROR", error);
+        log.debug("ERROR HANDLE ACCESS FUNCTION", error);
         return false;
       }
     } else {
@@ -387,9 +386,11 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     let internalIdRegMaestro = null;
     let subsidiaryId = null;
     let permisosValidex = "";
+    let permisosPruebaValidex = "";
     let prodMod = false;
     let idGuardaDocumentosCarpeta = null;
     let roles = null;
+    let emailAutomatico = false;
     let errorInterDescription = "";
     try {
       const buscaGlobalConfig = search.create({
@@ -399,6 +400,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           "internalId",
           "custrecord_ent_entloc_subsidiaria",
           "custrecord_ent_entloc_usuario_validex",
+          "custrecord_ent_entloc_usuario_prue_valid",
           "custrecord_ent_entloc_entorno_prod",
           "custrecord_ent_entloc_carpeta_archivos",
           "custrecord_ent_entloc_roles",
@@ -406,6 +408,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           "custrecord_ent_entloc_roles_nc",
           "custrecord_ent_entloc_roles_pc",
           "custrecord_ent_entloc_roles_ft",
+          "custrecord_ent_entloc_envio_email_auto",
         ],
       });
       buscaGlobalConfig.run().each((result) => {
@@ -418,11 +421,17 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         permisosValidex = result.getValue({
           name: "custrecord_ent_entloc_usuario_validex",
         });
+        permisosPruebaValidex = result.getValue({
+          name: "custrecord_ent_entloc_usuario_prue_valid",
+        });
         prodMod = result.getValue({
           name: "custrecord_ent_entloc_entorno_prod",
         });
         idGuardaDocumentosCarpeta = result.getValue({
           name: "custrecord_ent_entloc_carpeta_archivos",
+        });
+        emailAutomatico = result.getValue({
+          name: "custrecord_ent_entloc_envio_email_auto",
         });
         switch (recordType) {
           case "invoice":
@@ -456,6 +465,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       });
     } catch (error) {
       errorInterDescription += "<br /> " + error;
+      log.debug("ERROR IN HANDLEPERMS FUNCTION", error);
     }
     if (!idGuardaDocumentosCarpeta && subsidiaryId) {
       //==================================Buscando carpeta en gabinete==============================//
@@ -486,6 +496,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       roles,
       access,
       prodMod,
+      emailAutomatico,
+      permisosPruebaValidex,
     };
   };
   const getGlobalConfig = (subsidiaryId, recordType, esTraslado) => {
@@ -1522,7 +1534,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     };
   };
   const handleTotalTaxesForPayment = (resultTaxes) => {
-    log.debug("RESULTTAXES", resultTaxes);
     let resultTrasTaxesList = [];
     let paymentTrasTaxesTotals = [];
     let resultRetTaxesList = [];
@@ -1560,7 +1571,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         });
       }
     });
-    log.debug("RESULTAXESAFTERCALC", resultTrasTaxesList);
     for (let i = 0; i < resultTrasTaxesList.length; i++) {
       if (paymentTrasTaxesTotals.length === 0) {
         paymentTrasTaxesTotals.push({
@@ -1678,7 +1688,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     let newDecimalPart = "";
     if (decimalPart) {
       for (let i = 0; i < noDecimals; i++) {
-        newDecimalPart += decimalPart[i];
+        newDecimalPart += decimalPart[i] ? decimalPart[i] : 0;
       }
     }
     if (esEntero) {
@@ -1707,13 +1717,16 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       if (item.taxes.retExist) {
         //Recalculo de retenciones
         item.taxes.taxSummary.summaryRet.forEach((summaryElement) => {
-          summaryElement.base = (
-            Number(summaryElement.base) / Number(item.docToRel.docToEquivalence)
-          ).toFixed(6);
-          summaryElement.importe = (
+          const currentBase =
+            Number(summaryElement.base) /
+            Number(item.docToRel.docToEquivalence);
+          const currentAmount =
             Number(summaryElement.importe) /
-            Number(item.docToRel.docToEquivalence)
-          ).toFixed(6);
+            Number(item.docToRel.docToEquivalence);
+          const convertedBase = handleConvertedDecimals(currentBase, 2);
+          const convertedAmount = handleConvertedDecimals(currentAmount, 2);
+          summaryElement.base = convertedBase;
+          summaryElement.importe = convertedAmount;
         });
       }
     });
@@ -1831,7 +1844,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       taxesForPayment: recalcAmounts,
       totalPaymentTaxes,
       totalPaymentAmount: Number(
-        (totalPaymentAmount * exchangeRate * customExchangeRate).toFixed(2)
+        (totalPaymentAmount * customExchangeRate).toFixed(2)
       ),
     };
   };

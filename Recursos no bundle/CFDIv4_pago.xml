@@ -18,6 +18,12 @@
     <#return result>
   </#if>  
 </#function>
+<#function getAttrOne attr value1>
+   <#if value1?has_content>
+    <#assign result="${attr}=\"${value1}\"">
+    <#return result>
+  </#if>  
+</#function>
 <#function getNodePair node attr value>
    <#if value?has_content>
     <#assign result="<${node} ${attr}=\"${value}\" />">
@@ -67,6 +73,19 @@
 	<#assign result = ((amount?number)/100)?string["0.000000"]>
 	<#return result>
 </#function>
+<#function formatStringDate value>
+	<#assign stringDate = aDateTime?string.iso_nz>	
+	<#return value?date?iso_utc+"T"+stringDate?keep_after("T")?keep_before(".")>
+</#function>
+<#function formatDate value>
+	<#return value?string.iso_nz>
+</#function>
+<#assign cfdiDate = .now>
+<#if record.custbody_ent_entloc_nueva_fecha_cfdi4?has_content>
+	<#assign cfdiDate = formatDate(record.custbody_ent_entloc_nueva_fecha_cfdi4)>
+<#else>
+	<#assign cfdiDate = formatStringDate(record.trandate)>
+</#if>
 <cfdi:Comprobante 
     xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd http://www.sat.gob.mx/Pagos20 http://www.sat.gob.mx/sitio_internet/cfd/Pagos/Pagos20.xsd" 
     xmlns:pago20="http://www.sat.gob.mx/Pagos20" 
@@ -75,7 +94,7 @@
     Version="4.0" 
     Serie="${customRecordData.serie}" 
 	Folio="${customRecordData.folio}" 
-    Fecha="${aDateTime?string.iso_nz?keep_before(".")}" 
+    Fecha="${cfdiDate}" 
     SubTotal="0" 
     Moneda="XXX" 
     Total="0" 
@@ -115,7 +134,15 @@
 				${getRetTaxAttr()} 
 			/>
 			<#list customItem as item>
-				<pago20:Pago FechaPago="${record.createddate?string.iso_nz?keep_before(".")}" FormaDePagoP="${item.paymentData.paymentForm?keep_before(" -")}" MonedaP="${item.paymentData.currency}" Monto="${item.paymentData.monto}" TipoCambioP="${item.paymentData.exchangeRate}"> 
+				<pago20:Pago 
+					FechaPago="${record.createddate?string.iso_nz?keep_before(".")}" 
+					FormaDePagoP="${item.paymentData.paymentForm?keep_before(" -")}" 
+					MonedaP="${item.paymentData.currency}" 
+					Monto="${item.paymentData.monto}" 
+					TipoCambioP="${item.paymentData.exchangeRate}"
+					${getAttrOne("NumOperacion", record.custbody_ent_entloc_num_operacion)}
+					${getAttrOne("RfcEmisorCtaOrd", record.custbody_ent_entloc_rfc_cuenta_ord)}
+				> 	
 					<pago20:DoctoRelacionado 
 						EquivalenciaDR="${item.docToRel.docToEquivalence}" 
 						IdDocumento="${item.docToRel.invoiceUuid}" 

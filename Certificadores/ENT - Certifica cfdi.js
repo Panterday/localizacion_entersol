@@ -32,14 +32,20 @@ define([
   funcionesLoc,
   funcionesMail
 ) => {
-  const handlePostRequest = (body, permisosValidex, prodMod) => {
+  const handlePostRequest = (
+    body,
+    permisosValidex,
+    permisosPruebaValidex,
+    prodMod
+  ) => {
+    let key = prodMod ? permisosValidex : permisosPruebaValidex;
     const validexResponse = https.post({
       body,
       ...(prodMod
         ? { url: "https://api.validex.mx/api/timbrar" }
         : { url: "https://qa-api.validex.mx/api/timbrar-xml" }),
       headers: {
-        Authorization: "Basic " + permisosValidex,
+        Authorization: "Basic " + key,
         "Content-Type": "application/json",
       },
     });
@@ -122,7 +128,9 @@ define([
     subsidiaryRfc,
     subsidiaryId,
     idGuardaDocumentosCarpeta,
-    plantillaPdfPublica
+    plantillaPdfPublica,
+    emailAutomatico,
+    permisosPruebaValidex
   ) => {
     //Let's certificate!
     //Extra custom data
@@ -139,7 +147,12 @@ define([
     const body = JSON.stringify({
       xml: xmlText,
     });
-    const validexResponse = handlePostRequest(body, permisosValidex, prodMod);
+    const validexResponse = handlePostRequest(
+      body,
+      permisosValidex,
+      permisosPruebaValidex,
+      prodMod
+    );
     const validexBodyResponse = JSON.parse(validexResponse.body);
     if (validexResponse.code === 200) {
       const validexXmlResponse = validexBodyResponse.base64.replace(
@@ -171,7 +184,6 @@ define([
         firmaSAT,
         tipoComprobante,
       } = extraCertData;
-      log.debug("TIPOCOMPROBANTE", "tipo");
       //Get folder id Based on custom path
       const folderForXml = funcionesLoc.getFolderId(
         subsidiaryId,
@@ -224,6 +236,16 @@ define([
         nombreDocumento
       );
       //OK
+      //Envía correo
+      const responseMail = funcionesMail.enviaCfdiMail(
+        currentRecord,
+        subsidiaryRecord,
+        customerRecord,
+        idPdfToSave,
+        xmlIdToSave,
+        validexUUID,
+        emailAutomatico
+      );
       record.submitFields({
         type: recordType,
         id: recordId,
@@ -243,14 +265,28 @@ define([
           custbody_ent_entloc_tipo_cfdi: tipoComprobante,
           custbody_ent_entloc_impuestos_items: "",
           custbody_ent_entloc_cfdis_relacionados: "",
+          custbody_ent_mail_estado_correo: responseMail
+            ? responseMail.msjError
+            : null,
         },
       });
       //Redirección a la transacción
+      const emailParameters = {};
+      if (responseMail) {
+        if (responseMail.error) {
+          emailParameters.errorEmailMessage = true;
+        } else {
+          emailParameters.showEmailMessage = true;
+        }
+      }
       redirect.toRecord({
         type: recordType,
         id: recordId,
         parameters: {
           showCertMessage: true,
+          ...(emailParameters && emailParameters.errorEmailMessage
+            ? { errorEmailMessage: emailParameters.errorEmailMessage }
+            : { showEmailMessage: emailParameters.showEmailMessage }),
         },
       });
     } else {
@@ -286,14 +322,15 @@ define([
     idGuardaDocumentosCarpeta,
     userConfig,
     customXmlCustomerTemplate,
-    customPdfCustomerTemplate
+    customPdfCustomerTemplate,
+    emailAutomatico,
+    permisosPruebaValidex
   ) => {
     //Extra custom data
     const extraData = funcionesLoc.getExtraCustomData(
       currentRecord,
       subsidiaryRecord
     );
-    log.debug("EXTRADATA", extraData);
     //Global custom data
     const globalData = customData.getDataForInvoice();
     const xmlRenderedObj = renderizaString(
@@ -325,6 +362,7 @@ define([
         const validexResponse = handlePostRequest(
           body,
           permisosValidex,
+          permisosPruebaValidex,
           prodMod
         );
         const validexBodyResponse = JSON.parse(validexResponse.body);
@@ -414,7 +452,6 @@ define([
             customPdfCustomerTemplate
           );
           //OK
-          let envioAutomatico = true;
           //Envía correo
           const responseMail = funcionesMail.enviaCfdiMail(
             currentRecord,
@@ -423,11 +460,8 @@ define([
             idPdfToSave,
             xmlIdToSave,
             validexUUID,
-            envioAutomatico
+            emailAutomatico
           );
-          log.debug('Response Mail', responseMail);
-          const {errorEmail, msjError} = responseMail;
-
           record.submitFields({
             type: recordType,
             id: recordId,
@@ -447,16 +481,28 @@ define([
               custbody_ent_entloc_tipo_cfdi: tipoComprobante,
               custbody_ent_entloc_impuestos_items: "",
               custbody_ent_entloc_cfdis_relacionados: "",
-              custbody_ent_mail_estado_correo: msjError, 
+              custbody_ent_mail_estado_correo: responseMail
+                ? responseMail.msjError
+                : null,
             },
           });
           //Redirección a la transacción
+          const emailParameters = {};
+          if (responseMail) {
+            if (responseMail.error) {
+              emailParameters.errorEmailMessage = true;
+            } else {
+              emailParameters.showEmailMessage = true;
+            }
+          }
           redirect.toRecord({
             type: recordType,
             id: recordId,
             parameters: {
               showCertMessage: true,
-              ...(!errorEmail ? {showEmailMessage: true} : {errorEmailMessage: true})
+              ...(emailParameters && emailParameters.errorEmailMessage
+                ? { errorEmailMessage: emailParameters.errorEmailMessage }
+                : { showEmailMessage: emailParameters.showEmailMessage }),
             },
           });
         } else {
@@ -481,7 +527,7 @@ define([
           });
         }
       } catch (error) {
-        log.debug("ERROR", error);
+        log.debug("ERROR ONE STEP CERT FUNCTION", error);
         record.submitFields({
           type: recordType,
           id: recordId,
@@ -580,7 +626,9 @@ define([
         globalConfig.idGuardaDocumentosCarpeta,
         customPdfCustomerTemplate
           ? customPdfCustomerTemplate
-          : userConfig.plantillaPdfPublica
+          : userConfig.plantillaPdfPublica,
+        globalConfig.emailAutomatico,
+        globalConfig.permisosPruebaValidex
       );
     } else {
       //One step certification
@@ -596,7 +644,9 @@ define([
         globalConfig.idGuardaDocumentosCarpeta,
         userConfig,
         customXmlCustomerTemplate,
-        customPdfCustomerTemplate
+        customPdfCustomerTemplate,
+        globalConfig.emailAutomatico,
+        globalConfig.permisosPruebaValidex
       );
     }
     const scriptObj = runtime.getCurrentScript();
@@ -614,4 +664,3 @@ define([
     onRequest,
   };
 });
-//Nuevo nuevo comentario - Eduardo

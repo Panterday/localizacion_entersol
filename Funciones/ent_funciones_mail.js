@@ -16,6 +16,7 @@ define(["N/record", "N/search", "N/file", "N/email", "N/render"], (
     customerRecord,
     idPdf,
     idXml,
+    validexUUID,
     envioAutomatico
   ) => {
     const recordData = (
@@ -421,6 +422,7 @@ define(["N/record", "N/search", "N/file", "N/email", "N/render"], (
       customerRecord,
       idPdf,
       idXml,
+      validexUUID,
       envioAutomatico
     ) => {
       const recordId = currentRecord.id;
@@ -534,15 +536,17 @@ define(["N/record", "N/search", "N/file", "N/email", "N/render"], (
 
           return objEnviarMail;
         }
+      } else {
+        return false;
       }
     };
-
     return onRequest(
       currentRecord,
       subsidiaryRecord,
       customerRecord,
       idPdf,
       idXml,
+      validexUUID,
       envioAutomatico
     );
   };
