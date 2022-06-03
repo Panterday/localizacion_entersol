@@ -130,13 +130,17 @@ define([
     idGuardaDocumentosCarpeta,
     plantillaPdfPublica,
     emailAutomatico,
-    permisosPruebaValidex
+    permisosPruebaValidex,
+    longitudSerie,
+    longitudFolio
   ) => {
     //Let's certificate!
     //Extra custom data
     const extraData = funcionesLoc.getExtraCustomData(
       currentRecord,
-      subsidiaryRecord
+      subsidiaryRecord,
+      longitudSerie,
+      longitudFolio
     );
     //Global custom data
     const globalData = customData.getDataForInvoice();
@@ -324,12 +328,16 @@ define([
     customXmlCustomerTemplate,
     customPdfCustomerTemplate,
     emailAutomatico,
-    permisosPruebaValidex
+    permisosPruebaValidex,
+    longitudSerie,
+    longitudFolio
   ) => {
     //Extra custom data
     const extraData = funcionesLoc.getExtraCustomData(
       currentRecord,
-      subsidiaryRecord
+      subsidiaryRecord,
+      longitudSerie,
+      longitudFolio
     );
     //Global custom data
     const globalData = customData.getDataForInvoice();
@@ -628,7 +636,9 @@ define([
           ? customPdfCustomerTemplate
           : userConfig.plantillaPdfPublica,
         globalConfig.emailAutomatico,
-        globalConfig.permisosPruebaValidex
+        globalConfig.permisosPruebaValidex,
+        userConfig.longitudSerie,
+        userConfig.longitudFolio
       );
     } else {
       //One step certification
@@ -646,7 +656,9 @@ define([
         customXmlCustomerTemplate,
         customPdfCustomerTemplate,
         globalConfig.emailAutomatico,
-        globalConfig.permisosPruebaValidex
+        globalConfig.permisosPruebaValidex,
+        userConfig.longitudSerie,
+        userConfig.longitudFolio
       );
     }
     const scriptObj = runtime.getCurrentScript();

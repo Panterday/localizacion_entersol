@@ -543,6 +543,12 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
             plantillaEdocument: globalConfigRecord.getValue({
               fieldId: "custrecord_ent_entloc_plan_gen_xml_fv",
             }),
+            longitudSerie: globalConfigRecord.getValue({
+              fieldId: "custrecord_ent_entloc_long_serie_fv",
+            }),
+            longitudFolio: globalConfigRecord.getValue({
+              fieldId: "custrecord_ent_entloc_long_folio_fv",
+            }),
           };
         case "creditmemo":
           return {
@@ -567,6 +573,12 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
             plantillaEdocument: globalConfigRecord.getValue({
               fieldId: "custrecord_ent_entloc_plan_gen_xml_nc",
             }),
+            longitudSerie: globalConfigRecord.getValue({
+              fieldId: "custrecord_ent_entloc_long_serie_nc",
+            }),
+            longitudFolio: globalConfigRecord.getValue({
+              fieldId: "custrecord_ent_entloc_long_folio_nc",
+            }),
           };
         case "customerpayment":
           return {
@@ -590,6 +602,12 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
             }),
             plantillaEdocument: globalConfigRecord.getValue({
               fieldId: "custrecord_ent_entloc_plan_gen_xml_pc",
+            }),
+            longitudSerie: globalConfigRecord.getValue({
+              fieldId: "custrecord_ent_entloc_long_serie_pc",
+            }),
+            longitudFolio: globalConfigRecord.getValue({
+              fieldId: "custrecord_ent_entloc_long_folio_pc",
             }),
           };
       }
@@ -640,9 +658,37 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       return false;
     }
   };
-  const handleFolioSerie = (tranid) => {
-    const serie = tranid.replace(/[^a-z]/gi, "");
-    const folio = tranid.replace(/[^0-9]/g, "");
+  const handleFolioSerie = (tranid, longitudSerie, longitudFolio) => {
+    let serie = null;
+    let folio = null;
+    const manageFolio = (tranid, longitudFolio) => {
+      try {
+        let newFolio = "";
+        let reversFolio = "";
+        for (
+          let i = tranid.length - 1;
+          i > tranid.length - 1 - longitudFolio;
+          i--
+        ) {
+          newFolio += tranid[i];
+        }
+        for (let i = newFolio.length - 1; i >= 0; i--) {
+          reversFolio += newFolio[i];
+        }
+        return reversFolio;
+      } catch (error) {
+        log.debug("ERROR HANDLE FOLIO SERIE", error);
+        return null;
+      }
+    };
+    serie = tranid.slice(0, longitudSerie);
+    folio = manageFolio(tranid, longitudFolio);
+    if (!serie) {
+      serie = tranid.replace(/[^a-z]/gi, "");
+    }
+    if (!folio) {
+      folio = tranid.replace(/[^0-9]/g, "");
+    }
     return {
       serie,
       folio,
@@ -1477,7 +1523,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     invoiceRelated,
     paymentId,
     importePagado,
-    docToEquivalence
+    docToEquivalence,
+    invoiceObjImpuesto
   ) => {
     const totalLinkLines = invoiceRelated.getLineCount({ sublistId: "links" });
     let numParcialidad = 0;
@@ -1531,6 +1578,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       invoiceUuid,
       invoiceCurrency,
       docToEquivalence,
+      ...(invoiceObjImpuesto && { invoiceObjImpuesto }),
     };
   };
   const handleTotalTaxesForPayment = (resultTaxes) => {
@@ -1732,6 +1780,48 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     });
     return customItem;
   };
+  const handleRelatedInvoiceObjImp = (invoiceRelated, taxDataBase) => {
+    let invoiceObjImpuesto = false;
+    try {
+      const totalLines = invoiceRelated.getLineCount({
+        sublistId: "item",
+      });
+      for (let i = 0; i < totalLines; i++) {
+        const taxCode = Number(
+          invoiceRelated.getSublistValue({
+            sublistId: "item",
+            fieldId: "taxcode",
+            line: i,
+          })
+        );
+        let found = null;
+        found = taxDataBase.taxGroupData.find(
+          (element) => element.taxGroupId === taxCode
+        );
+        if (found) {
+          found.codes.forEach((element) => {
+            if (element.objetoImpuesto === "02 - Sí objeto de impuesto.") {
+              invoiceObjImpuesto = true;
+            }
+          });
+        } else {
+          found = taxDataBase.taxCodeData.find(
+            (element) => element.taxCodeId === taxCode
+          );
+          if (found.objetoImpuesto === "02 - Sí objeto de impuesto.") {
+            invoiceObjImpuesto = true;
+          }
+        }
+        if (invoiceObjImpuesto) {
+          break;
+        }
+      }
+      return invoiceObjImpuesto;
+    } catch (error) {
+      log.debug("ERROR handleRelatedInvoiceObjImp", error);
+      return invoiceObjImpuesto;
+    }
+  };
   const handleDataForPayment = (
     currentRecord,
     taxDataBase,
@@ -1781,15 +1871,18 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           fieldId: "internalid",
           line: i,
         });
-        const invoiceCurrency = currentRecord.getSublistValue({
-          sublistId: "apply",
-          fieldId: "currency",
-          line: i,
-        });
         const invoiceRelated = record.load({
           type: "invoice",
           id: internalInvoiceId,
         });
+        const invoiceCurrencyId = invoiceRelated.getValue({
+          fieldId: "currency",
+        });
+        const invoiceCurrency = handleCurrencySymbol(invoiceCurrencyId);
+        const invoiceObjImpuesto = handleRelatedInvoiceObjImp(
+          invoiceRelated,
+          taxDataBase
+        );
         //Exchange rate
         const globalExchangeRate = handleGlobalExchangeRate(
           currency,
@@ -1824,7 +1917,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
             invoiceRelated,
             paymentId,
             amount,
-            docToEquivalence
+            docToEquivalence,
+            invoiceObjImpuesto
           ),
           paymentData: {
             monto: Number((amount / Number(docToEquivalence)).toFixed(2)),
@@ -1872,7 +1966,12 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     }
     return subsidiaryAddressObj;
   };
-  const getExtraCustomData = (currentRecord, currentSubsidiary) => {
+  const getExtraCustomData = (
+    currentRecord,
+    currentSubsidiary,
+    longitudSerie,
+    longitudFolio
+  ) => {
     //Get taxGroup data
     const taxDataBase = handleTaxGroupData();
     //Get mapUnit data
@@ -1898,7 +1997,11 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     let totalPaymentAmount = 0;
 
     //Custom transaction
-    const { serie, folio } = handleFolioSerie(tranid);
+    const { serie, folio } = handleFolioSerie(
+      tranid,
+      longitudSerie,
+      longitudFolio
+    );
     //Summary
     total = Number(total).toFixed(2);
     subtotal = Number(subtotal).toFixed(2);
@@ -2077,7 +2180,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           ignoreMandatoryFields: true,
         });
       } catch (error) {
-        log.debug("FOLDER", error);
+        log.debug("handleFolderId", error);
       }
     }
     return folderId;

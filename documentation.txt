@@ -47,15 +47,23 @@ CFDI 4.0
 
         ENT - Número de operación
         ENT - Rfc emisor cuenta ordenante
+        ENT - Nombanco ordenante ext 
+        ENT - Cuenta ordenante
+        ENT - RFC emisor cta beneficiario 
+        ENT - Cuenta beneficiario
+        ENT - Tipo cadena pago
+        ENT - Certificado pago 
+        ENT - Cadena pago 
+        ENT - Sello pago
     Campos personalizados de subsidiaria: 
         *ENT- Régimen fiscal (Ligado a lista: ENT - Sat régimen fiscal)
         *ENT - Razón social CFDI 4.0
     Campos personalizadas de cliente: 
         *ENT - Rfc
 		*ENT - Régimen fiscal
-        *ENT - Uso de CFDI
-        *ENT - Forma de pago
-        *ENT - Método de pago
+        *ENT - SAT USO DE CFDI
+        *ENT - SAT FORMA DE PAGO
+        *ENT - SAT MÉTODO DE PAGO
         *ENT - Nombre legal sat
         *ENT - Exportación
         *ENT - Plantilla pdf factura de venta

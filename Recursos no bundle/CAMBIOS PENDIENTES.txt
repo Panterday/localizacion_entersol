@@ -3,40 +3,10 @@ si es PUE NO puede ser 99-Por definir.
 
 **Corregir que no se arrastren los datos de timbrado a las otras transacciones. 
 
+Limpiar campo fecha
+
 Cancelación
 Convertir el proceso de cancelación a la nueva versión.
 
 Factura de traslado 
 Resolver el tema de artículos de tipo kit (Es opcional, no se considera.)
-
-Al crear pago no trajo los campos del cliente.
-
-Ingresar número de caracteres de la serie
-
-NumOperacion 
-RfcEmisorCtaOrd
-...
-SelloPago
-
-Para el valor objeto de impuesto del DR, usar bandera. 
-
-Limpiar campo fecha
-
-
-Agregar campo de usuario de pruebas VALIDEX 
-
-Nombre plantillas PDF
-CFDI 4.0 STD PLANTIILA NOTA DE CREDITO
-Número de caracteres de serie
-
-Corregir Mayúsculas
-Configuración Localización Entersol
-
-Quitar los ENT a las listas 
-
-Validar campos de CFDI desde ORDEN DE VENTA
-
-Nuevos nombres botones
-Generar XML CFDI 4.0
-Certificar XML CFDI 4.0
-

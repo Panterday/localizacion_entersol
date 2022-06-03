@@ -32,7 +32,7 @@ define(["N/record", "N/url", "N/ui/serverWidget"], (
         //Adding a button to the form
         form.addButton({
           id: "custpage_ent_entloc_custom_print",
-          label: "Imprimir Cfdi 4.0",
+          label: "Imprimir CFDI 4.0",
           functionName: `window.open("${target}", "_blank")`,
         });
       }

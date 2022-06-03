@@ -25,21 +25,6 @@ define([
       return null;
     }
   };
-  const dynamicButtonLabel = (recordType) => {
-    let buttonLabel = "";
-    switch (recordType) {
-      case "invoice":
-        buttonLabel = "Certificar factura de ingreso";
-        break;
-      case "customerpayment":
-        buttonLabel = "Certificar pago del cliente";
-        break;
-      case "creditmemo":
-        buttonLabel = "Certificar nota de crédito";
-        break;
-    }
-    return buttonLabel;
-  };
   const handleCertButton = (recordId, recordType, form) => {
     const suiteletUrl = url.resolveScript({
       scriptId: "customscript_ent_entloc_certifica_cfdi",
@@ -66,13 +51,10 @@ define([
             });
           </script>
         `;
-    //Dynaminc button label
-    let buttonLabel = dynamicButtonLabel(recordType);
-
     //Adding a button to the form
     form.addButton({
       id: "custpage_ent_locent_button_cert",
-      label: buttonLabel,
+      label: "Certificar XML CFDI 4.0",
       functionName: `window.open("${target}", "_self")`,
     });
   };
@@ -106,7 +88,7 @@ define([
     //Adding a button to the form
     form.addButton({
       id: "custpage_ent_entloc_gen_btn",
-      label: "Generar documento electrónico",
+      label: "Generar XML CFDI 4.0",
       functionName: `window.open("${target}", "_self")`,
     });
   };

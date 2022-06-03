@@ -30,14 +30,18 @@ define([
     currentRecord,
     customerRecord,
     subsidiaryRecord,
-    currentTemplate
+    currentTemplate,
+    longitudSerie,
+    longitudFolio
   ) => {
     let renderedTemplate = null;
     const renderXml = render.create();
     //Extra custom data
     const extraData = funcionesLoc.getExtraCustomData(
       currentRecord,
-      subsidiaryRecord
+      subsidiaryRecord,
+      longitudSerie,
+      longitudFolio
     );
     //Global custom data
     const globalData = customData.getDataForInvoice();
@@ -45,7 +49,6 @@ define([
       globalData,
       extraData,
     };
-    log.debug("RENDER", customFullData);
     //Add custom data source
     renderXml.addCustomDataSource({
       format: render.DataSource.OBJECT,
@@ -58,13 +61,11 @@ define([
     renderXml.addRecord("subsidiary", subsidiaryRecord);
     //Add customer record
     renderXml.addRecord("customer", customerRecord);
-    log.debug("CUSTOMER RECORD", customerRecord);
     //Add template
     renderXml.templateContent = currentTemplate;
     //Try to render
     try {
       renderedTemplate = renderXml.renderAsString();
-      log.debug("RENDERED TEMPLATE FUNC", renderedTemplate);
       return {
         error: false,
         renderedTemplate,
@@ -123,13 +124,14 @@ define([
       currentRecord,
       customerRecord,
       subsidiaryRecord,
-      customCustomerTemplate ? customCustomerTemplate : currentTemplate
+      customCustomerTemplate ? customCustomerTemplate : currentTemplate,
+      userConfig.longitudSerie,
+      userConfig.longitudFolio
     );
     if (!xmlRenderedObj.error) {
       let xmlDocument = null;
       try {
         //Render XML
-        log.debug("XML TO RENDER", xmlRenderedObj.renderedTemplate);
         xmlDocument = xml.Parser.fromString({
           text: xmlRenderedObj.renderedTemplate,
         });

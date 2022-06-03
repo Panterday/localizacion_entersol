@@ -23,7 +23,43 @@ define(["N/record", "N/search"], (record, search) => {
     }
     return accountCurrency;
   };
+  const handleCustomerFields = (currenRecord) => {
+    const customerId = currenRecord.getValue({
+      fieldId: "customer",
+    });
+    const formaPago = currenRecord.getValue({
+      fieldId: "custbody_ent_entloc_forma_pago",
+    });
+    const regimenFiscalReceptor = currenRecord.getValue({
+      fieldId: "custbody_ent_entloc_reg_fis_receptor",
+    });
+    if (customerId) {
+      const customerRecord = record.load({
+        type: "customer",
+        id: customerId,
+      });
+      const customerFormaPago = customerRecord.getValue({
+        fieldId: "custentity_ent_entloc_forma_pago",
+      });
+      const customerRegimenFiscal = customerRecord.getValue({
+        fieldId: "custentity_ent_entloc_regimen_fiscal",
+      });
+      if (!formaPago && customerFormaPago) {
+        currenRecord.setValue({
+          fieldId: "custbody_ent_entloc_forma_pago",
+          value: customerFormaPago,
+        });
+      }
+      if (!regimenFiscalReceptor && customerRegimenFiscal) {
+        currenRecord.setValue({
+          fieldId: "custbody_ent_entloc_reg_fis_receptor",
+          value: customerRegimenFiscal,
+        });
+      }
+    }
+  };
   const paymentPageInit = (currentRecord) => {
+    handleCustomerFields(currentRecord);
     //Account currency
     const currencyAccount = getCurrencyAccount(currentRecord);
     if (
@@ -95,6 +131,10 @@ define(["N/record", "N/search"], (record, search) => {
       });
       if (Number(currency) === 1) {
         exchangeRateField.isDisabled = true;
+        currentRecord.setValue({
+          fieldId: "custbody_ent_entloc_tipo_cambio_pago",
+          value: 1,
+        });
       } else {
         exchangeRateField.isDisabled = false;
       }
@@ -130,7 +170,8 @@ define(["N/record", "N/search"], (record, search) => {
     const fieldId = context.fieldId;
     if (
       currentRecord.type === "invoice" ||
-      currentRecord.type === "creditmemo"
+      currentRecord.type === "creditmemo" ||
+      currentRecord.type === "salesorder"
     ) {
       //Entity
       if (fieldId === "entity") {
@@ -158,7 +199,7 @@ define(["N/record", "N/search"], (record, search) => {
 
           if (!usoCfdiFac) {
             const usoCfdiCliente = customerRecord.getValue({
-              fieldId: "custentity_ent_uso_de_cfdi",
+              fieldId: "custentity_ent_entloc_forma_pago",
             });
 
             currentRecord.setValue({
@@ -168,7 +209,7 @@ define(["N/record", "N/search"], (record, search) => {
           }
           if (!metodoPagoFac) {
             const metodoPagoCliente = customerRecord.getValue({
-              fieldId: "custentity_ent_metodo_de_pago",
+              fieldId: "custentity_ent_entloc_metodo_pago",
             });
 
             currentRecord.setValue({
@@ -178,7 +219,7 @@ define(["N/record", "N/search"], (record, search) => {
           }
           if (!formaPagoFac) {
             const formaPagoCliente = customerRecord.getValue({
-              fieldId: "custentity_ent_uso_de_cfdi",
+              fieldId: "custentity_ent_entloc_forma_pago",
             });
 
             currentRecord.setValue({
@@ -231,7 +272,8 @@ define(["N/record", "N/search"], (record, search) => {
     const currentRecord = context.currentRecord;
     if (
       currentRecord.type === "invoice" ||
-      currentRecord.type === "creditmemo"
+      currentRecord.type === "creditmemo" ||
+      currentRecord.type === "salesorder"
     ) {
       try {
         const customerId = currentRecord.getValue({
@@ -255,7 +297,7 @@ define(["N/record", "N/search"], (record, search) => {
         });
         if (!usoCfdiFac) {
           const usoCfdiCliente = customerRecord.getValue({
-            fieldId: "custentity_ent_uso_de_cfdi",
+            fieldId: "custentity_ent_entloc_forma_pago",
           });
 
           currentRecord.setValue({
@@ -265,7 +307,7 @@ define(["N/record", "N/search"], (record, search) => {
         }
         if (!metodoPagoFac) {
           const metodoPagoCliente = customerRecord.getValue({
-            fieldId: "custentity_ent_metodo_de_pago",
+            fieldId: "custentity_ent_entloc_metodo_pago",
           });
 
           currentRecord.setValue({
@@ -275,7 +317,7 @@ define(["N/record", "N/search"], (record, search) => {
         }
         if (!formaPagoFac) {
           const formaPagoCliente = customerRecord.getValue({
-            fieldId: "custentity_ent_uso_de_cfdi",
+            fieldId: "custentity_ent_entloc_forma_pago",
           });
 
           currentRecord.setValue({

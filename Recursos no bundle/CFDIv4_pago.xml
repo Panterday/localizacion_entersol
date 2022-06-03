@@ -86,6 +86,13 @@
 <#else>
 	<#assign cfdiDate = formatStringDate(record.trandate)>
 </#if>
+<#function getAttrObjImp value>
+	<#if value?has_content>
+		<#return "02">
+	<#else>
+		<#return "01">
+	</#if>
+</#function>
 <cfdi:Comprobante 
     xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd http://www.sat.gob.mx/Pagos20 http://www.sat.gob.mx/sitio_internet/cfd/Pagos/Pagos20.xsd" 
     xmlns:pago20="http://www.sat.gob.mx/Pagos20" 
@@ -142,6 +149,14 @@
 					TipoCambioP="${item.paymentData.exchangeRate}"
 					${getAttrOne("NumOperacion", record.custbody_ent_entloc_num_operacion)}
 					${getAttrOne("RfcEmisorCtaOrd", record.custbody_ent_entloc_rfc_cuenta_ord)}
+					${getAttrOne("NomBancoOrdExt", record.custbody_ent_entloc_nombanco_ord_ext)}
+					${getAttrOne("CtaOrdenante", record.custbody_ent_entloc_cuenta_ordenanante)}
+					${getAttrOne("RfcEmisorCtaBen", record.custbody_ent_entloc_rfc_emisor_cta_ben)}
+					${getAttrOne("CtaBeneficiario", record.custbody_ent_entloc_cuenta_ben)}
+					${getAttrOne("TipoCadPago", record.custbody_ent_entloc_tipo_cad_pago)}
+					${getAttrOne("CertPago", record.custbody_ent_entloc_cert_pago)}
+					${getAttrOne("CadPago", record.custbody_ent_entloc_cadena_pago)}
+					${getAttrOne("SelloPago", record.custbody_ent_entloc_sello_pago)}
 				> 	
 					<pago20:DoctoRelacionado 
 						EquivalenciaDR="${item.docToRel.docToEquivalence}" 
@@ -151,7 +166,7 @@
 						ImpSaldoInsoluto="${item.docToRel.saldoAnterior?number - item.docToRel.importePagado?number}" 
 						MonedaDR="${item.docToRel.invoiceCurrency}" 
 						NumParcialidad="${item.docToRel.numParcialidad}" 
-						ObjetoImpDR="02"
+						ObjetoImpDR="${getAttrObjImp(item.docToRel.invoiceObjImpuesto)}"
 					>
 						<pago20:ImpuestosDR>
 							<#if item.taxes.retExist?has_content>
