@@ -321,6 +321,7 @@ define(["N/record", "N/search", "N/file", "N/email", "N/render"], (
       let emailDoble = false;
       let ccDefaults = ccDefault;
       let ccEmailDoble = [];
+      let flagEmpresa = false;
 
       if (!correosEmpresa) {
         correosEmpresa = [];
@@ -383,6 +384,7 @@ define(["N/record", "N/search", "N/file", "N/email", "N/render"], (
             },
           });
         } else {
+          flagEmpresa = true;
           email.send({
             //Envio de correo a persona moral
             author: remitenteEmailId,
@@ -410,7 +412,16 @@ define(["N/record", "N/search", "N/file", "N/email", "N/render"], (
           });
         }
       } catch (error) {
-        return error;
+        let msjError = "";
+        if (flagEmpresa) {
+          msjError =
+            "El cliente cuenta con contactos agregados, pero no se seleccionó ningún tipo de CFDI para enviar en el registro de Contacto.";
+        } else {
+          msjError =
+            "Los correos definidos como copia en la configuración de la Subsidiaria, en el campo ENT - CC DEFAULT ENVIO EMAIL no estan escritos de la manera correcta. Asegurese de escribir los correos con el formato correcto, separado por comas y sin espacios, ejemplo: correo@dominio.com,correo2@dominio.com,correo3@dominio.com";
+        }
+        log.debug("error", error);
+        return msjError;
       }
     };
 
@@ -427,19 +438,6 @@ define(["N/record", "N/search", "N/file", "N/email", "N/render"], (
     ) => {
       const recordId = currentRecord.id;
       const recordType = currentRecord.type;
-
-      // const preCurrentRecord = record.load({
-      //   type: recordType,
-      //   id: recordId,
-      // });
-      // preCurrentRecord.save({
-      //   ignoreMandatoryFields: true,
-      // });
-
-      // const currentRecord = record.load({
-      //   type: recordType,
-      //   id: recordId,
-      // });
 
       //Validacion de tipo transaccion
       let idCliente = "";
@@ -476,64 +474,16 @@ define(["N/record", "N/search", "N/file", "N/email", "N/render"], (
           //Si sendEmail tiene un error, lo retorna y es lo que se evalua
           if (sendEmail) {
             //Si tiene error, se considera que el único error es para las copias añadidas en el campo
-            // record.submitFields({
-            //   type: recordType,
-            //   id: recordId,
-            //   values: {
-            //     custbody_ent_mail_estado_correo:
-            //       "Los correos definidos como copia en la configuración de la Subsidiaria, en el campo ENT - CC DEFAULT ENVIO EMAIL no estan escritos de la manera correcta. Asegurese de escribir los correos con el formato correcto, separado por comas y sin espacios, ejemplo: correo@dominio.com,correo2@dominio.com,correo3@dominio.com",
-            //   },
-            // });
-            // //Redirección a transacción
-            // redirect.toRecord({
-            //   type: recordType,
-            //   id: recordId,
-            //   parameters: {
-            //     errorEmailMessage: true,
-            //   },
-            // })
             objEnviarMail.error = true;
-            objEnviarMail.msjError =
-              "Los correos definidos como copia en la configuración de la Subsidiaria, en el campo ENT - CC DEFAULT ENVIO EMAIL no estan escritos de la manera correcta. Asegurese de escribir los correos con el formato correcto, separado por comas y sin espacios, ejemplo: correo@dominio.com,correo2@dominio.com,correo3@dominio.com";
+            objEnviarMail.msjError = sendEmail;
             return objEnviarMail;
           } else {
             //sendEmail no tiene error y se ejecuta correctamente
-            //Redirección a la transacción
-            // redirect.toRecord({
-            //   type: recordType,
-            //   id: recordId,
-            //   parameters: {
-            //     showEmailMessage: true,
-            //   },
-            // });
-            // record.submitFields({
-            //   type: recordType,
-            //   id: recordId,
-            //   values: {
-            //     custbody_ent_mail_estado_correo: "",
-            //   },
-            // });
             objEnviarMail.msjError = "";
             return objEnviarMail;
           }
         } else {
           //Si hay error en la función recordData
-          // record.submitFields({
-          //   type: recordType,
-          //   id: recordId,
-          //   values: {
-          //     custbody_ent_mail_estado_correo: msjError,
-          //   },
-          // });
-          // //Redirección a transacción
-          // redirect.toRecord({
-          //   type: recordType,
-          //   id: recordId,
-          //   parameters: {
-          //     errorEmailMessage: true,
-          //   },
-          // });
-
           return objEnviarMail;
         }
       } else {
