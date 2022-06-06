@@ -4,7 +4,6 @@
  */
 define(["N/search", "N/ui/message"], (search, message) => {
   const saveRecord = (context) => {
-    log.debug("CONFIG", "CONFIG");
     currentRecord = context.currentRecord;
     const excesoRegistrosMsg = message.create({
       title: "Ya existe registro",
@@ -52,7 +51,7 @@ define(["N/search", "N/ui/message"], (search, message) => {
     const currentRecord = context.currentRecord;
     const advertenciaDeProduccion = message.create({
       title: "Advertencia",
-      message: `Al activar el campo ENTORNO DE PRODUCCIÓN se realizarán cancelaciones reales.
+      message: `Al activar el campo ENTORNO DE PRODUCCIÓN se realizarán timbrados reales.
               `,
       type: message.Type.WARNING,
     });

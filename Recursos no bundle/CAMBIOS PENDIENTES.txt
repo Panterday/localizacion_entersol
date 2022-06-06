@@ -12,5 +12,3 @@ Factura de traslado
 Resolver el tema de artículos de tipo kit (Es opcional, no se considera.)
 
 Corregir mensage de registro principal.
-
-Corregir validación pago FACTURA USD PAGO MXN

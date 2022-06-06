@@ -72,64 +72,33 @@ define(["N/record", "N/search", "N/ui/message"], (record, search, message) => {
         value: currencyAccount,
       });
     }
-    const totalApplyLines = currentRecord.getLineCount({ sublistId: "apply" });
     const exchangeRate = currentRecord.getValue({
       fieldId: "custbody_ent_entloc_tipo_cambio_pago",
     });
-    const paymentCurrency = Number(
-      currentRecord.getValue({
-        fieldId: "custbody_ent_entloc_moneda_pago",
-      })
-    );
-    let invoiceCurrency = null;
-    for (let i = 0; i < totalApplyLines; i++) {
-      const apply = currentRecord.getSublistValue({
-        sublistId: "apply",
-        fieldId: "apply",
-        line: i,
-      });
-      if (apply) {
-        const invoiceId = currentRecord.getSublistValue({
-          sublistId: "apply",
-          fieldId: "internalid",
-          line: i,
-        });
-        const invoiceRelatedRecord = record.load({
-          type: "invoice",
-          id: invoiceId,
-        });
-        invoiceCurrency = Number(
-          invoiceRelatedRecord.getValue({
-            fieldId: "currency",
-          })
-        );
-        break;
-      }
-    }
     if (!exchangeRate) {
       currentRecord.setValue({
         fieldId: "custbody_ent_entloc_tipo_cambio_pago",
         value: 1,
       });
     }
-    const exchangeRateField = currentRecord.getField({
-      fieldId: "custbody_ent_entloc_tipo_cambio_pago",
-    });
-    exchangeRateField.isDisabled = true;
-    if (paymentCurrency !== 1 && paymentCurrency !== invoiceCurrency) {
-      exchangeRateField.isDisabled = false;
-    }
   };
   const paymentFieldChanged = (context) => {
     const currentRecord = context.currentRecord;
     if (context.fieldId === "custbody_ent_entloc_moneda_pago") {
-      const currency = currentRecord.getValue({
-        fieldId: "custbody_ent_entloc_moneda_pago",
-      });
+      const paymentCurrency = Number(
+        currentRecord.getValue({
+          fieldId: "currency",
+        })
+      );
+      const customCurrency = Number(
+        currentRecord.getValue({
+          fieldId: "custbody_ent_entloc_moneda_pago",
+        })
+      );
       const exchangeRateField = currentRecord.getField({
         fieldId: "custbody_ent_entloc_tipo_cambio_pago",
       });
-      if (Number(currency) === 1) {
+      if (paymentCurrency === customCurrency || customCurrency === 1) {
         exchangeRateField.isDisabled = true;
         currentRecord.setValue({
           fieldId: "custbody_ent_entloc_tipo_cambio_pago",
@@ -143,20 +112,29 @@ define(["N/record", "N/search", "N/ui/message"], (record, search, message) => {
   const paymentSaveRecord = (context) => {
     const currencyMsg = message.create({
       title: "Falta el valor para tipo de cambio",
-      message: `La factura y el pago están en diferente moneda, ingrese un tipo de cambio distinto de 1 en la subficha CFDI 4.0.`,
+      message: `Debe ingresar un tipo de cambio distinto de 1`,
       type: message.Type.WARNING,
     });
     const currentRecord = context.currentRecord;
-    const currencyId = currentRecord.getValue({
-      fieldId: "currency",
-    });
-    const customCurrencyId = currentRecord.getValue({
-      fieldId: "custbody_ent_entloc_moneda_pago",
-    });
+    const currencyId = Number(
+      currentRecord.getValue({
+        fieldId: "currency",
+      })
+    );
+    const customCurrencyId = Number(
+      currentRecord.getValue({
+        fieldId: "custbody_ent_entloc_moneda_pago",
+      })
+    );
     const customExchangeRate = currentRecord.getValue({
       fieldId: "custbody_ent_entloc_tipo_cambio_pago",
     });
-    if (currencyId !== customCurrencyId && customExchangeRate === 1) {
+    //paymentCurrency === customCurrency || customCurrency === 1
+    if (
+      currencyId !== customCurrencyId &&
+      customCurrencyId !== 1 &&
+      customExchangeRate === 1
+    ) {
       //Show message
       window.scrollTo({
         top: 0,
