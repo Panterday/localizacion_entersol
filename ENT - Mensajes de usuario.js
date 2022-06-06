@@ -14,8 +14,6 @@ define(["N/record", "N/ui/message"], (record, message) => {
     errorEmailMessage,
     form
   ) => {
-    log.debug("SHOW EMAILS", showEmailMessage);
-    log.debug("ERROR EMAIL", errorEmailMessage);
     if (showCertMessage) {
       //Show success message cert
       form.addPageInitMessage({

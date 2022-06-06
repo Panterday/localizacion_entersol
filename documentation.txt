@@ -12,6 +12,7 @@ CFDI 4.0
         *ENT - Mapeo de unidades 
         *ENT - Plantilla de documento electrónico 
         *ENT - Sat clave unidad
+        *CFDI 4.0 Migración de campos
     Campos personalizados de transacción: 
         *ENT – UUID 
         *ENT – DOCUMENTO ELECTRÓNICO 
@@ -45,16 +46,19 @@ CFDI 4.0
         *ENT - Documento electrónico traslado
         *ENT - Pdf timbrado traslado
 
-        ENT - Número de operación
-        ENT - Rfc emisor cuenta ordenante
-        ENT - Nombanco ordenante ext 
-        ENT - Cuenta ordenante
-        ENT - RFC emisor cta beneficiario 
-        ENT - Cuenta beneficiario
-        ENT - Tipo cadena pago
-        ENT - Certificado pago 
-        ENT - Cadena pago 
-        ENT - Sello pago
+        *ENT - Número de operación
+        *ENT - Rfc emisor cuenta ordenante
+        *ENT - Nombanco ordenante ext 
+        *ENT - Cuenta ordenante
+        *ENT - RFC emisor cta beneficiario 
+        *ENT - Cuenta beneficiario
+        *ENT - Tipo cadena pago
+        *ENT - Certificado pago 
+        *ENT - Cadena pago 
+        *ENT - Sello pago
+
+        *CFDI 4.0 : RFC RECEPTOR
+        *CFDI 4.0 : RAZÓN SOCIAL RECEPTOR
     Campos personalizados de subsidiaria: 
         *ENT- Régimen fiscal (Ligado a lista: ENT - Sat régimen fiscal)
         *ENT - Razón social CFDI 4.0

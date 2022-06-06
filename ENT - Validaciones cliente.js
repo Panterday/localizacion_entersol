@@ -5,7 +5,7 @@
 /*The mode in which the record is being accessed. The mode can be set
 to one of the following values:
 copy, create, edit*/
-define(["N/record", "N/search"], (record, search) => {
+define(["N/record", "N/search", "N/ui/message"], (record, search, message) => {
   const getCurrencyAccount = (currenRecord) => {
     let accountRecord = null;
     let accountCurrency = null;
@@ -138,6 +138,36 @@ define(["N/record", "N/search"], (record, search) => {
       } else {
         exchangeRateField.isDisabled = false;
       }
+    }
+  };
+  const paymentSaveRecord = (context) => {
+    const currencyMsg = message.create({
+      title: "Falta el valor para tipo de cambio",
+      message: `La factura y el pago están en diferente moneda, ingrese un tipo de cambio distinto de 1 en la subficha CFDI 4.0.`,
+      type: message.Type.WARNING,
+    });
+    const currentRecord = context.currentRecord;
+    const currencyId = currentRecord.getValue({
+      fieldId: "currency",
+    });
+    const customCurrencyId = currentRecord.getValue({
+      fieldId: "custbody_ent_entloc_moneda_pago",
+    });
+    const customExchangeRate = currentRecord.getValue({
+      fieldId: "custbody_ent_entloc_tipo_cambio_pago",
+    });
+    if (currencyId !== customCurrencyId && customExchangeRate === 1) {
+      //Show message
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+      currencyMsg.show({
+        duration: 10000,
+      });
+      return false;
+    } else {
+      return true;
     }
   };
   const handleUuid = (invoiceId) => {
@@ -341,8 +371,15 @@ define(["N/record", "N/search"], (record, search) => {
       paymentPageInit(currentRecord);
     }
   };
+  const saveRecord = (context) => {
+    const currentRecord = context.currentRecord;
+    if (currentRecord.type === "customerpayment") {
+      return paymentSaveRecord(context);
+    }
+  };
   return {
     fieldChanged,
     pageInit,
+    saveRecord,
   };
 });
