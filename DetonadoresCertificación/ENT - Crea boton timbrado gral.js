@@ -164,6 +164,8 @@ define([
           }
         }
       }
+      /* handleGenerationButton(recordType, recordId, form);
+      handleCertButton(recordId, recordType, form); */
     }
   };
   return {

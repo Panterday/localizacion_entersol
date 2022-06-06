@@ -1519,6 +1519,22 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     return itemFullSummary;
   };
   //Get related invoices data for payment
+  const handleLinkRecordType = (id) => {
+    let isPayment = false;
+    try {
+      const fieldLookUp = search.lookupFields({
+        type: "customerpayment",
+        id: id,
+        columns: ["type"],
+      });
+      if (Object.keys(fieldLookUp).length > 0) {
+        isPayment = true;
+      }
+    } catch (error) {
+      isPayment = false;
+    }
+    return isPayment;
+  };
   const handleDocRelData = (
     invoiceRelated,
     paymentId,
@@ -1548,23 +1564,16 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         fieldId: "id",
         line: i,
       });
-      const currentPaymentType = invoiceRelated.getSublistValue({
-        sublistId: "links",
-        fieldId: "type",
-        line: i,
-      });
       const currentPaymentTotal = invoiceRelated.getSublistValue({
         sublistId: "links",
         fieldId: "total",
         line: i,
       });
-      if (
-        Number(currentPaymentId) === Number(paymentId) &&
-        currentPaymentType === "Pago"
-      ) {
+      const linkRecordType = handleLinkRecordType(currentPaymentId);
+      if (Number(currentPaymentId) === Number(paymentId) && linkRecordType) {
         numParcialidad++;
         break;
-      } else if (currentPaymentType === "Pago") {
+      } else if (linkRecordType) {
         paymentLinkListTotal += Number(currentPaymentTotal);
         numParcialidad++;
       }
