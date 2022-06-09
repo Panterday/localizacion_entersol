@@ -122,8 +122,7 @@ define([
         recordType,
         globalConfig.access
       );
-      //Invoice
-      if (recordType === "invoice") {
+      /* 
         if (userConfig.aplica && !uuid) {
           if (userConfig.habilitaCertDosPasos) {
             if (xmlPrev && !estatusCert) {
@@ -135,37 +134,9 @@ define([
             handleCertButton(recordId, recordType, form);
           }
         }
-      }
-      //Customer payment
-      if (recordType === "customerpayment") {
-        if (userConfig.aplica && !uuid) {
-          if (userConfig.habilitaCertDosPasos) {
-            if (xmlPrev && !estatusCert) {
-              handleCertButton(recordId, recordType, form);
-            } else {
-              handleGenerationButton(recordType, recordId, form);
-            }
-          } else {
-            handleCertButton(recordId, recordType, form);
-          }
-        }
-      }
-      //Credit memo
-      if (recordType === "creditmemo") {
-        if (userConfig.aplica && !uuid) {
-          if (userConfig.habilitaCertDosPasos) {
-            if (xmlPrev && !estatusCert) {
-              handleCertButton(recordId, recordType, form);
-            } else {
-              handleGenerationButton(recordType, recordId, form);
-            }
-          } else {
-            handleCertButton(recordId, recordType, form);
-          }
-        }
-      }
-      /* handleGenerationButton(recordType, recordId, form);
-      handleCertButton(recordId, recordType, form); */
+      */
+      handleGenerationButton(recordType, recordId, form);
+      handleCertButton(recordId, recordType, form);
     }
   };
   return {

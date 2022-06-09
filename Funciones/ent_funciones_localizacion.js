@@ -9,6 +9,45 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
   runtime,
   render
 ) => {
+  const getCustomerDataObj = (customerId) => {
+    const customerDataObj = {};
+    const customerSearchObj = search.create({
+      type: "customer",
+      filters: [["internalidnumber", "equalto", customerId]],
+      columns: [
+        search.createColumn({
+          name: "entityid",
+          sort: search.Sort.ASC,
+        }),
+        "altname",
+        "email",
+        "phone",
+        "altphone",
+        "fax",
+        "contact",
+        "altemail",
+      ],
+    });
+    customerSearchObj.run().each((result) => {
+      customerDataObj.altname = result.getValue({
+        name: "altname",
+      });
+      customerDataObj.email = result.getValue({
+        name: "email",
+      });
+      customerDataObj.phone = result.getValue({
+        name: "phone",
+      });
+      customerDataObj.altphone = result.getValue({
+        name: "altphone",
+      });
+      customerDataObj.fax = result.getValue({
+        name: "fax",
+      });
+      return true;
+    });
+    return customerDataObj;
+  };
   const handleMontoEnLetra = (num, moneda) => {
     function Unidades(num) {
       switch (num) {
@@ -880,19 +919,25 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     }
   };
   const handleTaxTotal = (taxSummary) => {
-    let totalTraslados = 0;
-    let totalRetenciones = 0;
-    taxSummary.summaryTras.forEach((element) => {
-      totalTraslados += Number(element.importe);
-    });
-    taxSummary.summaryRet.forEach((element) => {
-      totalRetenciones += Number(element.importe);
-    });
+    let totalTraslados = null;
+    let totalRetenciones = null;
+    if (taxSummary.summaryTras.length > 0) {
+      totalTraslados = 0;
+      taxSummary.summaryTras.forEach((element) => {
+        totalTraslados += Number(element.importe);
+      });
+    }
+    if (taxSummary.summaryRet.length > 0) {
+      totalRetenciones = 0;
+      taxSummary.summaryRet.forEach((element) => {
+        totalRetenciones += Number(element.importe);
+      });
+    }
     return {
-      ...(totalTraslados > 0 && {
+      ...((totalTraslados || totalTraslados === 0) && {
         totalTraslados: Number(totalTraslados.toFixed(2)),
       }),
-      ...(totalRetenciones > 0 && {
+      ...((totalRetenciones || totalRetenciones === 0) && {
         totalRetenciones: Number(totalRetenciones.toFixed(2)),
       }),
     };
@@ -1558,6 +1603,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     const invoiceTotal = invoiceRelated.getValue({
       fieldId: "total",
     });
+    const invoiceExchangeRate = invoiceRelated.getValue({
+      fieldId: "exchangerate",
+    });
     for (let i = 0; i < totalLinkLines - 1; i++) {
       const currentPaymentId = invoiceRelated.getSublistValue({
         sublistId: "links",
@@ -1574,7 +1622,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         numParcialidad++;
         break;
       } else if (linkRecordType) {
-        paymentLinkListTotal += Number(currentPaymentTotal);
+        paymentLinkListTotal +=
+          Number(currentPaymentTotal) / Number(invoiceExchangeRate);
         numParcialidad++;
       }
     }
@@ -2034,6 +2083,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         mapUnitsDataBase,
         false
       );
+      log.debug("CUSTOMITEM", customItem);
     }
     //Related CFDIS
     const relatedCfdis = handleRelatedCfdis(currentRecord);
@@ -2432,5 +2482,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     getStringTax,
     getXmlCustomerTemplate,
     getPdfCustomerTemplate,
+    getCustomerDataObj,
   };
 });

@@ -128,12 +128,14 @@ define([
     subsidiaryRfc,
     subsidiaryId,
     idGuardaDocumentosCarpeta,
-    plantillaPdfPublica,
+    customPdfCustomerTemplate,
     emailAutomatico,
     permisosPruebaValidex,
     longitudSerie,
-    longitudFolio
+    longitudFolio,
+    userConfig
   ) => {
+    log.debug("HANDLETWOSTEP", "HANDLETWOSTEP");
     //Let's certificate!
     //Extra custom data
     const extraData = funcionesLoc.getExtraCustomData(
@@ -233,11 +235,12 @@ define([
         subsidiaryRecord,
         customerRecord,
         customFullData,
-        plantillaPdfPublica,
+        userConfig,
         !folderForPdf.error
           ? folderForPdf.tipoArchFolderId
           : idGuardaDocumentosCarpeta,
-        nombreDocumento
+        nombreDocumento,
+        customPdfCustomerTemplate
       );
       //OK
       //Envía correo
@@ -332,6 +335,7 @@ define([
     longitudSerie,
     longitudFolio
   ) => {
+    log.debug("HANDLEONESTEP", "HANDLEONESTEP");
     //Extra custom data
     const extraData = funcionesLoc.getExtraCustomData(
       currentRecord,
@@ -618,7 +622,7 @@ define([
       customerRecord,
       recordType
     );
-    if (genCert === 0) {
+    if (userConfig.habilitaCertDosPasos) {
       handleTwoStepsCert(
         currentRecord,
         subsidiaryRecord,
@@ -632,13 +636,12 @@ define([
         subsidiaryRfc,
         subsidiaryId,
         globalConfig.idGuardaDocumentosCarpeta,
-        customPdfCustomerTemplate
-          ? customPdfCustomerTemplate
-          : userConfig.plantillaPdfPublica,
+        customPdfCustomerTemplate,
         globalConfig.emailAutomatico,
         globalConfig.permisosPruebaValidex,
         userConfig.longitudSerie,
-        userConfig.longitudFolio
+        userConfig.longitudFolio,
+        userConfig
       );
     } else {
       //One step certification

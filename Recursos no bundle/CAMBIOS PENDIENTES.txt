@@ -11,4 +11,5 @@ Convertir el proceso de cancelación a la nueva versión.
 Factura de traslado 
 Resolver el tema de artículos de tipo kit (Es opcional, no se considera.)
 
-Corregir mensage de registro principal.
+
+
