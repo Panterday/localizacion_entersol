@@ -251,7 +251,8 @@ define([
         idPdfToSave,
         xmlIdToSave,
         validexUUID,
-        emailAutomatico
+        emailAutomatico,
+        prodMod
       );
       record.submitFields({
         type: recordType,
@@ -472,7 +473,8 @@ define([
             idPdfToSave,
             xmlIdToSave,
             validexUUID,
-            emailAutomatico
+            emailAutomatico,
+            prodMod
           );
           record.submitFields({
             type: recordType,
