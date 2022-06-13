@@ -42,7 +42,7 @@ define([
     const validexResponse = https.post({
       body,
       ...(prodMod
-        ? { url: "https://api.validex.mx/api/timbrar" }
+        ? { url: "https://api.validex.mx/api/timbrar-xml" }
         : { url: "https://qa-api.validex.mx/api/timbrar-xml" }),
       headers: {
         Authorization: "Basic " + key,

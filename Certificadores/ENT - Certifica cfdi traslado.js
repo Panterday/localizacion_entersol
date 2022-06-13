@@ -30,14 +30,20 @@ define([
   customData,
   funcionesLoc
 ) => {
-  const handlePostRequest = (body, permisosValidex, prodMod) => {
+  const handlePostRequest = (
+    body,
+    permisosValidex,
+    permisosPruebaValidex,
+    prodMod
+  ) => {
+    let key = prodMod ? permisosValidex : permisosPruebaValidex;
     const validexResponse = https.post({
       body,
       ...(prodMod
-        ? { url: "https://api.validex.mx/api/timbrar" }
+        ? { url: "https://api.validex.mx/api/timbrar-xml" }
         : { url: "https://qa-api.validex.mx/api/timbrar-xml" }),
       headers: {
-        Authorization: "Basic " + permisosValidex,
+        Authorization: "Basic " + key,
         "Content-Type": "application/json",
       },
     });
@@ -139,6 +145,7 @@ define([
     });
     const validexResponse = handlePostRequest(body, permisosValidex, prodMod);
     const validexBodyResponse = JSON.parse(validexResponse.body);
+    log.debug("VALIDEXRESPONSETRAS", validexBodyResponse);
     if (validexResponse.code === 200) {
       const validexXmlResponse = validexBodyResponse.base64.replace(
         "data:text/xml;base64,",
@@ -284,12 +291,18 @@ define([
     idGuardaDocumentosCarpeta,
     userConfig,
     customXmlCustomerTemplate,
-    customPdfCustomerTemplate
+    customPdfCustomerTemplate,
+    emailAutomatico,
+    permisosPruebaValidex,
+    longitudSerie,
+    longitudFolio
   ) => {
     //Extra custom data
     const extraData = funcionesLoc.getExtraCustomDataTraslado(
       currentRecord,
-      subsidiaryRecord
+      subsidiaryRecord,
+      longitudSerie,
+      longitudFolio
     );
     log.debug("EXTRADATA", extraData);
     //Global custom data
@@ -323,10 +336,11 @@ define([
         const validexResponse = handlePostRequest(
           body,
           permisosValidex,
+          permisosPruebaValidex,
           prodMod
         );
         const validexBodyResponse = JSON.parse(validexResponse.body);
-        log.debug("VALIDEXRESPONSE", validexBodyResponse);
+        log.debug("VALIDEXRESPONSETRAS", validexBodyResponse);
         if (validexResponse.code === 200) {
           const validexXmlResponse = validexBodyResponse.base64.replace(
             "data:text/xml;base64,",
@@ -538,6 +552,8 @@ define([
       recordType,
       globalConfig.access
     );
+    log.debug("GLOBALCONFI", globalConfig);
+    log.debug("USERCONFIG", userConfig);
     //Custom templates
     const customXmlCustomerTemplate = funcionesLoc.getXmlCustomerTemplate(
       customerRecord,
@@ -579,7 +595,11 @@ define([
         globalConfig.idGuardaDocumentosCarpeta,
         userConfig,
         customXmlCustomerTemplate,
-        customPdfCustomerTemplate
+        customPdfCustomerTemplate,
+        globalConfig.emailAutomatico,
+        globalConfig.permisosPruebaValidex,
+        userConfig.longitudSerie,
+        userConfig.longitudFolio
       );
     }
     const scriptObj = runtime.getCurrentScript();

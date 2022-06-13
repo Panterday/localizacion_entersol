@@ -110,7 +110,7 @@
 			<cfdi:Concepto 
 				Cantidad="${item.quantity}" 
 				Unidad="${item.units}" 
-				NoIdentificacion="${item.item}" 
+				NoIdentificacion="${item.custcol_ent_entloc_no_identificacion}" 
 				Descripcion="${item.description}" 
 				ValorUnitario="${formatFromCurrency(item.rate)}" 
 				Importe="${formatFromCurrency(item.amount)}"

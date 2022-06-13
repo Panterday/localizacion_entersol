@@ -18,7 +18,7 @@ define([
       deploymentId: "customdeploy_ent_entloc_cert_cfdi_tras",
     });
     //Building params string
-    const params = `&id=${recordId}&type=${recordType}&genCert=0`;
+    const params = `&id=${recordId}&type=${recordType}`;
 
     //Building target url
     const target = `${suiteletUrl}+${params}`;
@@ -52,7 +52,7 @@ define([
       deploymentId: "customdeploy_ent_entloc_gen_xml_prev_tra",
     });
     //Building params string
-    const params = `&id=${recordId}&type=${recordType}&genCert=1`;
+    const params = `&id=${recordId}&type=${recordType}`;
 
     //Building target url
     const target = `${suiteletUrl}+${params}`;

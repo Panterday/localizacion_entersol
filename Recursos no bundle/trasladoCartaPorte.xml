@@ -1,0 +1,32 @@
+<cfdi:Comprobante xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cartaporte20="http://www.sat.gob.mx/CartaPorte20" xmlns:cfdi="http://www.sat.gob.mx/cfd/3" Total="0" TipoDeComprobante="T" SubTotal="0" Serie="OV" Sello="cywYDwM3hocUFIVaj2DjGfp/ZzgA4Roy3Sl5OtdBaoQMwOQ0aXhYicCATxlbjiDRuqza18AYUdq4spW1gqhiOMVaDL9hHia9khZ9GbtWhYFZ1hcKSsO9XK52raUB0ZgAouZdKy8aYZGBb884DdNRKGURNMNmCy3Bl/AXR57CXRAOyFCaQa+fAC+IeKjUmfvCF7Xa7Rwgz8d7KyuTLF8g2l8/BSP4oYQE+PjZTB7W61Imx/sKnjkWCHWf6QXRw8fPSvvwpzNy2Guu53E4IeBqU1DOGi2AKJip7PTt/YAjQIrv28RPAtv5D0pemFXJx5eWibJ+luBWAP30enKFXSZqag==" NoCertificado="00001000000507671567" Moneda="XXX" xsi:schemaLocation="http://www.sat.gob.mx/cfd/3 http://www.sat.gob.mx/sitio_internet/cfd/3/cfdv33.xsd http://www.sat.gob.mx/CartaPorte20 http://www.sat.gob.mx/sitio_internet/cfd/CartaPorte/CartaPorte20.xsd" LugarExpedicion="01180" Version="3.3" Folio="4401000046" Fecha="2022-04-06T14:09:14">
+<cfdi:Emisor Nombre="Velsimex SA de CV" RegimenFiscal="601" Rfc="VEL880624879"/>
+<cfdi:Receptor Nombre="Velsimex SA de CV" Rfc="VEL880624879" UsoCFDI="P01"/>
+<cfdi:Conceptos>
+<cfdi:Concepto Cantidad="2004" ClaveProdServ="10171700" ClaveUnidad="KGM" Descripcion="SANAZINA cal 90 CJ 12X1 Kg" Importe="0.00" NoIdentificacion="VH0735" ValorUnitario="0.00"/>
+</cfdi:Conceptos>
+    <cfdi:Complemento>
+        <cartaporte20:CartaPorte Version="2.0" TranspInternac="No" TotalDistRec="359">
+            <cartaporte20:Ubicaciones>
+                <cartaporte20:Ubicacion TipoUbicacion="Origen" RFCRemitenteDestinatario="VEL880624879" FechaHoraSalidaLlegada="2022-04-07T07:00:00">
+                    <cartaporte20:Domicilio Estado="CHP" CodigoPostal="29112" Pais="MEX" Municipio="101"/>
+                </cartaporte20:Ubicacion>
+                <cartaporte20:Ubicacion TipoUbicacion="Destino" RFCRemitenteDestinatario="RAG140704G41" FechaHoraSalidaLlegada="2022-04-07T22:00:00" DistanciaRecorrida="359">
+                    <cartaporte20:Domicilio Estado="CHP" CodigoPostal="30798" Pais="MEX" Localidad="03" Municipio="089"/>
+                </cartaporte20:Ubicacion>
+            </cartaporte20:Ubicaciones>
+            <cartaporte20:Mercancias PesoBrutoTotal="2004.00" UnidadPeso="KGM" NumTotalMercancias="1">
+                <cartaporte20:Mercancia BienesTransp="10171700" Descripcion="SANAZINA cal 90 CJ 12X1 Kg" Cantidad="2004" ClaveUnidad="KGM" MaterialPeligroso="Sí" CveMaterialPeligroso="2763" Embalaje="4G" PesoEnKg="2004"/>
+                <cartaporte20:Autotransporte PermSCT="TPAF03" NumPermisoSCT="0919VEL16042010073601004">
+                <cartaporte20:IdentificacionVehicular ConfigVehicular="C2" PlacaVM="LB63468" AnioModeloVM="2016"/>
+                <cartaporte20:Seguros AseguraRespCivil="Seguros Inbursa S.A." PolizaRespCivil="11301 20977999" AseguraMedAmbiente="Seguros Inbursa S.A." PolizaMedAmbiente="11301 20977999"/>
+                </cartaporte20:Autotransporte>
+            </cartaporte20:Mercancias>
+            <cartaporte20:FiguraTransporte>
+                <cartaporte20:TiposFigura TipoFigura="01" RFCFigura="AURM7709035D9" NumLicencia="CHIS008457"/>
+                <cartaporte20:TiposFigura TipoFigura="02" RFCFigura="VEL880624879">
+                    <cartaporte20:PartesTransporte ParteTransporte="PT01"/>
+                </cartaporte20:TiposFigura>
+            </cartaporte20:FiguraTransporte>
+        </cartaporte20:CartaPorte>
+    </cfdi:Complemento>
+</cfdi:Comprobante>

@@ -1,55 +1,105 @@
 <?xml version="1.0" encoding="utf-8"?>
 <#setting locale = "es_MX">
 <#assign aDateTime = .now>
+<#assign customRecordData = customData.extraData.customRecordData>
+<#assign customItem = customData.extraData.customItem>
+<#assign esCartaPorte = record.custbody_ent_entloc_comp_carta_porte>
+<#function getAttrPair attr value1 value2>
+   <#if value1?has_content>
+    <#assign result="${attr}=\"${value1}\"">
+    <#return result>
+  <#else>
+	<#assign result="${attr}=\"${value2}\"">
+    <#return result>
+  </#if>  
+</#function>
+<#function getAttrIfCartaPorte value1 value2>
+   <#if esCartaPorte == true>
+    <#assign result="${value1}">
+    <#return result>
+  <#else>
+	<#assign result="${value2}">
+    <#return result>
+  </#if>  
+</#function>
 <cfdi:Comprobante 
-    xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd" 
+    xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd http://www.sat.gob.mx/CartaPorte20 http://www.sat.gob.mx/sitio_internet/cfd/CartaPorte/CartaPorte20.xsd" 
     Version="4.0" 
-    Serie="Serie" 
-    Folio="Folio" 
+    Serie="${customRecordData.serie}" 
+	Folio="${customRecordData.folio}" 
     Fecha="${aDateTime?string.iso_nz?keep_before(".")}" 
-    CondicionesDePago="CondicionesDePago" 
     SubTotal="0" 
-    Descuento="0" 
-    Moneda="${record.currencycode}" 
-    TipoCambio="1" 
+    Moneda="XXX" 
     Total="0" 
     TipoDeComprobante="T" 
     Exportacion="01" 
     LugarExpedicion="${subsidiary.zip}" 
     xmlns:cfdi="http://www.sat.gob.mx/cfd/4" 
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:cartaporte20="http://www.sat.gob.mx/CartaPorte20"
+>
 	<cfdi:Emisor 
         Rfc="${subsidiary.federalidnumber}" 
-		Nombre="${subsidiary.name}" 
+		Nombre="${subsidiary.custrecord_ent_entloc_razon_social}" 
 		RegimenFiscal="${subsidiary.custrecord_ent_entloc_regimen_fiscal?keep_before(" -")}"
     />
 	<cfdi:Receptor 
-        Rfc="${customer.custentity_ent_entloc_rfc}"
-		Nombre="${customer.custentity_ent_entloc_nombre_legal_sat}" 
-		DomicilioFiscalReceptor="${customer.billzip}" 
-		RegimenFiscalReceptor="${record.custbody_ent_entloc_reg_fis_receptor?keep_before(" -")}" 
-		UsoCFDI="${record.custbody_ent_entloc_uso_cfdi?keep_before(" -")}"
+        Rfc="${getAttrIfCartaPorte(subsidiary.federalidnumber, customer.custentity_ent_entloc_rfc)}"
+		Nombre="${getAttrIfCartaPorte(subsidiary.custrecord_ent_entloc_razon_social, customer.custentity_ent_entloc_nombre_legal_sat)}" 
+		DomicilioFiscalReceptor="${getAttrIfCartaPorte(customData.extraData.customSubsidiaryData.address.zip, customer.billzip)}" 
+		RegimenFiscalReceptor="${getAttrIfCartaPorte(subsidiary.custrecord_ent_entloc_regimen_fiscal?keep_before(" -"), record.custbody_ent_entloc_reg_fis_receptor?keep_before(" -"))}" 
+		UsoCFDI="S01"
     />
 	<cfdi:Conceptos>
-		<cfdi:Concepto 
-            ClaveProdServ="50211503" 
-            NoIdentificacion="UT421511" 
-            Cantidad="1" 
-            ClaveUnidad="H87" 
-            Unidad="Pieza" 
-            Descripcion="Cigarros" 
-            ValorUnitario="0.00" 
-            Importe="0.00" 
-            ObjetoImp="01">
-			<!--<cfdi:InformacionAduanera NumeroPedimento="21  47  3807  8003832"/>-->
-			<!--<cfdi:Parte 
-                ClaveProdServ="50211503" 
-                ValorUnitario="200.00" 
-                Importe="200.00" 
-                Cantidad="1" 
-                Unidad="Pieza" 
-                NoIdentificacion="123" 
-                Descripcion="cosas"/>-->
-		</cfdi:Concepto>
+        <#list record.item as item>
+            <cfdi:Concepto 
+                ${getAttrPair("ClaveProdServ", item.custcol_ent_entloc_sat_clv_pro_view?keep_before(" -"), item.custcol_ent_entloc_sat_clave_p_s_hidd?keep_before(" -"))}
+                NoIdentificacion="${item.custcol_ent_entloc_no_identificacion}" 
+                Cantidad="${item.quantity}" 
+                ClaveUnidad="${customItem.satUnitCodes[item?index]?keep_before(" -")}" 
+                Unidad="${item.unitsdisplay}" 
+                Descripcion="${item.description}" 
+                ValorUnitario="0.00" 
+                Importe="0.00" 
+                ObjetoImp="01"
+            >
+            </cfdi:Concepto>
+        </#list>
 	</cfdi:Conceptos>
+    <#if esCartaPorte == true>
+        <cfdi:Complemento>
+            <cartaporte20:CartaPorte Version="2.0" TranspInternac="No" TotalDistRec="359">
+                <cartaporte20:Ubicaciones>
+                    <cartaporte20:Ubicacion 
+                        TipoUbicacion="Origen" 
+                        RFCRemitenteDestinatario="VEL880624879" 
+                        FechaHoraSalidaLlegada="${record.custbody_ent_entloc_fecha_hora_prog_sa}"
+                    >
+                        <cartaporte20:Domicilio Estado="CHP" CodigoPostal="29112" Pais="MEX" Municipio="101"/>
+                    </cartaporte20:Ubicacion>
+                    <cartaporte20:Ubicacion 
+                        TipoUbicacion="Destino" 
+                        RFCRemitenteDestinatario="RAG140704G41" 
+                        FechaHoraSalidaLlegada="${record.custbody_ent_entloc_fecha_hor_pro_lleg}" 
+                        DistanciaRecorrida="359"
+                    >
+                        <cartaporte20:Domicilio Estado="CHP" CodigoPostal="30798" Pais="MEX" Localidad="03" Municipio="089"/>
+                    </cartaporte20:Ubicacion>
+                </cartaporte20:Ubicaciones>
+                <cartaporte20:Mercancias PesoBrutoTotal="2004.00" UnidadPeso="KGM" NumTotalMercancias="1">
+                    <cartaporte20:Mercancia BienesTransp="10171700" Descripcion="SANAZINA cal 90 CJ 12X1 Kg" Cantidad="2004" ClaveUnidad="KGM" MaterialPeligroso="Sí" CveMaterialPeligroso="2763" Embalaje="4G" PesoEnKg="2004"/>
+                    <cartaporte20:Autotransporte PermSCT="TPAF03" NumPermisoSCT="0919VEL16042010073601004">
+                    <cartaporte20:IdentificacionVehicular ConfigVehicular="C2" PlacaVM="LB63468" AnioModeloVM="2016"/>
+                    <cartaporte20:Seguros AseguraRespCivil="Seguros Inbursa S.A." PolizaRespCivil="11301 20977999" AseguraMedAmbiente="Seguros Inbursa S.A." PolizaMedAmbiente="11301 20977999"/>
+                    </cartaporte20:Autotransporte>
+                </cartaporte20:Mercancias>
+                <cartaporte20:FiguraTransporte>
+                    <cartaporte20:TiposFigura TipoFigura="01" RFCFigura="AURM7709035D9" NumLicencia="CHIS008457"/>
+                    <cartaporte20:TiposFigura TipoFigura="02" RFCFigura="VEL880624879">
+                        <cartaporte20:PartesTransporte ParteTransporte="PT01"/>
+                    </cartaporte20:TiposFigura>
+                </cartaporte20:FiguraTransporte>
+            </cartaporte20:CartaPorte>
+        </cfdi:Complemento>
+    </#if>
 </cfdi:Comprobante>

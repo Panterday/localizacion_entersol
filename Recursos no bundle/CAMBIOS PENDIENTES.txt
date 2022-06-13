@@ -11,5 +11,8 @@ Convertir el proceso de cancelación a la nueva versión.
 Factura de traslado 
 Resolver el tema de artículos de tipo kit (Es opcional, no se considera.)
 
-
+Corregir Actualización Masiva
+Modificar opciones de prueba: 
+    Si es prueba tomar RFC, Razón social, Código postal, Régimen fiscal. 
+Habilitar bloqueo de eliminación en registro de configuración.
 

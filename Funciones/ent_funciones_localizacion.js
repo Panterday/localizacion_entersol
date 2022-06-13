@@ -720,12 +720,14 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         return null;
       }
     };
-    serie = tranid.slice(0, longitudSerie);
-    folio = manageFolio(tranid, longitudFolio);
-    if (!serie) {
+    if (longitudSerie) {
+      serie = tranid.slice(0, longitudSerie);
+    } else {
       serie = tranid.replace(/[^a-z]/gi, "");
     }
-    if (!folio) {
+    if (longitudFolio) {
+      folio = manageFolio(tranid, longitudFolio);
+    } else {
       folio = tranid.replace(/[^0-9]/g, "");
     }
     return {
@@ -2108,10 +2110,62 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       }),
     };
   };
-  const getExtraCustomDataTraslado = (currentRecord, currentSubsidiary) => {
+  const handleDataForTransfer = (currentRecord, mapUnitsDataBase) => {
+    const handler = {};
+    handler.manageCustomItem = () => {
+      const satUnitCodes = [];
+      const totalLines = currentRecord.getLineCount({ sublistId: "item" });
+      for (let i = 0; i < totalLines; i++) {
+        const netsuiteUnit = currentRecord.getSublistValue({
+          sublistId: "item",
+          fieldId: "units",
+          line: i,
+        });
+        const tempSatCode = mapUnitsDataBase.find(
+          (element) => element.netsuiteCode === netsuiteUnit
+        );
+        satUnitCodes.push(tempSatCode.satCode);
+      }
+      return satUnitCodes;
+    };
+    return handler;
+  };
+  const getExtraCustomDataTraslado = (
+    currentRecord,
+    currentSubsidiary,
+    longitudSerie,
+    longitudFolio
+  ) => {
+    //Get taxGroup data
+    const taxDataBase = handleTaxGroupData();
+    //Get mapUnit data
+    const mapUnitsDataBase = handleSatMappingUnits();
+    const tranid = currentRecord.getValue({
+      fieldId: "tranid",
+    });
     const subsidiaryAddress = handleSubsidiaryAddressFields(currentSubsidiary);
+    //Units
+    const satUnitCodes = handleDataForTransfer(
+      currentRecord,
+      mapUnitsDataBase
+    ).manageCustomItem();
+    //Custom transaction
+    const { serie, folio } = handleFolioSerie(
+      tranid,
+      longitudSerie,
+      longitudFolio
+    );
     return {
-      customRecordData: subsidiaryAddress,
+      customRecordData: {
+        serie,
+        folio,
+      },
+      customSubsidiaryData: {
+        address: subsidiaryAddress,
+      },
+      customItem: {
+        satUnitCodes,
+      },
     };
   };
   const getPdfRendered = (
