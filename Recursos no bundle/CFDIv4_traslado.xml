@@ -68,30 +68,57 @@
 	</cfdi:Conceptos>
     <#if esCartaPorte == true>
         <cfdi:Complemento>
-            <cartaporte20:CartaPorte Version="2.0" TranspInternac="No" TotalDistRec="359">
+            <cartaporte20:CartaPorte Version="2.0" TranspInternac="No" TotalDistRec="${record.custbody_ent_entloc_distancia_recorrid}">
                 <cartaporte20:Ubicaciones>
                     <cartaporte20:Ubicacion 
                         TipoUbicacion="Origen" 
-                        RFCRemitenteDestinatario="VEL880624879" 
-                        FechaHoraSalidaLlegada="${record.custbody_ent_entloc_fecha_hora_prog_sa}"
+                        RFCRemitenteDestinatario="${subsidiary.federalidnumber}" 
+                        FechaHoraSalidaLlegada="${record.custbody_ent_entloc_fecha_hora_prog_sa?string.iso_nz}"
                     >
                         <cartaporte20:Domicilio Estado="CHP" CodigoPostal="29112" Pais="MEX" Municipio="101"/>
                     </cartaporte20:Ubicacion>
                     <cartaporte20:Ubicacion 
                         TipoUbicacion="Destino" 
                         RFCRemitenteDestinatario="RAG140704G41" 
-                        FechaHoraSalidaLlegada="${record.custbody_ent_entloc_fecha_hor_pro_lleg}" 
-                        DistanciaRecorrida="359"
+                        FechaHoraSalidaLlegada="${record.custbody_ent_entloc_fecha_hor_pro_lleg?string.iso_nz}" 
+                        DistanciaRecorrida="${record.custbody_ent_entloc_distancia_recorrid}"
                     >
                         <cartaporte20:Domicilio Estado="CHP" CodigoPostal="30798" Pais="MEX" Localidad="03" Municipio="089"/>
                     </cartaporte20:Ubicacion>
                 </cartaporte20:Ubicaciones>
-                <cartaporte20:Mercancias PesoBrutoTotal="2004.00" UnidadPeso="KGM" NumTotalMercancias="1">
-                    <cartaporte20:Mercancia BienesTransp="10171700" Descripcion="SANAZINA cal 90 CJ 12X1 Kg" Cantidad="2004" ClaveUnidad="KGM" MaterialPeligroso="Sí" CveMaterialPeligroso="2763" Embalaje="4G" PesoEnKg="2004"/>
-                    <cartaporte20:Autotransporte PermSCT="TPAF03" NumPermisoSCT="0919VEL16042010073601004">
-                    <cartaporte20:IdentificacionVehicular ConfigVehicular="C2" PlacaVM="LB63468" AnioModeloVM="2016"/>
-                    <cartaporte20:Seguros AseguraRespCivil="Seguros Inbursa S.A." PolizaRespCivil="11301 20977999" AseguraMedAmbiente="Seguros Inbursa S.A." PolizaMedAmbiente="11301 20977999"/>
-                    </cartaporte20:Autotransporte>
+                <cartaporte20:Mercancias 
+                    PesoBrutoTotal="2004.00" 
+                    UnidadPeso="KGM" 
+                    NumTotalMercancias="1"
+                >
+                <#list record.item as item>
+                        <cartaporte20:Mercancia 
+                            ${getAttrPair("BienesTransp", item.custcol_ent_entloc_sat_clv_pro_view?keep_before(" -"), item.custcol_ent_entloc_sat_clave_p_s_hidd?keep_before(" -"))}
+                            Descripcion="${item.description}" 
+                            Cantidad="${item.quantity}" 
+                            ClaveUnidad="${customItem.satUnitCodes[item?index]?keep_before(" -")}" 
+                            MaterialPeligroso="Sí" 
+                            CveMaterialPeligroso="2763" 
+                            Embalaje="4G" 
+                            PesoEnKg="2004"
+                        />
+                        <cartaporte20:Autotransporte 
+                            PermSCT="TPAF03" 
+                            NumPermisoSCT="0919VEL16042010073601004"
+                        >
+                            <cartaporte20:IdentificacionVehicular 
+                                ConfigVehicular="C2" 
+                                PlacaVM="LB63468" 
+                                AnioModeloVM="2016"
+                            />
+                            <cartaporte20:Seguros 
+                                AseguraRespCivil="Seguros Inbursa S.A." 
+                                PolizaRespCivil="11301 20977999" 
+                                AseguraMedAmbiente="Seguros Inbursa S.A." 
+                                PolizaMedAmbiente="11301 20977999"
+                            />
+                        </cartaporte20:Autotransporte>
+                </#list>
                 </cartaporte20:Mercancias>
                 <cartaporte20:FiguraTransporte>
                     <cartaporte20:TiposFigura TipoFigura="01" RFCFigura="AURM7709035D9" NumLicencia="CHIS008457"/>

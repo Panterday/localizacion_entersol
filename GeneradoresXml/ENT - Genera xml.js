@@ -32,7 +32,8 @@ define([
     subsidiaryRecord,
     currentTemplate,
     longitudSerie,
-    longitudFolio
+    longitudFolio,
+    prodMod
   ) => {
     let renderedTemplate = null;
     const renderXml = render.create();
@@ -41,7 +42,8 @@ define([
       currentRecord,
       subsidiaryRecord,
       longitudSerie,
-      longitudFolio
+      longitudFolio,
+      prodMod
     );
     //Global custom data
     const globalData = customData.getDataForInvoice();
@@ -126,7 +128,8 @@ define([
       subsidiaryRecord,
       customCustomerTemplate ? customCustomerTemplate : currentTemplate,
       userConfig.longitudSerie,
-      userConfig.longitudFolio
+      userConfig.longitudFolio,
+      globalConfig.prodMod
     );
     if (!xmlRenderedObj.error) {
       let xmlDocument = null;

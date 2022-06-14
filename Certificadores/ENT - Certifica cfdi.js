@@ -142,7 +142,8 @@ define([
       currentRecord,
       subsidiaryRecord,
       longitudSerie,
-      longitudFolio
+      longitudFolio,
+      prodMod
     );
     //Global custom data
     const globalData = customData.getDataForInvoice();
@@ -342,7 +343,8 @@ define([
       currentRecord,
       subsidiaryRecord,
       longitudSerie,
-      longitudFolio
+      longitudFolio,
+      prodMod
     );
     //Global custom data
     const globalData = customData.getDataForInvoice();

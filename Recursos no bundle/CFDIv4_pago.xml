@@ -118,11 +118,19 @@
 			</cfdi:CfdiRelacionados>
 		</#list>
 	</#if>
-	<cfdi:Emisor 
-        Rfc="${subsidiary.federalidnumber}" 
-        Nombre="${subsidiary.custrecord_ent_entloc_razon_social}" 
-		RegimenFiscal="${subsidiary.custrecord_ent_entloc_regimen_fiscal?keep_before(" -")}"
-    />
+	<#if customRecordData.prodMod == "true">
+		<cfdi:Emisor 
+			Rfc="${subsidiary.federalidnumber}" 
+			Nombre="${subsidiary.custrecord_ent_entloc_razon_social}" 
+			RegimenFiscal="${subsidiary.custrecord_ent_entloc_regimen_fiscal?keep_before(" -")}"
+		/>
+	<#else>
+		<cfdi:Emisor 
+			Rfc="IIA040805DZ4" 
+			Nombre="INDISTRIA ILUMINADORA DE ALMACENES" 
+			RegimenFiscal="601"
+		/>
+	</#if>
 	<cfdi:Receptor 
 		Rfc="${customer.custentity_ent_entloc_rfc}" 
 		Nombre="${customer.custentity_ent_entloc_nombre_legal_sat}" 

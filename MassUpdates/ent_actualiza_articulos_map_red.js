@@ -2,7 +2,12 @@
  *@NApiVersion 2.1
  *@NScriptType MapReduceScript
  */
-define(["N/search", "N/record"], (search, record) => {
+define(["N/search", "N/record", "N/email", "N/runtime"], (
+  search,
+  record,
+  email,
+  runtime
+) => {
   const keepBefore = (str, element) => {
     if (str) {
       const index = str.indexOf(element);
@@ -126,6 +131,15 @@ define(["N/search", "N/record"], (search, record) => {
 
   const summarize = (summary) => {
     log.debug("SUMMARY", summary);
+    //Add additional code
+    const userObj = runtime.getCurrentUser();
+    log.debug("CURRENT USER", userObj);
+    email.send({
+      author: userObj.id,
+      recipients: userObj.id,
+      subject: "Se han actualizado los artículos",
+      body: "Se han actualizado los artículos",
+    });
   };
 
   return {

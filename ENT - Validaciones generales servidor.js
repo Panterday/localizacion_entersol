@@ -4,19 +4,36 @@
  */
 /*This event can be used with the following context.UserEventType:
 CREATE, EDIT, VIEW, COPY, PRINT, EMAIL, QUICKVIEW*/
-define([], () => {
+define(["./Funciones/ent_funciones_localizacion"], (funcionesLoc) => {
   const beforeLoad = (context) => {
     if (context.type === context.UserEventType.EDIT) {
-      const newRecord = context.newRecord;
-      const uuid = newRecord.getValue({
+      const currentRecord = context.newRecord;
+      const recordType = currentRecord.type;
+      const subsidiaryId = currentRecord.getValue({
+        fieldId: "subsidiary",
+      });
+      const uuid = currentRecord.getValue({
         fieldId: "custbody_ent_entloc_uuid",
       });
-      if (uuid) {
-        const form = context.form;
-        const deleteButton = form.getButton({
-          id: "delete",
-        });
-        deleteButton.isDisabled = true;
+      //Global config
+      const globalConfig = funcionesLoc.getGlobalConfig(
+        subsidiaryId,
+        recordType
+      );
+      //User config
+      const userConfig = funcionesLoc.getUserConfig(
+        globalConfig.internalIdRegMaestro,
+        recordType,
+        globalConfig.access
+      );
+      if (userConfig.bloqueoEliminacion) {
+        if (uuid) {
+          const form = context.form;
+          const deleteButton = form.getButton({
+            id: "delete",
+          });
+          deleteButton.isDisabled = true;
+        }
       }
     }
     if (

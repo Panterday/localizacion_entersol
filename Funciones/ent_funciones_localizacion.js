@@ -588,6 +588,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
             longitudFolio: globalConfigRecord.getValue({
               fieldId: "custrecord_ent_entloc_long_folio_fv",
             }),
+            bloqueoEliminacion: globalConfigRecord.getValue({
+              fieldId: "custrecord_ent_entloc_bloqueo_eli_fv",
+            }),
           };
         case "creditmemo":
           return {
@@ -618,6 +621,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
             longitudFolio: globalConfigRecord.getValue({
               fieldId: "custrecord_ent_entloc_long_folio_nc",
             }),
+            bloqueoEliminacion: globalConfigRecord.getValue({
+              fieldId: "custrecord_ent_entloc_bloqueo_eli_nc",
+            }),
           };
         case "customerpayment":
           return {
@@ -647,6 +653,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
             }),
             longitudFolio: globalConfigRecord.getValue({
               fieldId: "custrecord_ent_entloc_long_folio_pc",
+            }),
+            bloqueoEliminacion: globalConfigRecord.getValue({
+              fieldId: "custrecord_ent_entloc_bloqueo_eli_pc",
             }),
           };
       }
@@ -2030,8 +2039,10 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     currentRecord,
     currentSubsidiary,
     longitudSerie,
-    longitudFolio
+    longitudFolio,
+    prodMod
   ) => {
+    log.debug("PRODMOD", prodMod);
     //Get taxGroup data
     const taxDataBase = handleTaxGroupData();
     //Get mapUnit data
@@ -2095,6 +2106,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         folio,
         ...(relatedCfdis && { relatedCfdis }),
         montoEnLetra,
+        prodMod,
       },
       summary: {
         total,
