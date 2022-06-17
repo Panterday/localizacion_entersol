@@ -679,6 +679,12 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       const plantillaPdfPublica = globalConfigRecord.getValue({
         fieldId: "custrecord_ent_entloc_plantilla_imp_ft",
       });
+      const longitudSerie = globalConfigRecord.getValue({
+        fieldId: "custrecord_ent_entloc_long_serie_ft",
+      });
+      const longitudFolio = globalConfigRecord.getValue({
+        fieldId: "custrecord_ent_entloc_long_folio_ft",
+      });
       switch (recordType) {
         case "itemfulfillment":
           aplica = globalConfigRecord.getValue({
@@ -701,6 +707,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         habilitaCertDosPasos,
         plantillaPdfPublica,
         plantillaEdocument,
+        longitudSerie,
+        longitudFolio,
       };
     } else {
       return false;
@@ -2122,9 +2130,11 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       }),
     };
   };
-  const handleDataForTransfer = (currentRecord, mapUnitsDataBase) => {
+  const handleDataForTransfer = () => {
     const handler = {};
-    handler.manageCustomItem = () => {
+    handler.manageCustomItem = (currentRecord, mapUnitsDataBase) => {
+      let pesoTotal = 0;
+      let trasMatPeligroso = false;
       const satUnitCodes = [];
       const totalLines = currentRecord.getLineCount({ sublistId: "item" });
       for (let i = 0; i < totalLines; i++) {
@@ -2133,34 +2143,54 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           fieldId: "units",
           line: i,
         });
+        let pesoItem = currentRecord.getSublistValue({
+          sublistId: "item",
+          fieldId: "custcol_ent_entloc_peso_en_kg",
+          line: i,
+        });
+        const isMatPel = currentRecord.getSublistValue({
+          sublistId: "item",
+          fieldId: "custcol_ent_entloc_material_peligroso",
+          line: i,
+        });
+        if (isMatPel) {
+          trasMatPeligroso = true;
+        }
         const tempSatCode = mapUnitsDataBase.find(
           (element) => element.netsuiteCode === netsuiteUnit
         );
         satUnitCodes.push(tempSatCode.satCode);
+        pesoItem = Number(pesoItem);
+        pesoTotal += pesoItem;
       }
-      return satUnitCodes;
+      return { satUnitCodes, pesoTotal, totalLines, trasMatPeligroso };
     };
+    handler.getDataOrigen = () => {};
     return handler;
   };
   const getExtraCustomDataTraslado = (
     currentRecord,
     currentSubsidiary,
     longitudSerie,
-    longitudFolio
+    longitudFolio,
+    prodMod
   ) => {
-    //Get taxGroup data
-    const taxDataBase = handleTaxGroupData();
     //Get mapUnit data
     const mapUnitsDataBase = handleSatMappingUnits();
     const tranid = currentRecord.getValue({
       fieldId: "tranid",
     });
     const subsidiaryAddress = handleSubsidiaryAddressFields(currentSubsidiary);
-    //Units
-    const satUnitCodes = handleDataForTransfer(
+    //Units, total weight
+    const {
+      satUnitCodes,
+      pesoTotal,
+      totalLines: totalArticulos,
+      trasMatPeligroso,
+    } = handleDataForTransfer().manageCustomItem(
       currentRecord,
       mapUnitsDataBase
-    ).manageCustomItem();
+    );
     //Custom transaction
     const { serie, folio } = handleFolioSerie(
       tranid,
@@ -2171,11 +2201,15 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       customRecordData: {
         serie,
         folio,
+        prodMod,
       },
       customSubsidiaryData: {
         address: subsidiaryAddress,
       },
       customItem: {
+        pesoTotal,
+        totalArticulos,
+        trasMatPeligroso,
         satUnitCodes,
       },
     };

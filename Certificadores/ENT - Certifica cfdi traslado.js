@@ -297,12 +297,14 @@ define([
     longitudSerie,
     longitudFolio
   ) => {
+    log.debug("ONE STEP CERT", "ONE STEP CERT");
     //Extra custom data
     const extraData = funcionesLoc.getExtraCustomDataTraslado(
       currentRecord,
       subsidiaryRecord,
       longitudSerie,
-      longitudFolio
+      longitudFolio,
+      prodMod
     );
     log.debug("EXTRADATA", extraData);
     //Global custom data
@@ -434,7 +436,7 @@ define([
               custbody_ent_entloc_estado_certifica: "",
               custbody_ent_entloc_estado_gen_xml: "",
               custbody_ent_entloc_edoc_traslado: xmlIdToSave,
-              custbody_ent_entloc_uuid: validexUUID,
+              custbody_ent_entloc_tras_uuid: validexUUID,
               custbody_ent_entloc_cadena_qr: validexQr,
               custbody_ent_entloc_cadena_original: validexCadenaOriginal,
               custbody_ent_entloc_pdf_timbrado_tras: idPdfToSave,
@@ -454,6 +456,24 @@ define([
             id: recordId,
             parameters: {
               showCertMessage: true,
+            },
+          });
+        } else if (validexResponse.code === 400) {
+          //error
+          record.submitFields({
+            type: recordType,
+            id: recordId,
+            values: {
+              custbody_ent_entloc_estado_certifica:
+                validexBodyResponse.errorDescription,
+            },
+          });
+          //Redirección a la transacción
+          redirect.toRecord({
+            type: recordType,
+            id: recordId,
+            parameters: {
+              errorCertMessage: true,
             },
           });
         } else {

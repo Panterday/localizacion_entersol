@@ -4,8 +4,6 @@
 <#assign customRecordData = customData.extraData.customRecordData>
 <#assign customItem = customData.extraData.customItem>
 <#assign esCartaPorte = record.custbody_ent_entloc_comp_carta_porte>
-<#assign NomAsegMedioAmbiental = record.custbody_ent_entloc_aseg_medio_amb?keep_before("@")>
-<#assign PolAsegMedioAmbiental = record.custbody_ent_entloc_aseg_medio_amb?keep_after("@")>
 <#function getAttrPair attr value1 value2>
    <#if value1?has_content>
     <#assign result="${attr}=\"${value1}\"">
@@ -23,18 +21,6 @@
 	<#assign result="${value2}">
     <#return result>
   </#if>  
-</#function>
-<#function getAttrMaterialPeligroso attr matPelFlag value1>
-    <#if matPelFlag == true>
-        <#assign result="${attr}=\"${value1}\"">
-        <#return result>
-    </#if>
-</#function>
-<#function getAttrTrasMatPel attr matPelFlag value1>
-    <#if matPelFlag == "true">
-        <#assign result="${attr}=\"${value1}\"">
-        <#return result>
-    </#if>
 </#function>
 <cfdi:Comprobante 
     xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd http://www.sat.gob.mx/CartaPorte20 http://www.sat.gob.mx/sitio_internet/cfd/CartaPorte/CartaPorte20.xsd" 
@@ -97,27 +83,21 @@
                         RFCRemitenteDestinatario="${subsidiary.federalidnumber}" 
                         FechaHoraSalidaLlegada="${record.custbody_ent_entloc_fecha_hora_prog_sa?string.iso_nz}"
                     >
-                        <cartaporte20:Domicilio 
-                            Estado="${record.custbody_ent_entloc_clave_estado_sat}" 
-                            CodigoPostal="${record.custbody_ent_entloc_cp_origen}"
-                        />
+                        <cartaporte20:Domicilio Estado="CHP" CodigoPostal="29112" Pais="MEX" Municipio="101"/>
                     </cartaporte20:Ubicacion>
                     <cartaporte20:Ubicacion 
                         TipoUbicacion="Destino" 
-                        RFCRemitenteDestinatario="${customer.custentity_ent_entloc_rfc}" 
+                        RFCRemitenteDestinatario="RAG140704G41" 
                         FechaHoraSalidaLlegada="${record.custbody_ent_entloc_fecha_hor_pro_lleg?string.iso_nz}" 
                         DistanciaRecorrida="${record.custbody_ent_entloc_distancia_recorrid}"
                     >
-                        <cartaporte20:Domicilio 
-                            Estado="${record.custbody_ent_entloc_clave_est_dest_sat}" 
-                            CodigoPostal="${record.custbody_ent_entloc_cp_destino}"
-                        />
+                        <cartaporte20:Domicilio Estado="CHP" CodigoPostal="30798" Pais="MEX" Localidad="03" Municipio="089"/>
                     </cartaporte20:Ubicacion>
                 </cartaporte20:Ubicaciones>
                 <cartaporte20:Mercancias 
-                    PesoBrutoTotal="${customItem.pesoTotal}" 
+                    PesoBrutoTotal="4008" 
                     UnidadPeso="KGM" 
-                    NumTotalMercancias="${customItem.totalArticulos}"
+                    NumTotalMercancias="2"
                 >
                 <#list record.item as item>
                         <cartaporte20:Mercancia 
@@ -125,45 +105,29 @@
                             Descripcion="${item.description}" 
                             Cantidad="${item.quantity}" 
                             ClaveUnidad="${customItem.satUnitCodes[item?index]?keep_before(" -")}" 
-                            PesoEnKg="${item.custcol_ent_entloc_peso_en_kg}"
-                            ${getAttrMaterialPeligroso("MaterialPeligroso", item.custcol_ent_entloc_material_peligroso, item.custcol_ent_entloc_material_peligroso)}
-                            ${getAttrMaterialPeligroso("CveMaterialPeligroso", item.custcol_ent_entloc_material_peligroso, item.custcol_ent_entloc_clave_mat_peligros?keep_before(" -"))}
-                            ${getAttrMaterialPeligroso("Embalaje", item.custcol_ent_entloc_material_peligroso, item.custcol_ent_entloc_embalaje?keep_before(" -"))}
+                            PesoEnKg="2004"
                         />
                 </#list>
                 <cartaporte20:Autotransporte 
-                    PermSCT="${record.custbody_ent_entloc_clave_perm_sct}" 
-                    NumPermisoSCT="${record.custbody_ent_entloc_num_perm_sct}"
+                    PermSCT="TPAF03" 
+                    NumPermisoSCT="0919VEL16042010073601004"
                 >
                     <cartaporte20:IdentificacionVehicular 
-                        ConfigVehicular="${record.custbody_ent_entloc_config_vehicular?keep_before(" -")}" 
-                        PlacaVM="${record.custbody_ent_entloc_vehiculo}" 
-                        AnioModeloVM="${record.custbody_ent_entloc_anio_modelo}"
+                        ConfigVehicular="C2" 
+                        PlacaVM="LB63468" 
+                        AnioModeloVM="2016"
                     />
                     <cartaporte20:Seguros 
-                        AseguraRespCivil="${record.custbody_ent_entloc_aseg_resp_civil?keep_before("@")}" 
-                        PolizaRespCivil="${record.custbody_ent_entloc_aseg_resp_civil?keep_after("@")}"
-                        ${getAttrTrasMatPel("AseguraMedAmbiente", customItem.trasMatPeligroso, NomAsegMedioAmbiental)}
-                        ${getAttrTrasMatPel("PolizaMedAmbiente", customItem.trasMatPeligroso, PolAsegMedioAmbiental)}
+                        AseguraRespCivil="Seguros Inbursa S.A." 
+                        PolizaRespCivil="11301 20977999" 
                     />
                 </cartaporte20:Autotransporte>
                 </cartaporte20:Mercancias>
                 <cartaporte20:FiguraTransporte>
-                    <cartaporte20:TiposFigura 
-                        TipoFigura="01" 
-                        RFCFigura="${record.custbody_ent_entloc_rfc_operador}" 
-                        NumLicencia="${record.custbody_ent_entloc_num_licencia}"
-                    />
-                    <#if record.custbody_ent_entloc_arrenda_prop?has_content>
-                        <cartaporte20:TiposFigura 
-                            TipoFigura="${record.custbody_ent_entloc_tipo_figura?keep_before(" -")}" 
-                            RFCFigura="${record.custbody_ent_entloc_rfc_arren_prop}"
-                        >
-                            <cartaporte20:PartesTransporte 
-                                ParteTransporte="${record.custbody_ent_entloc_parte_transporte?keep_before(" -")}"
-                            />
-                        </cartaporte20:TiposFigura>
-                    </#if>
+                    <cartaporte20:TiposFigura TipoFigura="01" RFCFigura="AURM7709035D9" NumLicencia="CHIS008457"/>
+                    <cartaporte20:TiposFigura TipoFigura="02" RFCFigura="VEL880624879">
+                        <cartaporte20:PartesTransporte ParteTransporte="PT01"/>
+                    </cartaporte20:TiposFigura>
                 </cartaporte20:FiguraTransporte>
             </cartaporte20:CartaPorte>
         </cfdi:Complemento>

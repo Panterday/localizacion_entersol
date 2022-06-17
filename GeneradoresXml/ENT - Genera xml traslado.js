@@ -30,14 +30,20 @@ define([
     currentRecord,
     customerRecord,
     subsidiaryRecord,
-    currentTemplate
+    currentTemplate,
+    longitudSerie,
+    longitudFolio,
+    prodMod
   ) => {
     let renderedTemplate = null;
     const renderXml = render.create();
     //Extra custom data
     const extraData = funcionesLoc.getExtraCustomDataTraslado(
       currentRecord,
-      subsidiaryRecord
+      subsidiaryRecord,
+      longitudSerie,
+      longitudFolio,
+      prodMod
     );
     log.debug("EXTRADATA", extraData);
     //Global custom data
@@ -121,7 +127,10 @@ define([
       currentRecord,
       customerRecord,
       subsidiaryRecord,
-      customCustomerTemplate ? customCustomerTemplate : currentTemplate
+      customCustomerTemplate ? customCustomerTemplate : currentTemplate,
+      userConfig.longitudSerie,
+      userConfig.longitudFolio,
+      globalConfig.prodMod
     );
     if (!xmlRenderedObj.error) {
       let xmlDocument = null;

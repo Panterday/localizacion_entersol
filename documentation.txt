@@ -13,9 +13,22 @@ CFDI 4.0
         *ENT - Plantilla de documento electrónico 
         *ENT - Sat clave unidad
         *CFDI 4.0 Migración de campos
-        CFDI 4.0 : Catálogo material peligroso
+
+        CFDI 4.0 Sat material peligroso
         CFDI 4.0 Catálogo de embalaje
-        CFDI 4.0 Catálogo de embalaje
+        CFDI 4.0 Vehículos
+        CFDI 4.0 Sat tipo permiso
+        CFDI 4.0 Sat subtipos de remolques
+        CFDI 4.0 Remolques 
+        CFDI 4.0 Permisos SCT
+        CFDI 4.0 Sat parte transporte
+        CFDI 4.0 Config. autotransporte
+        CFDI 4.0 Sat embalaje
+        CFDI 4.0 Aseguradoras
+        CFDI 4.0 Aseg. medio ambi.
+        CFDI 4.0 Arrendador/propietario
+        CFDI 4.0 Operadores
+
     Campos personalizados de transacción: 
         *ENT – UUID 
         *ENT – DOCUMENTO ELECTRÓNICO 
@@ -67,6 +80,27 @@ CFDI 4.0
         CFDI 4.0 : Fecha y hora prog de salida
         CFDI 4.0 : Fecha y hora prog de llegada
         CFDI 4.0 : DISTANCIA RECORRIDA
+        CFDI 4.0 : CP Origen
+        CFDI 4.0 : UBICACIÓN ORIGEN
+        CFDI 4.0 : Clave estado sat (Oculto)
+        CFDI 4.0 : CP Destino
+        CFDI 4.0 : Clave estado destino sat (Oculto)
+        CFDI 4.0 : Dirección personalizada de origen
+        CFDI 4.0 : Dirección personalizada de destino
+
+        CFDI 4.0 : Vehículo
+        CFDI 4.0 : Clave permiso SCT
+        CFDI 4.0 : Config. vehicular
+        CFDI 4.0 : Año/modelo
+        CFDI 4.0 : Aseguradora resp. civil
+        CFDI 4.0 : Aseguradora medio amb.
+        CFDI 4.0 : Operador
+        CFDI 4.0 : Rfc operador
+        CFDI 4.0 : Num. licencia
+        CFDI 4.0 : Arrendador/propietario
+        CFDI 4.0 : Parte transporte
+        CFDI 4.0 : Tipo figura
+        
     Campos personalizados de subsidiaria: 
         *ENT- Régimen fiscal (Ligado a lista: ENT - Sat régimen fiscal)
         *ENT - Razón social CFDI 4.0
@@ -93,6 +127,9 @@ CFDI 4.0
     Campos de línea de artículos
         *custcol_ent_entloc_sat_clave_p_s_hidd
         *ENT - Sat clave prod servicio
+        CFDI 4.0 : Peso en KG
+        CFDI 4.0 : Material peligroso
+        CFDI 4.0 : Clave material peligroso
     Otros campos personalizados (Aplicado a código de impuesto): 
         *ENT - Código de impuesto (Ligado a lista: ENT - Sat código de impuesto)
         *ENT - Objeto de impuesto
@@ -106,21 +143,23 @@ CFDI 4.0
         	CFDI 4.0
 		*Cliente: 
 			CFDI 4.0
-
     Comienzo de mapeo de XML para la certificación en dos pasos. 
     Comienzo de carga de catálogos. 
 
     Listas personalizadas 
-        *ENT - Sat Método de pago
-        *ENT - Sat forma de pago
-        *ENT - Sat exportación
-        *ENT - Sat régimen fiscal
-        *ENT - Sat código de impuesto
-        *ENT - Sat Periodicidad
-        *ENT - Sat Meses
-        *ENT - Sat Tipo relacion
-        *ENT - Sat Uso de CFDI
-        *ENT - Sat Objeto Impuesto
-        *ENT - Sat Tipo Factor
+        *CFDI 4.0 Sat exportación	
+        *CFDI 4.0 Sat régimen fiscal	
+        *CFDI 4.0 Sat cód. de impuesto	
+        *CFDI 4.0 Sat Periodicidad
+        *CFDI 4.0 Sat Meses
+        *CFDI 4.0 Sat Tipo relaciòn
+        *CFDI 4.0 Sat Objeto Impuesto
+        *CFDI 4.0 Sat Tipo de Factor	
+        *CFDI 4.0 Fuentes	
+        *CFDI 4.0 Sat Impuesto	
+        *CFDI 4.0 Tamaño de fuente
+
+        CFDI 4.0 Sat fig. transporte	
+
      
 
