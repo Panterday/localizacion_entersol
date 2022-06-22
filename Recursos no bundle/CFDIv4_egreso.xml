@@ -78,6 +78,7 @@
 	FormaPago="${record.custbody_ent_entloc_forma_pago?keep_before(" -")}" 
 	SubTotal="${formatFromCurrency(record.subtotal)}" 
 	Moneda="${record.currencysymbol}" 
+	${getExchangeRate(record.currencysymbol)}
 	${getAttrExist("Descuento", formatFromString(customItem.discounts.totalDiscount))}
 	Total="${formatFromCurrency(record.total)}" 
 	TipoDeComprobante="E" 
@@ -116,10 +117,10 @@
 	<cfdi:Conceptos>
 		<#list record.item as item>
 			<cfdi:Concepto 
-				Cantidad="${item.quantity}" 
+				Cantidad="${item.quantity?long?c}"
 				Unidad="${item.units}" 
 				NoIdentificacion="${item.custcol_ent_entloc_no_identificacion}" 
-				Descripcion="${item.description}" 
+				Descripcion="${customItem.newItemDescriptions[item?index]}"
 				ValorUnitario="${formatFromCurrency(item.rate)}" 
 				Importe="${formatFromCurrency(item.amount)}"
 				${getAttrPair("ClaveProdServ", item.custcol_ent_entloc_sat_clv_pro_view?keep_before(" -"), item.custcol_ent_entloc_sat_clave_p_s_hidd?keep_before(" -"))}

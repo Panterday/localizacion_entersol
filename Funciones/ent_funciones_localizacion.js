@@ -346,6 +346,46 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       taxCodeData,
     };
   };
+  const handleTaxGroupDataSuiteTax = () => {
+    const taxCodeData = [];
+    //Tax code
+    const taxCodeDetailsSearch = search.create({
+      type: "salestaxitem",
+      filters: [],
+      columns: [
+        "internalid",
+        "custrecord_ent_entloc_codigo_impuesto",
+        "custrecord_ent_entloc_obj_impuesto",
+        "custrecord_ste_taxcode_ratetype",
+      ],
+    });
+    taxCodeDetailsSearch.run().each((result) => {
+      const taxCodeId = Number(
+        result.getValue({
+          name: "internalid",
+        })
+      );
+      const taxRateType = result.getValue({
+        name: "custrecord_ste_taxcode_ratetype",
+      });
+      const customCode = result.getText({
+        name: "custrecord_ent_entloc_codigo_impuesto",
+      });
+      const objetoImpuesto = result.getText({
+        name: "custrecord_ent_entloc_obj_impuesto",
+      });
+      taxCodeData.push({
+        taxCodeId,
+        taxRateType,
+        customCode,
+        objetoImpuesto,
+      });
+      return true;
+    });
+    return {
+      taxCodeData,
+    };
+  };
   const handleSatMappingUnits = () => {
     const satUnitData = [];
     const satMapSearch = search.create({
@@ -430,6 +470,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     let idGuardaDocumentosCarpeta = null;
     let roles = null;
     let emailAutomatico = false;
+    let suiteTax = false;
     let errorInterDescription = "";
     try {
       const buscaGlobalConfig = search.create({
@@ -448,6 +489,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           "custrecord_ent_entloc_roles_pc",
           "custrecord_ent_entloc_roles_ft",
           "custrecord_ent_entloc_envio_email_auto",
+          "custrecord_ent_entloc_suite_tax",
         ],
       });
       buscaGlobalConfig.run().each((result) => {
@@ -471,6 +513,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         });
         emailAutomatico = result.getValue({
           name: "custrecord_ent_entloc_envio_email_auto",
+        });
+        suiteTax = result.getValue({
+          name: "custrecord_ent_entloc_suite_tax",
         });
         switch (recordType) {
           case "invoice":
@@ -536,6 +581,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       access,
       prodMod,
       emailAutomatico,
+      suiteTax,
       permisosPruebaValidex,
     };
   };
@@ -781,7 +827,13 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       nuevoImporteIepsLinea: Number(importeIepsLinea.toFixed(2)),
     };
   };
-  const handleTaxesCalc = (taxList, amount, taxAmount, isPayment) => {
+  const handleTaxesCalc = (
+    taxList,
+    amount,
+    taxAmount,
+    isPayment,
+    globalDiscount
+  ) => {
     const itemTaxGroupDetails = {
       taxRetDetails: [],
       taxTrasDetails: [],
@@ -870,7 +922,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           //Correct tax
           let nuevoImporteIvaLinea = null;
           let nuevoImporteIepsLinea = null;
-          if (isPayment) {
+          if (isPayment || globalDiscount) {
             nuevoImporteIvaLinea = importeIvaLinea;
             nuevoImporteIepsLinea = importeIepsLinea;
           } else {
@@ -904,7 +956,13 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       }
     }
   };
-  const handleTaxGroupDetails = (taxRecord, amount, taxAmount, isPayment) => {
+  const handleTaxGroupDetails = (
+    taxRecord,
+    amount,
+    taxAmount,
+    isPayment,
+    globalDiscount
+  ) => {
     const taxList = [];
     const totalItemLines = taxRecord.codes.length;
     if (totalItemLines === 1) {
@@ -920,7 +978,11 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           impuesto: keepBefore(taxRecord.codes[0].customCode, " -"),
           tipoFactor: "Tasa",
           tasaOcuota: currentRate < 0 ? currentRate * -1 : currentRate,
-          importe: currentRate < 0 ? taxAmount * -1 : taxAmount,
+          importe: globalDiscount
+            ? Number((Number(amount) * (currentRate / 100)).toFixed(2))
+            : currentRate < 0
+            ? taxAmount * -1
+            : taxAmount,
         },
       };
     } else {
@@ -929,7 +991,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         taxRecord,
         amount,
         taxAmount,
-        isPayment
+        isPayment,
+        globalDiscount
       );
       return {
         isGroup: 1,
@@ -1002,93 +1065,181 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       ...(newTaxSummaryTras.length > 0 && { summaryTras: newTaxSummaryTras }),
     };
   };
-  const handleSplitDiscountItems = (currentRecord) => {
-    const fullItems = [];
-    const items = [];
+  const handleDescCorrection = (description) => {
+    const newDescription = description
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+    return newDescription;
+  };
+  const handleCustomItemSuiteTax = (
+    newItems,
+    totalDiscount,
+    taxDataBase,
+    mapUnitsDataBase,
+    isPayment,
+    currentRecord,
+    globalDiscount
+  ) => {
+    let retExist = false;
+    let trasExist = false;
+    const newItemDescriptions = [];
+    const taxItemDetails = [];
+    const taxSummary = { summaryRet: [], summaryTras: [] };
+    const satUnitCodes = [];
     const discounts = [];
-    let totalDiscount = 0;
-    const totalItemLines = currentRecord.getLineCount({ sublistId: "item" });
-    for (let i = 0; i < totalItemLines; i++) {
-      const itemType = currentRecord.getSublistValue({
-        sublistId: "item",
-        fieldId: "itemtype",
-        line: i,
+    const objImpuesto = [];
+    const totalTaxDetailLines = currentRecord.getLineCount({
+      sublistId: "taxdetails",
+    });
+    //Tax details
+    for (let i = 0; i < newItems.length; i++) {
+      const unit = newItems[i].unit;
+      const discount = newItems[i].discount;
+      //Units
+      const tempSatCode = mapUnitsDataBase.find(
+        (element) => element.netsuiteCode === unit
+      );
+      //Description
+      satUnitCodes.push(tempSatCode.satCode);
+      newItemDescriptions.push(handleDescCorrection(newItems[i].description));
+      //Discounts
+      discounts.push({
+        item: i,
+        discount,
       });
-      const taxcodeId = currentRecord.getSublistValue({
-        sublistId: "item",
+    }
+    for (let i = 0; i < totalTaxDetailLines; i++) {
+      const taxCode = currentRecord.getSublistValue({
+        sublistId: "taxdetails",
         fieldId: "taxcode",
         line: i,
       });
+      const taxBasis = currentRecord.getSublistValue({
+        sublistId: "taxdetails",
+        fieldId: "taxbasis",
+        line: i,
+      });
+      const taxRate = currentRecord.getSublistValue({
+        sublistId: "taxdetails",
+        fieldId: "taxrate",
+        line: i,
+      });
       const taxAmount = currentRecord.getSublistValue({
-        sublistId: "item",
-        fieldId: "tax1amt",
+        sublistId: "taxdetails",
+        fieldId: "taxamount",
         line: i,
       });
-      const amount = currentRecord.getSublistValue({
-        sublistId: "item",
-        fieldId: "amount",
-        line: i,
-      });
-      const unit = currentRecord.getSublistValue({
-        sublistId: "item",
-        fieldId: "units",
-        line: i,
-      });
-      if (itemType === "Discount") {
-        const discline = currentRecord.getSublistValue({
-          sublistId: "item",
-          fieldId: "discline",
-          line: i,
+      //Try to load taxcode
+      const taxRecord = taxDataBase.taxCodeData.find(
+        (taxCodeElement) => taxCodeElement.taxCodeId === Number(taxCode)
+      );
+      //Obj impuesto
+      objImpuesto.push(taxRecord.objetoImpuesto);
+      /*    
+      4	Exempt	
+      2	Reduced
+      1	Standard	
+      3	Zero 
+      */
+      if (Number(taxRecord.taxRateType) !== 2) {
+        //Es traslado
+        trasExist = true;
+        const taxTrasDetails = {
+          isGroup: 0,
+          exempt: Number(taxRecord.taxRateType) === 4 ? true : false,
+          base: taxBasis,
+          impuesto: keepBefore(taxRecord.customCode, " -"),
+          tipoFactor: "Tasa",
+          tasaOcuota: taxRate,
+          importe: taxAmount,
+        };
+        taxItemDetails.push({
+          item: i,
+          taxTrasDetails,
         });
-        discounts.push({ line: discline, amount, taxAmount });
+        //Summary
+        //Push summary
+        const exist = taxSummary.summaryTras.find(
+          (element) =>
+            element.impuesto === keepBefore(taxRecord.customCode, " -") &&
+            element.tasaOcuota === taxRate
+        );
+        if (!exist) {
+          taxSummary.summaryTras.push({
+            base: taxTrasDetails.base,
+            impuesto: taxTrasDetails.impuesto,
+            tipoFactor: taxTrasDetails.tipoFactor,
+            tasaOcuota: taxTrasDetails.tasaOcuota,
+            importe: taxTrasDetails.importe,
+          });
+        } else {
+          exist.importe = (
+            Number(exist.importe) + Number(taxTrasDetails.importe)
+          ).toFixed(2);
+          exist.base = (
+            Number(exist.base) + Number(taxTrasDetails.base)
+          ).toFixed(2);
+        }
       } else {
-        const line = currentRecord.getSublistValue({
-          sublistId: "item",
-          fieldId: "line",
-          line: i,
+        //Es retención
+        retExist = true;
+        const taxRetDetails = {
+          isGroup: 0,
+          exempt: Number(taxRecord.taxRateType) === 4 ? true : false,
+          base: taxBasis,
+          impuesto: keepBefore(taxRecord.customCode, " -"),
+          tipoFactor: "Tasa",
+          tasaOcuota: taxRate,
+          importe: taxAmount,
+        };
+        taxItemDetails.push({
+          item: i,
+          taxRetDetails,
         });
-        items.push({
-          line,
-          unit,
-          taxcodeId,
-          amount,
-          taxAmount,
-        });
+        //Summary
+        //Push summary
+        const exist = taxSummary.summaryRet.find(
+          (element) =>
+            element.impuesto === keepBefore(taxRecord.customCode, " -") &&
+            element.tasaOcuota === taxRate
+        );
+        if (!exist) {
+          taxSummary.summaryRet.push({
+            base: taxRetDetails.base,
+            impuesto: taxRetDetails.impuesto,
+            tipoFactor: taxRetDetails.tipoFactor,
+            tasaOcuota: taxRetDetails.tasaOcuota,
+            importe: taxRetDetails.importe,
+          });
+        } else {
+          exist.importe = (
+            Number(exist.importe) + Number(taxRetDetails.importe)
+          ).toFixed(2);
+          exist.base = (
+            Number(exist.base) + Number(taxRetDetails.base)
+          ).toFixed(2);
+        }
       }
     }
-    items.forEach((item) => {
-      const discountFound = discounts.find(
-        (element) => element.line === item.line
-      );
-      if (discountFound) {
-        const newAmount = (
-          Number(item.amount) + Number(discountFound.amount)
-        ).toFixed(2);
-        const newTaxAmount = (
-          Number(item.taxAmount) + Number(discountFound.taxAmount)
-        ).toFixed(2);
-        fullItems.push({
-          discount: Math.abs(Number(discountFound.amount)),
-          unit: item.unit,
-          taxcodeId: item.taxcodeId,
-          amount: newAmount,
-          taxAmount: newTaxAmount,
-        });
-      } else {
-        fullItems.push({
-          unit: item.unit,
-          taxcodeId: item.taxcodeId,
-          amount: item.amount,
-          taxAmount: item.taxAmount,
-        });
-      }
-    });
-    discounts.forEach((discount) => {
-      totalDiscount += Math.abs(Number(discount.amount));
-    });
+    const taxTotal = handleTaxTotal(taxSummary);
     return {
-      fullItems,
-      totalDiscount: Number(totalDiscount.toFixed(2)),
+      ...(retExist && { retExist }),
+      ...(trasExist && { trasExist }),
+      taxItemDetails,
+      taxTotal,
+      taxSummary,
+      satUnitCodes,
+      ...((totalDiscount > 0 || globalDiscount) && {
+        discounts: {
+          totalDiscount,
+          discounts,
+        },
+      }),
+      objImpuesto,
+      newItemDescriptions,
     };
   };
   const handleCustomItem = (
@@ -1096,10 +1247,13 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     totalDiscount,
     taxDataBase,
     mapUnitsDataBase,
-    isPayment
+    isPayment,
+    globalDiscount,
+    newSubTotal
   ) => {
     let retExist = false;
     let trasExist = false;
+    const newItemDescriptions = [];
     const taxItemDetails = [];
     const taxSummary = { summaryRet: [], summaryTras: [] };
     const satUnitCodes = [];
@@ -1121,6 +1275,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         item: i,
         discount,
       });
+      //Description
+      newItemDescriptions.push(handleDescCorrection(newItems[i].description));
       //Taxgroup or taxcode
       let taxRecord = null;
       try {
@@ -1148,7 +1304,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
               impuesto: keepBefore(taxcode, " -"),
               tipoFactor: "Tasa",
               tasaOcuota: newRate,
-              importe: Number(Number(newTaxAmount).toFixed(2)),
+              importe: globalDiscount
+                ? Number((Number(amount) * (newRate / 100)).toFixed(2))
+                : Number(Number(newTaxAmount).toFixed(2)),
             };
             //Push summary
             const exist = taxSummary.summaryRet.find(
@@ -1162,7 +1320,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
                 impuesto: keepBefore(taxcode, " -"),
                 tipoFactor: "Tasa",
                 tasaOcuota: newRate,
-                importe: Number(Number(newTaxAmount).toFixed(2)),
+                importe: globalDiscount
+                  ? Number((Number(amount) * (newRate / 100)).toFixed(2))
+                  : Number(Number(newTaxAmount).toFixed(2)),
               });
             } else {
               exist.importe = (
@@ -1180,7 +1340,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
               impuesto: keepBefore(taxcode, " -"),
               tipoFactor: "Tasa",
               tasaOcuota: newRate,
-              importe: Number(Number(newTaxAmount).toFixed(2)),
+              importe: globalDiscount
+                ? Number((Number(amount) * (newRate / 100)).toFixed(2))
+                : Number(Number(newTaxAmount).toFixed(2)),
             };
             //Push summary
             const exist = taxSummary.summaryTras.find(
@@ -1195,7 +1357,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
                 impuesto: keepBefore(taxcode, " -"),
                 tipoFactor: "Tasa",
                 tasaOcuota: newRate,
-                importe: Number(Number(newTaxAmount).toFixed(2)),
+                importe: globalDiscount
+                  ? Number((Number(amount) * (newRate / 100)).toFixed(2))
+                  : Number(Number(newTaxAmount).toFixed(2)),
               });
             } else {
               exist.importe = (
@@ -1221,7 +1385,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
               taxRecord,
               amount,
               taxAmount,
-              isPayment
+              isPayment,
+              globalDiscount
             );
             if (taxListDetails.isGroup) {
               let taxRetAuxTemp = null;
@@ -1387,30 +1552,52 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       taxTotal,
       taxSummary: newTaxSummary,
       satUnitCodes,
-      ...(totalDiscount > 0 && {
+      ...((totalDiscount > 0 || globalDiscount) && {
         discounts: {
           totalDiscount,
           discounts,
         },
       }),
       objImpuesto,
+      newItemDescriptions,
+      newSubTotal,
     };
   };
   const handleDataForFvNc = (
     currentRecord,
     taxDataBase,
     mapUnitsDataBase,
-    isPayment
+    isPayment,
+    suiteTax
   ) => {
-    const { fullItems: newItems, totalDiscount } =
-      handleSplitDiscountItems(currentRecord);
-    return handleCustomItem(
-      newItems,
+    const {
+      fullItems: newItems,
       totalDiscount,
-      taxDataBase,
-      mapUnitsDataBase,
-      isPayment
-    );
+      globalDiscount,
+      newSubTotal,
+    } = handleSplitDiscountItems(currentRecord);
+    if (suiteTax) {
+      return handleCustomItemSuiteTax(
+        newItems,
+        totalDiscount,
+        taxDataBase,
+        mapUnitsDataBase,
+        isPayment,
+        currentRecord,
+        globalDiscount,
+        newSubTotal
+      );
+    } else {
+      return handleCustomItem(
+        newItems,
+        totalDiscount,
+        taxDataBase,
+        mapUnitsDataBase,
+        isPayment,
+        globalDiscount,
+        newSubTotal
+      );
+    }
   };
   const handleRelatedCfdis = (currentRecord) => {
     const relatedCfdis = [];
@@ -1455,6 +1642,167 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     }
     return relatedCfdis;
   };
+  const handleSplitDiscountItems = (currentRecord) => {
+    const fullItems = [];
+    const items = [];
+    const discounts = [];
+    let totalDiscount = 0;
+    let globalDiscount = false;
+    let newSubTotal = 0;
+    const totalItemLines = currentRecord.getLineCount({ sublistId: "item" });
+    const globalRate = currentRecord.getValue({
+      fieldId: "discountrate",
+    });
+    const subtotal = Number(
+      currentRecord.getValue({
+        fieldId: "subtotal",
+      })
+    );
+    if (globalRate) {
+      newSubTotal = subtotal;
+      globalDiscount = true;
+      for (let i = 0; i < totalItemLines; i++) {
+        const amount = currentRecord.getSublistValue({
+          sublistId: "item",
+          fieldId: "amount",
+          line: i,
+        });
+        const unit = currentRecord.getSublistValue({
+          sublistId: "item",
+          fieldId: "units",
+          line: i,
+        });
+        const taxcodeId = currentRecord.getSublistValue({
+          sublistId: "item",
+          fieldId: "taxcode",
+          line: i,
+        });
+        const taxAmount = currentRecord.getSublistValue({
+          sublistId: "item",
+          fieldId: "tax1amt",
+          line: i,
+        });
+        const desc = currentRecord.getSublistValue({
+          sublistId: "item",
+          fieldId: "description",
+          line: i,
+        });
+        const newAmount = Number(
+          (
+            Number(amount) -
+            Number(amount) * (Math.abs(globalRate) / 100)
+          ).toFixed(2)
+        );
+        totalDiscount += Number(
+          (Number(amount) * (Math.abs(globalRate) / 100)).toFixed(2)
+        );
+        fullItems.push({
+          discount: Number(
+            (Number(amount) * (Math.abs(globalRate) / 100)).toFixed(2)
+          ),
+          unit,
+          taxcodeId,
+          amount: newAmount,
+          taxAmount,
+          description: desc,
+        });
+      }
+    } else {
+      for (let i = 0; i < totalItemLines; i++) {
+        const itemType = currentRecord.getSublistValue({
+          sublistId: "item",
+          fieldId: "itemtype",
+          line: i,
+        });
+        const taxcodeId = currentRecord.getSublistValue({
+          sublistId: "item",
+          fieldId: "taxcode",
+          line: i,
+        });
+        const taxAmount = currentRecord.getSublistValue({
+          sublistId: "item",
+          fieldId: "tax1amt",
+          line: i,
+        });
+        const amount = currentRecord.getSublistValue({
+          sublistId: "item",
+          fieldId: "amount",
+          line: i,
+        });
+        const unit = currentRecord.getSublistValue({
+          sublistId: "item",
+          fieldId: "units",
+          line: i,
+        });
+        const desc = currentRecord.getSublistValue({
+          sublistId: "item",
+          fieldId: "description",
+          line: i,
+        });
+        if (itemType === "Discount") {
+          const discline = currentRecord.getSublistValue({
+            sublistId: "item",
+            fieldId: "discline",
+            line: i,
+          });
+          discounts.push({ line: discline, amount, taxAmount });
+        } else {
+          const line = currentRecord.getSublistValue({
+            sublistId: "item",
+            fieldId: "line",
+            line: i,
+          });
+          items.push({
+            line,
+            unit,
+            taxcodeId,
+            amount,
+            taxAmount,
+            desc,
+          });
+        }
+      }
+      items.forEach((item) => {
+        const discountFound = discounts.find(
+          (element) => element.line === item.line
+        );
+        if (discountFound) {
+          const newAmount = (
+            Number(item.amount) + Number(discountFound.amount)
+          ).toFixed(2);
+          const newTaxAmount = (
+            Number(item.taxAmount) + Number(discountFound.taxAmount)
+          ).toFixed(2);
+          fullItems.push({
+            discount: Math.abs(Number(discountFound.amount)),
+            unit: item.unit,
+            taxcodeId: item.taxcodeId,
+            amount: newAmount,
+            taxAmount: newTaxAmount,
+            description: item.desc,
+          });
+        } else {
+          fullItems.push({
+            unit: item.unit,
+            taxcodeId: item.taxcodeId,
+            amount: item.amount,
+            taxAmount: item.taxAmount,
+            description: item.desc,
+          });
+        }
+      });
+      discounts.forEach((discount) => {
+        totalDiscount += Math.abs(Number(discount.amount));
+      });
+      newSubTotal = subtotal + totalDiscount;
+    }
+    return {
+      fullItems,
+      totalDiscount: Number(totalDiscount.toFixed(2)),
+      globalDiscount,
+      newSubTotal: Number(newSubTotal.toFixed(2)),
+    };
+  };
   const handleSplitDiscountItemsForPayment = (currentRecord, factor) => {
     const fullItems = [];
     const items = [];
@@ -1465,6 +1813,11 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       fieldId: "tranid",
     });
     for (let i = 0; i < totalItemLines; i++) {
+      const desc = currentRecord.getSublistValue({
+        sublistId: "item",
+        fieldId: "description",
+        line: i,
+      });
       const itemType = currentRecord.getSublistValue({
         sublistId: "item",
         fieldId: "itemtype",
@@ -1519,6 +1872,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           taxcodeId,
           amount: calcAmount,
           taxAmount: calcTaxAmount,
+          desc,
         });
       }
     }
@@ -1539,6 +1893,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           taxcodeId: item.taxcodeId,
           amount: newAmount,
           taxAmount: newTaxAmount,
+          description: item.desc,
         });
       } else {
         fullItems.push({
@@ -1546,6 +1901,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           taxcodeId: item.taxcodeId,
           amount: item.amount,
           taxAmount: item.taxAmount,
+          description: item.desc,
         });
       }
     });
@@ -1562,7 +1918,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     paymentAmount,
     taxDataBase,
     mapUnitsDataBase,
-    isPayment
+    isPayment,
+    suiteTax
   ) => {
     const currentRecord = invoiceRecord;
     const invoiceAmount = invoiceRecord.getValue({
@@ -1573,13 +1930,26 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     //CALCULATE
     const { fullItems: newItems, totalDiscount } =
       handleSplitDiscountItemsForPayment(currentRecord, porcentajePago);
-    const itemFullSummary = handleCustomItem(
-      newItems,
-      totalDiscount,
-      taxDataBase,
-      mapUnitsDataBase,
-      isPayment
-    );
+    let itemFullSummary = null;
+    if (suiteTax) {
+      itemFullSummary = handleCustomItemSuiteTax(
+        newItems,
+        totalDiscount,
+        taxDataBase,
+        mapUnitsDataBase,
+        isPayment,
+        currentRecord,
+        false
+      );
+    } else {
+      itemFullSummary = handleCustomItem(
+        newItems,
+        totalDiscount,
+        taxDataBase,
+        mapUnitsDataBase,
+        isPayment
+      );
+    }
     return itemFullSummary;
   };
   //Get related invoices data for payment
@@ -1903,7 +2273,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     currentRecord,
     taxDataBase,
     mapUnitsDataBase,
-    isPayment
+    isPayment,
+    suiteTax
   ) => {
     let taxesForPayment = [];
     let totalPaymentTaxesList = [];
@@ -1979,7 +2350,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           amount,
           taxDataBase,
           mapUnitsDataBase,
-          isPayment
+          isPayment,
+          suiteTax
         );
         totalPaymentTaxesList.push({
           resultTaxes: resultTaxes.taxSummary,
@@ -2048,11 +2420,13 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     currentSubsidiary,
     longitudSerie,
     longitudFolio,
-    prodMod
+    prodMod,
+    suiteTax
   ) => {
-    log.debug("PRODMOD", prodMod);
     //Get taxGroup data
-    const taxDataBase = handleTaxGroupData();
+    const taxDataBase = suiteTax
+      ? handleTaxGroupDataSuiteTax()
+      : handleTaxGroupData();
     //Get mapUnit data
     const mapUnitsDataBase = handleSatMappingUnits();
     let total = currentRecord.getValue({
@@ -2092,7 +2466,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         currentRecord,
         taxDataBase,
         mapUnitsDataBase,
-        true
+        true,
+        suiteTax
       );
       customItem = dataForPayment.taxesForPayment;
       totalTaxesForPayment = dataForPayment.totalPaymentTaxes;
@@ -2102,9 +2477,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         currentRecord,
         taxDataBase,
         mapUnitsDataBase,
-        false
+        false,
+        suiteTax
       );
-      log.debug("CUSTOMITEM", customItem);
     }
     //Related CFDIS
     const relatedCfdis = handleRelatedCfdis(currentRecord);

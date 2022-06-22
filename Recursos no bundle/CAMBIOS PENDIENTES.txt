@@ -12,3 +12,7 @@ Factura de traslado
 Resolver el tema de artículos de tipo kit (Es opcional, no se considera.)
 
 Revisar implementación en todos los artículos de Script de validación de artículos.
+
+Agregar nuevo modelo de descuentos, ejemplo en GLUTTEN.
+
+Agregar campo para definir una serie personalizada.

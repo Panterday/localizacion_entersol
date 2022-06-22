@@ -6,7 +6,7 @@
 CREATE, EDIT, VIEW, COPY, PRINT, EMAIL, QUICKVIEW*/
 define(["./Funciones/ent_funciones_localizacion"], (funcionesLoc) => {
   const beforeLoad = (context) => {
-    if (context.type === context.UserEventType.EDIT) {
+    /* if (context.type === context.UserEventType.EDIT) {
       const currentRecord = context.newRecord;
       const recordType = currentRecord.type;
       const subsidiaryId = currentRecord.getValue({
@@ -35,7 +35,7 @@ define(["./Funciones/ent_funciones_localizacion"], (funcionesLoc) => {
           deleteButton.isDisabled = true;
         }
       }
-    }
+    } */
     if (
       context.type === context.UserEventType.COPY ||
       context.type === context.UserEventType.CREATE

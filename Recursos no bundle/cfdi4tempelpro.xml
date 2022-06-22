@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?> 
+<?xml version="1.0" encoding="UTF-8"?> 
 <!--Setting locale for MEXICO-->
 <#setting locale = "es_MX">
 <!--Certification date-->
@@ -8,6 +8,10 @@
 <#assign customItem = customData.extraData.customItem>
 <#assign customRecordData = customData.extraData.customRecordData>
 <#assign descuentoTotal = customData.extraData.customItem.discounts.totalDiscount>
+<#assign nuevoSubtotal = record.subtotal?keep_after("$")?replace(",", "")?number?string[zeros]>
+<#if descuentoTotal?has_content>
+	<#assign nuevoSubtotal = (nuevoSubtotal?number + descuentoTotal?number)?string[zeros]>
+</#if>
 <#function getAttrPair attr value1 value2>
    <#if value1?has_content>
     <#assign result="${attr}=\"${value1}\"">
@@ -77,11 +81,11 @@
 	Serie="${customRecordData.serie}" 
 	Folio="${customRecordData.folio}" 
 	FormaPago="${record.custbody_ent_entloc_forma_pago?keep_before(" -")}" 
-	SubTotal="${customItem.newSubTotal?number?string[zeros]}" 
+	SubTotal="${nuevoSubtotal}" 
 	Moneda="${record.currencysymbol}"
 	${getExchangeRate(record.currencysymbol)}
 	Total="${formatFromCurrency(record.total)}" 
-	${getAttrExist("Descuento", formatFromString(customItem.discounts.totalDiscount))}
+	Descuento = "2022.23"
 	TipoDeComprobante="I" 
 	MetodoPago="${record.custbody_ent_entloc_ent_metodo_pago?keep_before(" -")}" 
 	LugarExpedicion="${customData.extraData.customSubsidiaryData.address.zip}" 

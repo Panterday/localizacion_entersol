@@ -133,7 +133,8 @@ define([
     permisosPruebaValidex,
     longitudSerie,
     longitudFolio,
-    userConfig
+    userConfig,
+    suiteTax
   ) => {
     log.debug("HANDLETWOSTEP", "HANDLETWOSTEP");
     //Let's certificate!
@@ -143,7 +144,8 @@ define([
       subsidiaryRecord,
       longitudSerie,
       longitudFolio,
-      prodMod
+      prodMod,
+      suiteTax
     );
     //Global custom data
     const globalData = customData.getDataForInvoice();
@@ -161,6 +163,7 @@ define([
       prodMod
     );
     const validexBodyResponse = JSON.parse(validexResponse.body);
+    log.debug("VALIDEX", validexBodyResponse);
     if (validexResponse.code === 200) {
       const validexXmlResponse = validexBodyResponse.base64.replace(
         "data:text/xml;base64,",
@@ -335,7 +338,8 @@ define([
     emailAutomatico,
     permisosPruebaValidex,
     longitudSerie,
-    longitudFolio
+    longitudFolio,
+    suiteTax
   ) => {
     log.debug("HANDLEONESTEP", "HANDLEONESTEP");
     //Extra custom data
@@ -344,7 +348,8 @@ define([
       subsidiaryRecord,
       longitudSerie,
       longitudFolio,
-      prodMod
+      prodMod,
+      suiteTax
     );
     //Global custom data
     const globalData = customData.getDataForInvoice();
@@ -645,7 +650,8 @@ define([
         globalConfig.permisosPruebaValidex,
         userConfig.longitudSerie,
         userConfig.longitudFolio,
-        userConfig
+        userConfig,
+        globalConfig.suiteTax
       );
     } else {
       //One step certification
@@ -665,7 +671,8 @@ define([
         globalConfig.emailAutomatico,
         globalConfig.permisosPruebaValidex,
         userConfig.longitudSerie,
-        userConfig.longitudFolio
+        userConfig.longitudFolio,
+        globalConfig.suiteTax
       );
     }
     const scriptObj = runtime.getCurrentScript();

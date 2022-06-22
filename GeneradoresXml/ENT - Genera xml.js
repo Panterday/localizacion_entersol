@@ -33,7 +33,8 @@ define([
     currentTemplate,
     longitudSerie,
     longitudFolio,
-    prodMod
+    prodMod,
+    suiteTax
   ) => {
     let renderedTemplate = null;
     const renderXml = render.create();
@@ -43,7 +44,8 @@ define([
       subsidiaryRecord,
       longitudSerie,
       longitudFolio,
-      prodMod
+      prodMod,
+      suiteTax
     );
     //Global custom data
     const globalData = customData.getDataForInvoice();
@@ -51,6 +53,7 @@ define([
       globalData,
       extraData,
     };
+    log.debug("CUSTOMDATA", customFullData);
     //Add custom data source
     renderXml.addCustomDataSource({
       format: render.DataSource.OBJECT,
@@ -109,6 +112,7 @@ define([
     }
     //Global config
     const globalConfig = funcionesLoc.getGlobalConfig(subsidiaryId, recordType);
+    log.debug("GLOBALCONFIG", globalConfig);
     //User config
     const userConfig = funcionesLoc.getUserConfig(
       globalConfig.internalIdRegMaestro,
@@ -129,7 +133,8 @@ define([
       customCustomerTemplate ? customCustomerTemplate : currentTemplate,
       userConfig.longitudSerie,
       userConfig.longitudFolio,
-      globalConfig.prodMod
+      globalConfig.prodMod,
+      globalConfig.suiteTax
     );
     if (!xmlRenderedObj.error) {
       let xmlDocument = null;

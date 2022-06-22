@@ -406,7 +406,7 @@ define([
               extraCertData,
             },
           };
-
+          log.debug("CUSTOMFULLDATA", extraData);
           //Get json to string Tax and Related CFDI
           /* const stringRelatedCfdi = funcionesLoc.getStringRelated(
               customFullData.extraData

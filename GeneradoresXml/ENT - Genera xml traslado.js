@@ -45,13 +45,13 @@ define([
       longitudFolio,
       prodMod
     );
-    log.debug("EXTRADATA", extraData);
     //Global custom data
     const globalData = customData.getDataForInvoice();
     const customFullData = {
       globalData,
       extraData,
     };
+    log.debug("customData", customFullData);
     //Add custom data source
     renderXml.addCustomDataSource({
       format: render.DataSource.OBJECT,

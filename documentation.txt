@@ -75,7 +75,7 @@ CFDI 4.0
 
         *CFDI 4.0 : RFC RECEPTOR
         *CFDI 4.0 : RAZÓN SOCIAL RECEPTOR
-        CFDI 4.0 : No Identificación (Oculto)
+        *CFDI 4.0 : No Identificación (Oculto)
         CFDI 4.0 : Complemento carta porte
         CFDI 4.0 : Fecha y hora prog de salida
         CFDI 4.0 : Fecha y hora prog de llegada
