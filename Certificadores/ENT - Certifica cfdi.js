@@ -38,6 +38,7 @@ define([
     permisosPruebaValidex,
     prodMod
   ) => {
+    log.debug("BODY", body);
     let key = prodMod ? permisosValidex : permisosPruebaValidex;
     const validexResponse = https.post({
       body,
@@ -582,109 +583,118 @@ define([
     }
   };
   const onRequest = (context) => {
-    const start = Date.now();
-    const recordId = context.request.parameters.id;
-    const recordType = context.request.parameters.type;
-    const genCert = context.request.parameters.genCert;
-    const currentRecord = record.load({
-      type: recordType,
-      id: recordId,
-    });
-    const customerId = currentRecord.getValue({
-      fieldId: recordType === "customerpayment" ? "customer" : "entity",
-    });
-    const customerRecord = record.load({
-      type: "customer",
-      id: customerId,
-    });
-    const subsidiaryId = currentRecord.getValue({
-      fieldId: "subsidiary",
-    });
-    const subsidiaryRecord = record.load({
-      type: "subsidiary",
-      id: subsidiaryId,
-    });
-    const subsidiaryRfc = subsidiaryRecord.getValue({
-      fieldId: "federalidnumber",
-    });
-    const generatedXml = currentRecord.getValue({
-      fieldId: "custbody_ent_entloc_doc_prev",
-    });
-    const tranid = currentRecord.getValue({
-      fieldId: "tranid",
-    });
-    const nombreDocumento = `${tranid} - ${subsidiaryRfc}`;
-    //Global config
-    const globalConfig = funcionesLoc.getGlobalConfig(subsidiaryId, recordType);
-    //User config
-    const userConfig = funcionesLoc.getUserConfig(
-      globalConfig.internalIdRegMaestro,
-      recordType,
-      globalConfig.access
-    );
-    //Custom templates
-    const customXmlCustomerTemplate = funcionesLoc.getXmlCustomerTemplate(
-      customerRecord,
-      recordType
-    );
-    const customPdfCustomerTemplate = funcionesLoc.getPdfCustomerTemplate(
-      customerRecord,
-      recordType
-    );
-    if (userConfig.habilitaCertDosPasos) {
-      handleTwoStepsCert(
-        currentRecord,
-        subsidiaryRecord,
-        customerRecord,
-        nombreDocumento,
+    try {
+      const start = Date.now();
+      const recordId = context.request.parameters.id;
+      const recordType = context.request.parameters.type;
+      const genCert = context.request.parameters.genCert;
+      const currentRecord = record.load({
+        type: recordType,
+        id: recordId,
+      });
+      const customerId = currentRecord.getValue({
+        fieldId: recordType === "customerpayment" ? "customer" : "entity",
+      });
+      const customerRecord = record.load({
+        type: "customer",
+        id: customerId,
+      });
+      const subsidiaryId = currentRecord.getValue({
+        fieldId: "subsidiary",
+      });
+      const subsidiaryRecord = record.load({
+        type: "subsidiary",
+        id: subsidiaryId,
+      });
+      const subsidiaryRfc = subsidiaryRecord.getValue({
+        fieldId: "federalidnumber",
+      });
+      const generatedXml = currentRecord.getValue({
+        fieldId: "custbody_ent_entloc_doc_prev",
+      });
+      const tranid = currentRecord.getValue({
+        fieldId: "tranid",
+      });
+      const nombreDocumento = `${tranid} - ${subsidiaryRfc}`;
+      //Global config
+      const globalConfig = funcionesLoc.getGlobalConfig(
+        subsidiaryId,
+        recordType
+      );
+      //User config
+      const userConfig = funcionesLoc.getUserConfig(
+        globalConfig.internalIdRegMaestro,
         recordType,
-        recordId,
-        generatedXml,
-        globalConfig.permisosValidex,
-        globalConfig.prodMod,
-        subsidiaryRfc,
-        subsidiaryId,
-        globalConfig.idGuardaDocumentosCarpeta,
-        customPdfCustomerTemplate,
-        globalConfig.emailAutomatico,
-        globalConfig.permisosPruebaValidex,
-        userConfig.longitudSerie,
-        userConfig.longitudFolio,
-        userConfig,
-        globalConfig.suiteTax
+        globalConfig.access
       );
-    } else {
-      //One step certification
-      handleOneStepsCert(
-        currentRecord,
+      //Custom templates
+      const customXmlCustomerTemplate = funcionesLoc.getXmlCustomerTemplate(
         customerRecord,
-        subsidiaryRecord,
-        nombreDocumento,
-        globalConfig.permisosValidex,
-        globalConfig.prodMod,
-        subsidiaryRfc,
-        subsidiaryId,
-        globalConfig.idGuardaDocumentosCarpeta,
-        userConfig,
-        customXmlCustomerTemplate,
-        customPdfCustomerTemplate,
-        globalConfig.emailAutomatico,
-        globalConfig.permisosPruebaValidex,
-        userConfig.longitudSerie,
-        userConfig.longitudFolio,
-        globalConfig.suiteTax
+        recordType
       );
+      const customPdfCustomerTemplate = funcionesLoc.getPdfCustomerTemplate(
+        customerRecord,
+        recordType
+      );
+      if (userConfig.habilitaCertDosPasos) {
+        log.debug("TWO STEPS", "TWO STEPS");
+        handleTwoStepsCert(
+          currentRecord,
+          subsidiaryRecord,
+          customerRecord,
+          nombreDocumento,
+          recordType,
+          recordId,
+          generatedXml,
+          globalConfig.permisosValidex,
+          globalConfig.prodMod,
+          subsidiaryRfc,
+          subsidiaryId,
+          globalConfig.idGuardaDocumentosCarpeta,
+          customPdfCustomerTemplate,
+          globalConfig.emailAutomatico,
+          globalConfig.permisosPruebaValidex,
+          userConfig.longitudSerie,
+          userConfig.longitudFolio,
+          userConfig,
+          globalConfig.suiteTax
+        );
+      } else {
+        log.debug("ONE STEP", "ONE STEP");
+        //One step certification
+        handleOneStepsCert(
+          currentRecord,
+          customerRecord,
+          subsidiaryRecord,
+          nombreDocumento,
+          globalConfig.permisosValidex,
+          globalConfig.prodMod,
+          subsidiaryRfc,
+          subsidiaryId,
+          globalConfig.idGuardaDocumentosCarpeta,
+          userConfig,
+          customXmlCustomerTemplate,
+          customPdfCustomerTemplate,
+          globalConfig.emailAutomatico,
+          globalConfig.permisosPruebaValidex,
+          userConfig.longitudSerie,
+          userConfig.longitudFolio,
+          globalConfig.suiteTax
+        );
+      }
+      const scriptObj = runtime.getCurrentScript();
+      const duration = Date.now() - start;
+      log.debug(
+        "Execution summary: ",
+        `Transaction: ${recordType} TranID: ${tranid} Subsidiary: ${subsidiaryId} Duration: ${(
+          Number(duration) / 1000
+        ).toFixed(
+          2
+        )} Seconds Remaining governance: ${scriptObj.getRemainingUsage()}`
+      );
+    } catch (error) {
+      log.debug("ERROR EN SUITELET CERTIFICA", error);
     }
-    const scriptObj = runtime.getCurrentScript();
-    const duration = Date.now() - start;
-    log.debug(
-      "Execution summary: ",
-      `Transaction: ${recordType} TranID: ${tranid} Subsidiary: ${subsidiaryId} Duration: ${(
-        Number(duration) / 1000
-      ).toFixed(
-        2
-      )} Seconds Remaining governance: ${scriptObj.getRemainingUsage()}`
-    );
   };
   return {
     onRequest,

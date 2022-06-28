@@ -1,0 +1,30 @@
+<cfdi:Comprobante xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:pago20="http://www.sat.gob.mx/Pagos20" xmlns:cfdi="http://www.sat.gob.mx/cfd/4" Moneda="XXX" Total="0" xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd http://www.sat.gob.mx/Pagos20 http://www.sat.gob.mx/sitio_internet/cfd/Pagos/Pagos20.xsd" Exportacion="01" TipoDeComprobante="P" SubTotal="0" LugarExpedicion="29960" Fecha="2022-06-22T14:35:52" Folio="00038" Serie="PAG" Version="4.0">
+<cfdi:Emisor Rfc="IIA040805DZ4" Nombre="INDISTRIA ILUMINADORA DE ALMACENES" RegimenFiscal="601"/>
+<cfdi:Receptor Rfc="MOFY900516NL1" Nombre="YADIRA MAGALY MONTAÑEZ FELIX" DomicilioFiscalReceptor="91779" RegimenFiscalReceptor="612" UsoCFDI="CP01"/>
+<cfdi:Conceptos>
+<cfdi:Concepto ClaveProdServ="84111506" Cantidad="1" ClaveUnidad="ACT" Descripcion="Pago" ValorUnitario="0" Importe="0" ObjetoImp="01"/>
+</cfdi:Conceptos>
+<cfdi:Complemento>
+<pago20:Pagos Version="2.0">
+<pago20:Totales MontoTotalPagos="22637.52" TotalTrasladosBaseIVA16="20542.21" TotalTrasladosImpuestoIVA16="3286.75"/>
+<pago20:Pago FechaPago="2022-06-24T14:35:00" FormaDePagoP="01" MonedaP="MXN" Monto="22637.52" TipoCambioP="1">
+<pago20:DoctoRelacionado EquivalenciaDR="1" IdDocumento="95eacf08-d29b-48c3-88ea-247c0cf19852" ImpPagado="22637.52" ImpSaldoAnt="22637.52" ImpSaldoInsoluto="0" MonedaDR="MXN" NumParcialidad="1" ObjetoImpDR="02">
+<pago20:ImpuestosDR>
+<pago20:TrasladosDR>
+<pago20:TrasladoDR BaseDR="8317.8" ImporteDR="1330.85" ImpuestoDR="002" TasaOCuotaDR="0.160000" TipoFactorDR="Tasa"/>
+<pago20:TrasladoDR BaseDR="8349.9" ImporteDR="1335.98" ImpuestoDR="002" TasaOCuotaDR="0.160000" TipoFactorDR="Tasa"/>
+<pago20:TrasladoDR BaseDR="3554.6" ImporteDR="319.91" ImpuestoDR="003" TasaOCuotaDR="0.090000" TipoFactorDR="Tasa"/>
+<pago20:TrasladoDR BaseDR="3874.51" ImporteDR="619.92" ImpuestoDR="002" TasaOCuotaDR="0.160000" TipoFactorDR="Tasa"/>
+</pago20:TrasladosDR>
+</pago20:ImpuestosDR>
+</pago20:DoctoRelacionado>
+<pago20:ImpuestosP>
+<pago20:TrasladosP>
+<pago20:TrasladoP BaseP="20542.21" ImporteP="3286.75" ImpuestoP="002" TasaOCuotaP="0.160000" TipoFactorP="Tasa"/>
+<pago20:TrasladoP BaseP="3554.60" ImporteP="319.91" ImpuestoP="003" TasaOCuotaP="0.090000" TipoFactorP="Tasa"/>
+</pago20:TrasladosP>
+</pago20:ImpuestosP>
+</pago20:Pago>
+</pago20:Pagos>
+</cfdi:Complemento>
+</cfdi:Comprobante>

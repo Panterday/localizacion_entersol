@@ -11,8 +11,10 @@ Convertir el proceso de cancelación a la nueva versión.
 Factura de traslado 
 Resolver el tema de artículos de tipo kit (Es opcional, no se considera.)
 
-Revisar implementación en todos los artículos de Script de validación de artículos.
-
-Agregar nuevo modelo de descuentos, ejemplo en GLUTTEN.
-
 Agregar campo para definir una serie personalizada.
+
+CANTIDAD CON DECIMALES LISTA EN CUSTOM ITEM PASAR A CUSTOM ITEM SUITE TAX
+
+MONEDA DEL BANCO 
+
+NO TIPO DE CAMBIO CON MISMA MONEDA PAGE INIT

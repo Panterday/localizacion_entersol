@@ -68,6 +68,12 @@
 <#else>
 	<#assign cfdiDate = formatStringDate(record.trandate)>
 </#if>
+<#function getAttrExistTaxTotal attr value exempt>
+	<#if value?has_content && exempt == "true">
+		<#assign result="${attr}=\"${value}\"">
+		<#return result>
+	</#if>  
+</#function>
 <cfdi:Comprobante 
 	xmlns:cfdi="http://www.sat.gob.mx/cfd/4" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
@@ -121,7 +127,7 @@
 			<#if item.itemtype != "Discount">
 				<#assign itemIndex = itemIndex + 1>
 				<cfdi:Concepto 
-					Cantidad="${item.quantity?long?c}" 
+					Cantidad="${customItem.quantityItems[itemIndex]}" 
 					Unidad="${item.units}" 
 					NoIdentificacion="${item.custcol_ent_entloc_no_identificacion}" 
 					Descripcion="${customItem.newItemDescriptions[itemIndex]}"
@@ -132,8 +138,9 @@
 					ClaveUnidad="${customItem.satUnitCodes[itemIndex]?keep_before(" -")}" 
 					ObjetoImp="${customItem.objImpuesto[itemIndex]?keep_before(" -")}"
 				>
-					<#if customItem.taxItemDetails?has_content>
-						<cfdi:Impuestos> 
+					<#if customItem.objImpuesto[itemIndex]?keep_before(" -") != "01">
+						<#if customItem.taxItemDetails?has_content>
+							<cfdi:Impuestos> 
 								<#if customItem.taxItemDetails[itemIndex].taxTrasDetails.isGroup?number == 0>
 									<#if customItem.taxItemDetails[itemIndex].taxTrasDetails.exempt == "true">
 										<cfdi:Traslados> 
@@ -190,42 +197,54 @@
 										</#list>
 									</cfdi:Retenciones>
 								</#if>
-						</cfdi:Impuestos> 
-					</#if> 
+							</cfdi:Impuestos> 
+						</#if> 
+					</#if>
 				</cfdi:Concepto> 
 			</#if>
 		</#list> 
 	</cfdi:Conceptos> 
-	<#if customItem.taxTotal?has_content>
-		<cfdi:Impuestos 
-			${getAttrExist("TotalImpuestosTrasladados", formatFromString(customItem.taxTotal.totalTraslados))}
-			${getAttrExist("TotalImpuestosRetenidos", formatFromString(customItem.taxTotal.totalRetenciones))}
-		> 
-			<#if customItem.taxSummary.summaryRet?has_content>
-				<cfdi:Retenciones> 
-					<#list customItem.taxSummary.summaryRet as elementSummary>
-							<cfdi:Retencion 
-								Importe="${formatFromString(elementSummary.importe)}" 
-								Impuesto="${elementSummary.impuesto}" 
-							/> 
-					</#list>
-				</cfdi:Retenciones> 
-			</#if>	
-			<#if customItem.taxSummary.summaryTras?has_content>
-				<cfdi:Traslados> 
-					<#list customItem.taxSummary.summaryTras as elementSummary>
-						<#if !elementSummary.exempt?has_content> 
-							<cfdi:Traslado 
-								Base="${formatFromString(elementSummary.base)}"
-								Impuesto="${elementSummary.impuesto}" 
-								TipoFactor="${elementSummary.tipoFactor}"
-								TasaOCuota="${formatRate(elementSummary.tasaOcuota)}" 
-								Importe="${formatFromString(elementSummary.importe)}" 
-							/> 
-						</#if>
-					</#list>
-				</cfdi:Traslados> 
-			</#if>
-		</cfdi:Impuestos> 
+	<#if customItem.taxSummary?has_content>
+		<#if customItem.globalObjImpuesto == "true">
+			<#assign trasTotalTax = formatFromString(customItem.taxTotal.totalTraslados)>
+			<cfdi:Impuestos 
+				${getAttrExistTaxTotal("TotalImpuestosTrasladados", trasTotalTax, customItem.showTotalIfTraslado)}
+				${getAttrExist("TotalImpuestosRetenidos", formatFromString(customItem.taxTotal.totalRetenciones))}
+			> 
+				<#if customItem.taxSummary.summaryRet?has_content>
+					<cfdi:Retenciones> 
+						<#list customItem.taxSummary.summaryRet as elementSummary>
+								<cfdi:Retencion 
+									Importe="${formatFromString(elementSummary.importe)}" 
+									Impuesto="${elementSummary.impuesto}" 
+								/> 
+						</#list>
+					</cfdi:Retenciones> 
+				</#if>	
+				<#if customItem.taxSummary.summaryTras?has_content>
+					<cfdi:Traslados> 
+						<#list customItem.taxSummary.summaryTras as elementSummary>
+							<#if elementSummary.exempt?has_content>
+								<#if elementSummary.objImpuesto == "true">
+									<cfdi:Traslado 
+										Base="${formatFromString(elementSummary.base)}"
+										Impuesto="${elementSummary.impuesto}" 
+										TipoFactor="Exento"
+									/>
+								</#if>
+							<#else> 
+								<cfdi:Traslado 
+									Base="${formatFromString(elementSummary.base)}"
+									Impuesto="${elementSummary.impuesto}" 
+									TipoFactor="${elementSummary.tipoFactor}"
+									TasaOCuota="${formatRate(elementSummary.tasaOcuota)}" 
+									Importe="${formatFromString(elementSummary.importe)}" 
+								/> 
+							</#if>
+						</#list>
+					</cfdi:Traslados> 
+				</#if>
+			</cfdi:Impuestos> 
+		</#if>
 	</#if>
 </cfdi:Comprobante>

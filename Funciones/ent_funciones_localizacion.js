@@ -9,6 +9,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
   runtime,
   render
 ) => {
+  /* ----------------------------------------Utilities------------------------------------ */
   const getCustomerDataObj = (customerId) => {
     const customerDataObj = {};
     const customerSearchObj = search.create({
@@ -437,167 +438,46 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       return null;
     }
   };
-  const handleAccess = (subsidiary, currentRole, globalConfig) => {
-    //Get credentials
-    if (globalConfig.exist) {
+  const handleFolioSerie = (tranid, longitudSerie, longitudFolio) => {
+    let serie = null;
+    let folio = null;
+    const manageFolio = (tranid, longitudFolio) => {
       try {
-        const impRol = globalConfig.roles.split(",");
-        const implementedSubsidiary = globalConfig.subsidiaryId;
-        //Validating implementation
-        const isRole = impRol.find(
-          (element) => Number(element) === currentRole
-        );
-        if (subsidiary === implementedSubsidiary && isRole) {
-          return true;
-        } else {
-          return false;
+        let newFolio = "";
+        let reversFolio = "";
+        for (
+          let i = tranid.length - 1;
+          i > tranid.length - 1 - longitudFolio;
+          i--
+        ) {
+          newFolio += tranid[i];
         }
+        for (let i = newFolio.length - 1; i >= 0; i--) {
+          reversFolio += newFolio[i];
+        }
+        return reversFolio;
       } catch (error) {
-        log.debug("ERROR HANDLE ACCESS FUNCTION", error);
-        return false;
+        log.debug("ERROR HANDLE FOLIO SERIE", error);
+        return null;
       }
+    };
+    if (longitudSerie) {
+      serie = tranid.slice(0, longitudSerie);
     } else {
-      return false;
+      serie = tranid.replace(/[^a-z]/gi, "");
     }
-  };
-  const handlePerms = (subsidiary, currentRole, recordType, esTraslado) => {
-    //==================================Credentials====================================//
-    let internalIdRegMaestro = null;
-    let subsidiaryId = null;
-    let permisosValidex = "";
-    let permisosPruebaValidex = "";
-    let prodMod = false;
-    let idGuardaDocumentosCarpeta = null;
-    let roles = null;
-    let emailAutomatico = false;
-    let suiteTax = false;
-    let errorInterDescription = "";
-    try {
-      const buscaGlobalConfig = search.create({
-        type: "customrecord_ent_entloc_config_registro",
-        filters: [["custrecord_ent_entloc_subsidiaria", "anyof", subsidiary]],
-        columns: [
-          "internalId",
-          "custrecord_ent_entloc_subsidiaria",
-          "custrecord_ent_entloc_usuario_validex",
-          "custrecord_ent_entloc_usuario_prue_valid",
-          "custrecord_ent_entloc_entorno_prod",
-          "custrecord_ent_entloc_carpeta_archivos",
-          "custrecord_ent_entloc_roles",
-          "custrecord_ent_entloc_roles_fv",
-          "custrecord_ent_entloc_roles_nc",
-          "custrecord_ent_entloc_roles_pc",
-          "custrecord_ent_entloc_roles_ft",
-          "custrecord_ent_entloc_envio_email_auto",
-          "custrecord_ent_entloc_suite_tax",
-        ],
-      });
-      buscaGlobalConfig.run().each((result) => {
-        internalIdRegMaestro = result.getValue({
-          name: "internalId",
-        });
-        subsidiaryId = result.getValue({
-          name: "custrecord_ent_entloc_subsidiaria",
-        });
-        permisosValidex = result.getValue({
-          name: "custrecord_ent_entloc_usuario_validex",
-        });
-        permisosPruebaValidex = result.getValue({
-          name: "custrecord_ent_entloc_usuario_prue_valid",
-        });
-        prodMod = result.getValue({
-          name: "custrecord_ent_entloc_entorno_prod",
-        });
-        idGuardaDocumentosCarpeta = result.getValue({
-          name: "custrecord_ent_entloc_carpeta_archivos",
-        });
-        emailAutomatico = result.getValue({
-          name: "custrecord_ent_entloc_envio_email_auto",
-        });
-        suiteTax = result.getValue({
-          name: "custrecord_ent_entloc_suite_tax",
-        });
-        switch (recordType) {
-          case "invoice":
-            roles = result.getValue({
-              name: "custrecord_ent_entloc_roles_fv",
-            });
-            break;
-          case "creditmemo":
-            roles = result.getValue({
-              name: "custrecord_ent_entloc_roles_nc",
-            });
-            break;
-          case "customerpayment":
-            roles = result.getValue({
-              name: "custrecord_ent_entloc_roles_pc",
-            });
-            break;
-          default:
-            if (esTraslado) {
-              roles = result.getValue({
-                name: "custrecord_ent_entloc_roles_ft",
-              });
-            }
-            break;
-        }
-        if (!roles) {
-          roles = result.getValue({
-            name: "custrecord_ent_entloc_roles",
-          });
-        }
-      });
-    } catch (error) {
-      errorInterDescription += "<br /> " + error;
-      log.debug("ERROR IN HANDLEPERMS FUNCTION", error);
+    if (longitudFolio) {
+      folio = manageFolio(tranid, longitudFolio);
+    } else {
+      folio = tranid.replace(/[^0-9]/g, "");
     }
-    if (!idGuardaDocumentosCarpeta && subsidiaryId) {
-      //==================================Buscando carpeta en gabinete==============================//
-      const parentFolder = handleFolderId("Entersol localización", -20);
-      const cfdiFolder = handleFolderId("CFDI", parentFolder);
-      idGuardaDocumentosCarpeta = cfdiFolder;
-      //Set global folder ID
-      record.submitFields({
-        type: "customrecord_ent_entloc_config_registro",
-        id: internalIdRegMaestro,
-        values: {
-          custrecord_ent_entloc_carpeta_archivos: idGuardaDocumentosCarpeta,
-        },
-      });
-    }
-    //Access flag
-    const access = handleAccess(subsidiary, currentRole, {
-      roles,
-      subsidiaryId,
-      ...(internalIdRegMaestro ? { exist: true } : { exist: false }),
-    });
     return {
-      ...(internalIdRegMaestro ? { exist: true } : { exist: false }),
-      internalIdRegMaestro,
-      idGuardaDocumentosCarpeta,
-      permisosValidex,
-      subsidiaryId,
-      roles,
-      access,
-      prodMod,
-      emailAutomatico,
-      suiteTax,
-      permisosPruebaValidex,
+      serie,
+      folio,
     };
   };
-  const getGlobalConfig = (subsidiaryId, recordType, esTraslado) => {
-    //Info for access
-    const currentUser = runtime.getCurrentUser();
-    const currentRole = currentUser.role;
-    //Config record info
-    const globalConfig = handlePerms(
-      subsidiaryId,
-      currentRole,
-      recordType,
-      esTraslado
-    );
-    return globalConfig;
-  };
+  /* ------------------------------------------------------------------------------------- */
+
   const getUserConfig = (globalConfigRecordId, recordType, access) => {
     if (access) {
       const globalConfigRecord = record.load({
@@ -760,44 +640,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       return false;
     }
   };
-  const handleFolioSerie = (tranid, longitudSerie, longitudFolio) => {
-    let serie = null;
-    let folio = null;
-    const manageFolio = (tranid, longitudFolio) => {
-      try {
-        let newFolio = "";
-        let reversFolio = "";
-        for (
-          let i = tranid.length - 1;
-          i > tranid.length - 1 - longitudFolio;
-          i--
-        ) {
-          newFolio += tranid[i];
-        }
-        for (let i = newFolio.length - 1; i >= 0; i--) {
-          reversFolio += newFolio[i];
-        }
-        return reversFolio;
-      } catch (error) {
-        log.debug("ERROR HANDLE FOLIO SERIE", error);
-        return null;
-      }
-    };
-    if (longitudSerie) {
-      serie = tranid.slice(0, longitudSerie);
-    } else {
-      serie = tranid.replace(/[^a-z]/gi, "");
-    }
-    if (longitudFolio) {
-      folio = manageFolio(tranid, longitudFolio);
-    } else {
-      folio = tranid.replace(/[^0-9]/g, "");
-    }
-    return {
-      serie,
-      folio,
-    };
-  };
   const handleTaxCorrection = (
     importeIvaLinea,
     importeIepsLinea,
@@ -861,7 +703,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       taxTempList.forEach((element) => {
         tempTotalImporte += element.importe;
       });
-
       if (Number(tempTotalImporte.toFixed(2)) !== taxAmount) {
         let diferencia = Number(tempTotalImporte.toFixed(2)) - taxAmount;
         if (diferencia < 0) {
@@ -922,7 +763,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           //Correct tax
           let nuevoImporteIvaLinea = null;
           let nuevoImporteIepsLinea = null;
-          if (isPayment || globalDiscount) {
+          if (isPayment) {
             nuevoImporteIvaLinea = importeIvaLinea;
             nuevoImporteIepsLinea = importeIepsLinea;
           } else {
@@ -974,15 +815,15 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         taxesPerItem: {
           isGroup: 0,
           exempt: taxRecord.codes[0].exempt,
-          base: amount,
+          base: globalDiscount
+            ? Number(
+                (Math.abs(taxAmount) / (Math.abs(currentRate) / 100)).toFixed(2)
+              )
+            : amount,
           impuesto: keepBefore(taxRecord.codes[0].customCode, " -"),
           tipoFactor: "Tasa",
           tasaOcuota: currentRate < 0 ? currentRate * -1 : currentRate,
-          importe: globalDiscount
-            ? Number((Number(amount) * (currentRate / 100)).toFixed(2))
-            : currentRate < 0
-            ? taxAmount * -1
-            : taxAmount,
+          importe: currentRate < 0 ? taxAmount * -1 : taxAmount,
         },
       };
     } else {
@@ -1051,6 +892,22 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       }
     }
     taxSummary.summaryTras.forEach((element) => {
+      let objImpuesto = false;
+      if (Array.isArray(element.objImpuesto)) {
+        for (let i = 0; i < element.objImpuesto.length; i++) {
+          if (
+            element.objImpuesto[i].objetoImpuesto ===
+            "02 - Sí objeto de impuesto."
+          ) {
+            objImpuesto = true;
+            break;
+          }
+        }
+      } else {
+        if (element.objImpuesto === "02 - Sí objeto de impuesto.") {
+          objImpuesto = true;
+        }
+      }
       newTaxSummaryTras.push({
         ...(element.exempt && { exempt: element.exempt }),
         base: element.base,
@@ -1058,6 +915,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         tipoFactor: element.tipoFactor,
         tasaOcuota: element.tasaOcuota,
         importe: element.importe,
+        objImpuesto,
       });
     });
     return {
@@ -1074,529 +932,57 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       .replace(/'/g, "&#039;");
     return newDescription;
   };
-  const handleCustomItemSuiteTax = (
-    newItems,
+  const handleGlobalDiscountCorrection = (
+    newSubTotal,
     totalDiscount,
-    taxDataBase,
-    mapUnitsDataBase,
-    isPayment,
-    currentRecord,
-    globalDiscount
+    taxTotal,
+    discounts,
+    total
   ) => {
-    let retExist = false;
-    let trasExist = false;
-    const newItemDescriptions = [];
-    const taxItemDetails = [];
-    const taxSummary = { summaryRet: [], summaryTras: [] };
-    const satUnitCodes = [];
-    const discounts = [];
-    const objImpuesto = [];
-    const totalTaxDetailLines = currentRecord.getLineCount({
-      sublistId: "taxdetails",
-    });
-    //Tax details
-    for (let i = 0; i < newItems.length; i++) {
-      const unit = newItems[i].unit;
-      const discount = newItems[i].discount;
-      //Units
-      const tempSatCode = mapUnitsDataBase.find(
-        (element) => element.netsuiteCode === unit
-      );
-      //Description
-      satUnitCodes.push(tempSatCode.satCode);
-      newItemDescriptions.push(handleDescCorrection(newItems[i].description));
-      //Discounts
-      discounts.push({
-        item: i,
-        discount,
-      });
-    }
-    for (let i = 0; i < totalTaxDetailLines; i++) {
-      const taxCode = currentRecord.getSublistValue({
-        sublistId: "taxdetails",
-        fieldId: "taxcode",
-        line: i,
-      });
-      const taxBasis = currentRecord.getSublistValue({
-        sublistId: "taxdetails",
-        fieldId: "taxbasis",
-        line: i,
-      });
-      const taxRate = currentRecord.getSublistValue({
-        sublistId: "taxdetails",
-        fieldId: "taxrate",
-        line: i,
-      });
-      const taxAmount = currentRecord.getSublistValue({
-        sublistId: "taxdetails",
-        fieldId: "taxamount",
-        line: i,
-      });
-      //Try to load taxcode
-      const taxRecord = taxDataBase.taxCodeData.find(
-        (taxCodeElement) => taxCodeElement.taxCodeId === Number(taxCode)
-      );
-      //Obj impuesto
-      objImpuesto.push(taxRecord.objetoImpuesto);
-      /*    
-      4	Exempt	
-      2	Reduced
-      1	Standard	
-      3	Zero 
-      */
-      if (Number(taxRecord.taxRateType) !== 2) {
-        //Es traslado
-        trasExist = true;
-        const taxTrasDetails = {
-          isGroup: 0,
-          exempt: Number(taxRecord.taxRateType) === 4 ? true : false,
-          base: taxBasis,
-          impuesto: keepBefore(taxRecord.customCode, " -"),
-          tipoFactor: "Tasa",
-          tasaOcuota: taxRate,
-          importe: taxAmount,
-        };
-        taxItemDetails.push({
-          item: i,
-          taxTrasDetails,
-        });
-        //Summary
-        //Push summary
-        const exist = taxSummary.summaryTras.find(
-          (element) =>
-            element.impuesto === keepBefore(taxRecord.customCode, " -") &&
-            element.tasaOcuota === taxRate
-        );
-        if (!exist) {
-          taxSummary.summaryTras.push({
-            base: taxTrasDetails.base,
-            impuesto: taxTrasDetails.impuesto,
-            tipoFactor: taxTrasDetails.tipoFactor,
-            tasaOcuota: taxTrasDetails.tasaOcuota,
-            importe: taxTrasDetails.importe,
-          });
-        } else {
-          exist.importe = (
-            Number(exist.importe) + Number(taxTrasDetails.importe)
-          ).toFixed(2);
-          exist.base = (
-            Number(exist.base) + Number(taxTrasDetails.base)
-          ).toFixed(2);
-        }
-      } else {
-        //Es retención
-        retExist = true;
-        const taxRetDetails = {
-          isGroup: 0,
-          exempt: Number(taxRecord.taxRateType) === 4 ? true : false,
-          base: taxBasis,
-          impuesto: keepBefore(taxRecord.customCode, " -"),
-          tipoFactor: "Tasa",
-          tasaOcuota: taxRate,
-          importe: taxAmount,
-        };
-        taxItemDetails.push({
-          item: i,
-          taxRetDetails,
-        });
-        //Summary
-        //Push summary
-        const exist = taxSummary.summaryRet.find(
-          (element) =>
-            element.impuesto === keepBefore(taxRecord.customCode, " -") &&
-            element.tasaOcuota === taxRate
-        );
-        if (!exist) {
-          taxSummary.summaryRet.push({
-            base: taxRetDetails.base,
-            impuesto: taxRetDetails.impuesto,
-            tipoFactor: taxRetDetails.tipoFactor,
-            tasaOcuota: taxRetDetails.tasaOcuota,
-            importe: taxRetDetails.importe,
-          });
-        } else {
-          exist.importe = (
-            Number(exist.importe) + Number(taxRetDetails.importe)
-          ).toFixed(2);
-          exist.base = (
-            Number(exist.base) + Number(taxRetDetails.base)
-          ).toFixed(2);
-        }
-      }
-    }
-    const taxTotal = handleTaxTotal(taxSummary);
-    return {
-      ...(retExist && { retExist }),
-      ...(trasExist && { trasExist }),
-      taxItemDetails,
-      taxTotal,
-      taxSummary,
-      satUnitCodes,
-      ...((totalDiscount > 0 || globalDiscount) && {
-        discounts: {
-          totalDiscount,
-          discounts,
-        },
-      }),
-      objImpuesto,
-      newItemDescriptions,
-    };
-  };
-  const handleCustomItem = (
-    newItems,
-    totalDiscount,
-    taxDataBase,
-    mapUnitsDataBase,
-    isPayment,
-    globalDiscount,
-    newSubTotal
-  ) => {
-    let retExist = false;
-    let trasExist = false;
-    const newItemDescriptions = [];
-    const taxItemDetails = [];
-    const taxSummary = { summaryRet: [], summaryTras: [] };
-    const satUnitCodes = [];
-    const discounts = [];
-    const objImpuesto = [];
-    for (let i = 0; i < newItems.length; i++) {
-      const discount = newItems[i].discount;
-      const taxcodeId = newItems[i].taxcodeId;
-      const taxAmount = newItems[i].taxAmount;
-      const amount = newItems[i].amount;
-      const unit = newItems[i].unit;
-      //Units
-      const tempSatCode = mapUnitsDataBase.find(
-        (element) => element.netsuiteCode === unit
-      );
-      satUnitCodes.push(tempSatCode.satCode);
-      //Discounts
-      discounts.push({
-        item: i,
-        discount,
-      });
-      //Description
-      newItemDescriptions.push(handleDescCorrection(newItems[i].description));
-      //Taxgroup or taxcode
-      let taxRecord = null;
-      try {
-        //Try to load taxcode
-        taxRecord = taxDataBase.taxCodeData.find(
-          (taxCodeElement) => taxCodeElement.taxCodeId === Number(taxcodeId)
-        );
-        if (taxRecord) {
-          //Objeto de impuesto
-          objImpuesto.push(taxRecord.objetoImpuesto);
-          let taxTrasDetails = null;
-          let taxRetDetails = null;
-          const { customCode: taxcode, rate, exempt } = taxRecord;
-          let newRate = Number(rate.replace("%", ""));
-          const rateRetTemp = newRate;
-          newRate = newRate < 0 ? newRate * -1 : newRate;
-          let newTaxAmount = taxAmount < 0 ? taxAmount * -1 : taxAmount;
-          if (rateRetTemp < 0) {
-            retExist = true;
-            //Es retención
-            taxRetDetails = {
-              isGroup: 0,
-              exempt,
-              base: amount,
-              impuesto: keepBefore(taxcode, " -"),
-              tipoFactor: "Tasa",
-              tasaOcuota: newRate,
-              importe: globalDiscount
-                ? Number((Number(amount) * (newRate / 100)).toFixed(2))
-                : Number(Number(newTaxAmount).toFixed(2)),
-            };
-            //Push summary
-            const exist = taxSummary.summaryRet.find(
-              (element) =>
-                element.impuesto === keepBefore(taxcode, " -") &&
-                element.tasaOcuota === newRate
-            );
-            if (!exist) {
-              taxSummary.summaryRet.push({
-                base: Number(amount),
-                impuesto: keepBefore(taxcode, " -"),
-                tipoFactor: "Tasa",
-                tasaOcuota: newRate,
-                importe: globalDiscount
-                  ? Number((Number(amount) * (newRate / 100)).toFixed(2))
-                  : Number(Number(newTaxAmount).toFixed(2)),
-              });
-            } else {
-              exist.importe = (
-                Number(exist.importe) + Number(newTaxAmount)
-              ).toFixed(2);
-              exist.base = (Number(exist.base) + Number(amount)).toFixed(2);
-            }
-          } else {
-            trasExist = true;
-            //Es traslado
-            taxTrasDetails = {
-              isGroup: 0,
-              exempt,
-              base: amount,
-              impuesto: keepBefore(taxcode, " -"),
-              tipoFactor: "Tasa",
-              tasaOcuota: newRate,
-              importe: globalDiscount
-                ? Number((Number(amount) * (newRate / 100)).toFixed(2))
-                : Number(Number(newTaxAmount).toFixed(2)),
-            };
-            //Push summary
-            const exist = taxSummary.summaryTras.find(
-              (element) =>
-                element.impuesto === keepBefore(taxcode, " -") &&
-                element.tasaOcuota === newRate
-            );
-            if (!exist) {
-              taxSummary.summaryTras.push({
-                exempt,
-                base: Number(amount),
-                impuesto: keepBefore(taxcode, " -"),
-                tipoFactor: "Tasa",
-                tasaOcuota: newRate,
-                importe: globalDiscount
-                  ? Number((Number(amount) * (newRate / 100)).toFixed(2))
-                  : Number(Number(newTaxAmount).toFixed(2)),
-              });
-            } else {
-              exist.importe = (
-                Number(exist.importe) + Number(newTaxAmount)
-              ).toFixed(2);
-              exist.base = (Number(exist.base) + Number(amount)).toFixed(2);
-            }
-          }
-          taxItemDetails.push({
-            item: i,
-            ...(taxRetDetails && { taxRetDetails }),
-            ...(taxTrasDetails && { taxTrasDetails }),
-          });
-        } else {
-          //Try to load taxgroup
-          taxRecord = taxDataBase.taxGroupData.find(
-            (taxCodeElement) => taxCodeElement.taxGroupId === Number(taxcodeId)
-          );
-          if (taxRecord) {
-            //Objeto de impuesto
-            objImpuesto.push(taxRecord.codes[0].objetoImpuesto);
-            const taxListDetails = handleTaxGroupDetails(
-              taxRecord,
-              amount,
-              taxAmount,
-              isPayment,
-              globalDiscount
-            );
-            if (taxListDetails.isGroup) {
-              let taxRetAuxTemp = null;
-              let taxTrasAuxTemp = null;
-              if (taxListDetails.taxesPerItem.taxRetDetails.length > 0) {
-                retExist = true;
-                taxRetAuxTemp = {
-                  isGroup: taxListDetails.isGroup,
-                  details: taxListDetails.taxesPerItem.taxRetDetails,
-                };
-                //Push summary
-                taxListDetails.taxesPerItem.taxRetDetails.forEach((tax) => {
-                  const exist = taxSummary.summaryRet.find(
-                    (element) =>
-                      element.impuesto === tax.impuesto &&
-                      element.tasaOcuota === tax.tasaOcuota
-                  );
-                  if (!exist) {
-                    taxSummary.summaryRet.push({
-                      base: Number(tax.base),
-                      impuesto: tax.impuesto,
-                      tipoFactor: tax.tipoFactor,
-                      tasaOcuota: tax.tasaOcuota,
-                      importe: Number(Number(tax.importe).toFixed(2)),
-                    });
-                  } else {
-                    exist.importe = (
-                      Number(exist.importe) + Number(tax.importe)
-                    ).toFixed(2);
-                    exist.base = (
-                      Number(exist.base) + Number(tax.base)
-                    ).toFixed(2);
-                  }
-                });
-              }
-              if (taxListDetails.taxesPerItem.taxTrasDetails.length > 0) {
-                trasExist = true;
-                taxTrasAuxTemp = {
-                  isGroup: taxListDetails.isGroup,
-                  details: taxListDetails.taxesPerItem.taxTrasDetails,
-                };
-                //Push summary
-                taxListDetails.taxesPerItem.taxTrasDetails.forEach((tax) => {
-                  const exist = taxSummary.summaryTras.find(
-                    (element) =>
-                      element.impuesto === tax.impuesto &&
-                      element.tasaOcuota === tax.tasaOcuota
-                  );
-                  if (!exist) {
-                    taxSummary.summaryTras.push({
-                      base: Number(tax.base),
-                      impuesto: tax.impuesto,
-                      tipoFactor: tax.tipoFactor,
-                      tasaOcuota: tax.tasaOcuota,
-                      importe: Number(Number(tax.importe).toFixed(2)),
-                    });
-                  } else {
-                    exist.importe = (
-                      Number(exist.importe) + Number(tax.importe)
-                    ).toFixed(2);
-                    exist.base = (
-                      Number(exist.base) + Number(tax.base)
-                    ).toFixed(2);
-                  }
-                });
-              }
-              taxItemDetails.push({
-                item: i,
-                ...(taxRetAuxTemp && { taxRetDetails: taxRetAuxTemp }),
-                ...(taxTrasAuxTemp && { taxTrasDetails: taxTrasAuxTemp }),
-              });
-            } else {
-              let taxRetAuxTemp = null;
-              let taxTrasAuxTemp = null;
-              if (taxListDetails.isRet) {
-                retExist = true;
-                taxRetAuxTemp = taxListDetails.taxesPerItem;
-                //Push summary
-                const exist = taxSummary.summaryRet.find(
-                  (element) =>
-                    element.impuesto === taxListDetails.taxesPerItem.impuesto &&
-                    element.tasaOcuota ===
-                      taxListDetails.taxesPerItem.tasaOcuota
-                );
-                if (!exist) {
-                  taxSummary.summaryRet.push({
-                    base: Number(taxListDetails.taxesPerItem.base),
-                    impuesto: taxListDetails.taxesPerItem.impuesto,
-                    tipoFactor: taxListDetails.taxesPerItem.tipoFactor,
-                    tasaOcuota: taxListDetails.taxesPerItem.tasaOcuota,
-                    importe: Number(
-                      Number(taxListDetails.taxesPerItem.importe).toFixed(2)
-                    ),
-                  });
-                } else {
-                  exist.importe = Number(
-                    (
-                      Number(exist.importe) +
-                      Number(taxListDetails.taxesPerItem.importe)
-                    ).toFixed(2)
-                  );
-                  exist.base = Number(
-                    (
-                      Number(exist.base) +
-                      Number(taxListDetails.taxesPerItem.base)
-                    ).toFixed(2)
-                  );
-                }
-              } else {
-                trasExist = true;
-                taxTrasAuxTemp = taxListDetails.taxesPerItem;
-                //Push summary
-                const exist = taxSummary.summaryTras.find(
-                  (element) =>
-                    element.impuesto === taxListDetails.taxesPerItem.impuesto &&
-                    element.tasaOcuota ===
-                      taxListDetails.taxesPerItem.tasaOcuota
-                );
-                if (!exist) {
-                  taxSummary.summaryTras.push({
-                    exempt: taxListDetails.taxesPerItem.exempt,
-                    base: Number(taxListDetails.taxesPerItem.base),
-                    impuesto: taxListDetails.taxesPerItem.impuesto,
-                    tipoFactor: taxListDetails.taxesPerItem.tipoFactor,
-                    tasaOcuota: taxListDetails.taxesPerItem.tasaOcuota,
-                    importe: Number(
-                      Number(taxListDetails.taxesPerItem.importe).toFixed(2)
-                    ),
-                  });
-                } else {
-                  exist.importe = Number(
-                    (
-                      Number(exist.importe) +
-                      Number(taxListDetails.taxesPerItem.importe)
-                    ).toFixed(2)
-                  );
-                  exist.base = Number(
-                    (
-                      Number(exist.base) +
-                      Number(taxListDetails.taxesPerItem.base)
-                    ).toFixed(2)
-                  );
-                }
-              }
-              taxItemDetails.push({
-                item: i,
-                ...(taxRetAuxTemp && { taxRetDetails: taxRetAuxTemp }),
-                ...(taxTrasAuxTemp && { taxTrasDetails: taxTrasAuxTemp }),
-              });
-            }
-          }
-        }
-      } catch (error) {
-        log.debug("ERROR EN CALCULO IMPUESTOS", error);
-      }
-    }
-    const taxTotal = handleTaxTotal(taxSummary);
-    const newTaxSummary = handleNewTaxSummary(taxSummary);
-    return {
-      ...(retExist && { retExist }),
-      ...(trasExist && { trasExist }),
-      taxItemDetails,
-      taxTotal,
-      taxSummary: newTaxSummary,
-      satUnitCodes,
-      ...((totalDiscount > 0 || globalDiscount) && {
-        discounts: {
-          totalDiscount,
-          discounts,
-        },
-      }),
-      objImpuesto,
-      newItemDescriptions,
-      newSubTotal,
-    };
-  };
-  const handleDataForFvNc = (
-    currentRecord,
-    taxDataBase,
-    mapUnitsDataBase,
-    isPayment,
-    suiteTax
-  ) => {
-    const {
-      fullItems: newItems,
-      totalDiscount,
-      globalDiscount,
-      newSubTotal,
-    } = handleSplitDiscountItems(currentRecord);
-    if (suiteTax) {
-      return handleCustomItemSuiteTax(
-        newItems,
-        totalDiscount,
-        taxDataBase,
-        mapUnitsDataBase,
-        isPayment,
-        currentRecord,
-        globalDiscount,
-        newSubTotal
+    const totalTraslados = taxTotal.totalTraslados
+      ? taxTotal.totalTraslados
+      : 0;
+    const totalRetenciones = taxTotal.totalRetenciones
+      ? taxTotal.totalRetenciones
+      : 0;
+    const tempTotal =
+      Number(newSubTotal) -
+      Number(totalDiscount) +
+      totalTraslados -
+      totalRetenciones;
+    const totalDif = tempTotal - total;
+    if (totalDif > 0) {
+      discounts[0].discount = Number(
+        (discounts[0].discount + totalDif).toFixed(2)
       );
     } else {
-      return handleCustomItem(
-        newItems,
-        totalDiscount,
-        taxDataBase,
-        mapUnitsDataBase,
-        isPayment,
-        globalDiscount,
-        newSubTotal
+      discounts[0].discount = Number(
+        (discounts[0].discount - Math.abs(totalDif)).toFixed(2)
       );
+    }
+  };
+  const handleNewTotalDiscount = (discounts) => {
+    let totalDiscount = 0;
+    discounts.forEach((element) => {
+      totalDiscount += element.discount;
+    });
+    return Number(totalDiscount.toFixed(2));
+  };
+  const handleDiscountCorrection = (fullItems, totalDiscount) => {
+    let tempTotalDiscount = 0;
+    fullItems.forEach((item) => {
+      tempTotalDiscount += item.discount;
+    });
+    tempTotalDiscount = Number(tempTotalDiscount.toFixed(2));
+    if (tempTotalDiscount !== totalDiscount) {
+      const discDifference = Number(
+        (tempTotalDiscount - totalDiscount).toFixed(2)
+      );
+      if (discDifference > 0) {
+        fullItems[0].discount -= discDifference;
+      } else {
+        fullItems[0].discount += Math.abs(discDifference);
+      }
     }
   };
   const handleRelatedCfdis = (currentRecord) => {
@@ -1642,317 +1028,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     }
     return relatedCfdis;
   };
-  const handleSplitDiscountItems = (currentRecord) => {
-    const fullItems = [];
-    const items = [];
-    const discounts = [];
-    let totalDiscount = 0;
-    let globalDiscount = false;
-    let newSubTotal = 0;
-    const totalItemLines = currentRecord.getLineCount({ sublistId: "item" });
-    const globalRate = currentRecord.getValue({
-      fieldId: "discountrate",
-    });
-    const subtotal = Number(
-      currentRecord.getValue({
-        fieldId: "subtotal",
-      })
-    );
-    if (globalRate) {
-      newSubTotal = subtotal;
-      globalDiscount = true;
-      for (let i = 0; i < totalItemLines; i++) {
-        const amount = currentRecord.getSublistValue({
-          sublistId: "item",
-          fieldId: "amount",
-          line: i,
-        });
-        const unit = currentRecord.getSublistValue({
-          sublistId: "item",
-          fieldId: "units",
-          line: i,
-        });
-        const taxcodeId = currentRecord.getSublistValue({
-          sublistId: "item",
-          fieldId: "taxcode",
-          line: i,
-        });
-        const taxAmount = currentRecord.getSublistValue({
-          sublistId: "item",
-          fieldId: "tax1amt",
-          line: i,
-        });
-        const desc = currentRecord.getSublistValue({
-          sublistId: "item",
-          fieldId: "description",
-          line: i,
-        });
-        const newAmount = Number(
-          (
-            Number(amount) -
-            Number(amount) * (Math.abs(globalRate) / 100)
-          ).toFixed(2)
-        );
-        totalDiscount += Number(
-          (Number(amount) * (Math.abs(globalRate) / 100)).toFixed(2)
-        );
-        fullItems.push({
-          discount: Number(
-            (Number(amount) * (Math.abs(globalRate) / 100)).toFixed(2)
-          ),
-          unit,
-          taxcodeId,
-          amount: newAmount,
-          taxAmount,
-          description: desc,
-        });
-      }
-    } else {
-      for (let i = 0; i < totalItemLines; i++) {
-        const itemType = currentRecord.getSublistValue({
-          sublistId: "item",
-          fieldId: "itemtype",
-          line: i,
-        });
-        const taxcodeId = currentRecord.getSublistValue({
-          sublistId: "item",
-          fieldId: "taxcode",
-          line: i,
-        });
-        const taxAmount = currentRecord.getSublistValue({
-          sublistId: "item",
-          fieldId: "tax1amt",
-          line: i,
-        });
-        const amount = currentRecord.getSublistValue({
-          sublistId: "item",
-          fieldId: "amount",
-          line: i,
-        });
-        const unit = currentRecord.getSublistValue({
-          sublistId: "item",
-          fieldId: "units",
-          line: i,
-        });
-        const desc = currentRecord.getSublistValue({
-          sublistId: "item",
-          fieldId: "description",
-          line: i,
-        });
-        if (itemType === "Discount") {
-          const discline = currentRecord.getSublistValue({
-            sublistId: "item",
-            fieldId: "discline",
-            line: i,
-          });
-          discounts.push({ line: discline, amount, taxAmount });
-        } else {
-          const line = currentRecord.getSublistValue({
-            sublistId: "item",
-            fieldId: "line",
-            line: i,
-          });
-          items.push({
-            line,
-            unit,
-            taxcodeId,
-            amount,
-            taxAmount,
-            desc,
-          });
-        }
-      }
-      items.forEach((item) => {
-        const discountFound = discounts.find(
-          (element) => element.line === item.line
-        );
-        if (discountFound) {
-          const newAmount = (
-            Number(item.amount) + Number(discountFound.amount)
-          ).toFixed(2);
-          const newTaxAmount = (
-            Number(item.taxAmount) + Number(discountFound.taxAmount)
-          ).toFixed(2);
-          fullItems.push({
-            discount: Math.abs(Number(discountFound.amount)),
-            unit: item.unit,
-            taxcodeId: item.taxcodeId,
-            amount: newAmount,
-            taxAmount: newTaxAmount,
-            description: item.desc,
-          });
-        } else {
-          fullItems.push({
-            unit: item.unit,
-            taxcodeId: item.taxcodeId,
-            amount: item.amount,
-            taxAmount: item.taxAmount,
-            description: item.desc,
-          });
-        }
-      });
-      discounts.forEach((discount) => {
-        totalDiscount += Math.abs(Number(discount.amount));
-      });
-      newSubTotal = subtotal + totalDiscount;
-    }
-    return {
-      fullItems,
-      totalDiscount: Number(totalDiscount.toFixed(2)),
-      globalDiscount,
-      newSubTotal: Number(newSubTotal.toFixed(2)),
-    };
-  };
-  const handleSplitDiscountItemsForPayment = (currentRecord, factor) => {
-    const fullItems = [];
-    const items = [];
-    const discounts = [];
-    let totalDiscount = 0;
-    const totalItemLines = currentRecord.getLineCount({ sublistId: "item" });
-    const tranid = currentRecord.getValue({
-      fieldId: "tranid",
-    });
-    for (let i = 0; i < totalItemLines; i++) {
-      const desc = currentRecord.getSublistValue({
-        sublistId: "item",
-        fieldId: "description",
-        line: i,
-      });
-      const itemType = currentRecord.getSublistValue({
-        sublistId: "item",
-        fieldId: "itemtype",
-        line: i,
-      });
-      const taxcodeId = currentRecord.getSublistValue({
-        sublistId: "item",
-        fieldId: "taxcode",
-        line: i,
-      });
-      //Calc taxAmount
-      const taxAmount = currentRecord.getSublistValue({
-        sublistId: "item",
-        fieldId: "tax1amt",
-        line: i,
-      });
-      const calcTaxAmount = Number(
-        (Number(taxAmount) * (factor / 100)).toFixed(2)
-      );
-      //Calc amount
-      const amount = currentRecord.getSublistValue({
-        sublistId: "item",
-        fieldId: "amount",
-        line: i,
-      });
-      const calcAmount = Number((Number(amount) * (factor / 100)).toFixed(2));
-      const unit = currentRecord.getSublistValue({
-        sublistId: "item",
-        fieldId: "units",
-        line: i,
-      });
-      if (itemType === "Discount") {
-        const discline = currentRecord.getSublistValue({
-          sublistId: "item",
-          fieldId: "discline",
-          line: i,
-        });
-        discounts.push({
-          line: discline,
-          amount: calcAmount,
-          taxAmount: calcTaxAmount,
-        });
-      } else {
-        const line = currentRecord.getSublistValue({
-          sublistId: "item",
-          fieldId: "line",
-          line: i,
-        });
-        items.push({
-          line,
-          unit,
-          taxcodeId,
-          amount: calcAmount,
-          taxAmount: calcTaxAmount,
-          desc,
-        });
-      }
-    }
-    items.forEach((item) => {
-      const discountFound = discounts.find(
-        (element) => element.line === item.line
-      );
-      if (discountFound) {
-        const newAmount = (
-          Number(item.amount) + Number(discountFound.amount)
-        ).toFixed(2);
-        const newTaxAmount = (
-          Number(item.taxAmount) + Number(discountFound.taxAmount)
-        ).toFixed(2);
-        fullItems.push({
-          discount: Math.abs(Number(discountFound.amount)),
-          unit: item.unit,
-          taxcodeId: item.taxcodeId,
-          amount: newAmount,
-          taxAmount: newTaxAmount,
-          description: item.desc,
-        });
-      } else {
-        fullItems.push({
-          unit: item.unit,
-          taxcodeId: item.taxcodeId,
-          amount: item.amount,
-          taxAmount: item.taxAmount,
-          description: item.desc,
-        });
-      }
-    });
-    discounts.forEach((discount) => {
-      totalDiscount += Math.abs(Number(discount.amount));
-    });
-    return {
-      fullItems,
-      totalDiscount: Number(totalDiscount.toFixed(2)),
-    };
-  };
-  const handleTaxesForPayment = (
-    invoiceRecord,
-    paymentAmount,
-    taxDataBase,
-    mapUnitsDataBase,
-    isPayment,
-    suiteTax
-  ) => {
-    const currentRecord = invoiceRecord;
-    const invoiceAmount = invoiceRecord.getValue({
-      fieldId: "total",
-    });
-    const porcentajePago =
-      (Number(paymentAmount) * 100) / Number(invoiceAmount);
-    //CALCULATE
-    const { fullItems: newItems, totalDiscount } =
-      handleSplitDiscountItemsForPayment(currentRecord, porcentajePago);
-    let itemFullSummary = null;
-    if (suiteTax) {
-      itemFullSummary = handleCustomItemSuiteTax(
-        newItems,
-        totalDiscount,
-        taxDataBase,
-        mapUnitsDataBase,
-        isPayment,
-        currentRecord,
-        false
-      );
-    } else {
-      itemFullSummary = handleCustomItem(
-        newItems,
-        totalDiscount,
-        taxDataBase,
-        mapUnitsDataBase,
-        isPayment
-      );
-    }
-    return itemFullSummary;
-  };
-  //Get related invoices data for payment
   const handleLinkRecordType = (id) => {
     let isPayment = false;
     try {
@@ -2227,170 +1302,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     });
     return customItem;
   };
-  const handleRelatedInvoiceObjImp = (invoiceRelated, taxDataBase) => {
-    let invoiceObjImpuesto = false;
-    try {
-      const totalLines = invoiceRelated.getLineCount({
-        sublistId: "item",
-      });
-      for (let i = 0; i < totalLines; i++) {
-        const taxCode = Number(
-          invoiceRelated.getSublistValue({
-            sublistId: "item",
-            fieldId: "taxcode",
-            line: i,
-          })
-        );
-        let found = null;
-        found = taxDataBase.taxGroupData.find(
-          (element) => element.taxGroupId === taxCode
-        );
-        if (found) {
-          found.codes.forEach((element) => {
-            if (element.objetoImpuesto === "02 - Sí objeto de impuesto.") {
-              invoiceObjImpuesto = true;
-            }
-          });
-        } else {
-          found = taxDataBase.taxCodeData.find(
-            (element) => element.taxCodeId === taxCode
-          );
-          if (found.objetoImpuesto === "02 - Sí objeto de impuesto.") {
-            invoiceObjImpuesto = true;
-          }
-        }
-        if (invoiceObjImpuesto) {
-          break;
-        }
-      }
-      return invoiceObjImpuesto;
-    } catch (error) {
-      log.debug("ERROR handleRelatedInvoiceObjImp", error);
-      return invoiceObjImpuesto;
-    }
-  };
-  const handleDataForPayment = (
-    currentRecord,
-    taxDataBase,
-    mapUnitsDataBase,
-    isPayment,
-    suiteTax
-  ) => {
-    let taxesForPayment = [];
-    let totalPaymentTaxesList = [];
-    let totalPaymentAmount = 0;
-    const totalApplyLines = currentRecord.getLineCount({ sublistId: "apply" });
-    const paymentId = currentRecord.id;
-    const paymentDate = currentRecord.getValue({
-      fieldId: "createddate",
-    });
-    const paymentForm = currentRecord.getText({
-      fieldId: "custbody_ent_entloc_forma_pago",
-    });
-    const currencyId = currentRecord.getValue({
-      fieldId: "custbody_ent_entloc_moneda_pago",
-    });
-    const currency = handleCurrencySymbol(currencyId);
-    const exchangeRate = currentRecord.getValue({
-      fieldId: "exchangerate",
-    });
-    const customExchangeRate = currentRecord.getValue({
-      fieldId: "custbody_ent_entloc_tipo_cambio_pago",
-    });
-    for (let i = 0; i < totalApplyLines; i++) {
-      const apply = currentRecord.getSublistValue({
-        sublistId: "apply",
-        fieldId: "apply",
-        line: i,
-      });
-      if (apply) {
-        const amount = currentRecord.getSublistValue({
-          sublistId: "apply",
-          fieldId: "amount",
-          line: i,
-        });
-        const total = currentRecord.getSublistValue({
-          sublistId: "apply",
-          fieldId: "total",
-          line: i,
-        });
-        const internalInvoiceId = currentRecord.getSublistValue({
-          sublistId: "apply",
-          fieldId: "internalid",
-          line: i,
-        });
-        const invoiceRelated = record.load({
-          type: "invoice",
-          id: internalInvoiceId,
-        });
-        const invoiceCurrencyId = invoiceRelated.getValue({
-          fieldId: "currency",
-        });
-        const invoiceCurrency = handleCurrencySymbol(invoiceCurrencyId);
-        const invoiceObjImpuesto = handleRelatedInvoiceObjImp(
-          invoiceRelated,
-          taxDataBase
-        );
-        //Exchange rate
-        const globalExchangeRate = handleGlobalExchangeRate(
-          currency,
-          invoiceCurrency,
-          customExchangeRate
-        );
-        //Equivalencia
-        const docToEquivalence = handleDocToEquivalence(
-          currency,
-          invoiceCurrency,
-          exchangeRate,
-          customExchangeRate
-        );
-        //Taxes summary for payment
-        const resultTaxes = handleTaxesForPayment(
-          invoiceRelated,
-          amount,
-          taxDataBase,
-          mapUnitsDataBase,
-          isPayment,
-          suiteTax
-        );
-        totalPaymentTaxesList.push({
-          resultTaxes: resultTaxes.taxSummary,
-          globalExchangeRate,
-        });
-        totalPaymentAmount += Number(
-          (amount / Number(docToEquivalence)).toFixed(2)
-        );
-        taxesForPayment.push({
-          taxes: resultTaxes,
-          docToRel: handleDocRelData(
-            invoiceRelated,
-            paymentId,
-            amount,
-            docToEquivalence,
-            invoiceObjImpuesto
-          ),
-          paymentData: {
-            monto: Number((amount / Number(docToEquivalence)).toFixed(2)),
-            paymentDate,
-            paymentForm,
-            currency,
-            ...(currency === invoiceCurrency || currency === "MXN"
-              ? { exchangeRate: 1 }
-              : { exchangeRate: customExchangeRate }),
-          },
-        });
-      }
-    }
-    const recalcAmounts = handleRecalcAmountsForPayment(taxesForPayment);
-    const totalPaymentTaxes = handleTotalTaxesForPayment(totalPaymentTaxesList);
-    return {
-      taxesForPayment: recalcAmounts,
-      totalPaymentTaxes,
-      totalPaymentAmount: Number(
-        (totalPaymentAmount * customExchangeRate).toFixed(2)
-      ),
-    };
-  };
   const handleSubsidiaryAddressFields = (currentSubsidiary) => {
     let currentSubsidiaryAddress = null;
     const subsidiaryAddressObj = {};
@@ -2414,96 +1325,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       }
     }
     return subsidiaryAddressObj;
-  };
-  const getExtraCustomData = (
-    currentRecord,
-    currentSubsidiary,
-    longitudSerie,
-    longitudFolio,
-    prodMod,
-    suiteTax
-  ) => {
-    //Get taxGroup data
-    const taxDataBase = suiteTax
-      ? handleTaxGroupDataSuiteTax()
-      : handleTaxGroupData();
-    //Get mapUnit data
-    const mapUnitsDataBase = handleSatMappingUnits();
-    let total = currentRecord.getValue({
-      fieldId: "total",
-    });
-    let subtotal = currentRecord.getValue({
-      fieldId: "subtotal",
-    });
-    const tranid = currentRecord.getValue({
-      fieldId: "tranid",
-    });
-    const recordType = currentRecord.type;
-    //Monto en letra
-    const currency = currentRecord.getText({
-      fieldId: "currencysymbol",
-    });
-    const montoEnLetra = handleMontoEnLetra(total, currency);
-
-    let customItem = null;
-    let totalTaxesForPayment = null;
-    let totalPaymentAmount = 0;
-
-    //Custom transaction
-    const { serie, folio } = handleFolioSerie(
-      tranid,
-      longitudSerie,
-      longitudFolio
-    );
-    //Summary
-    total = Number(total).toFixed(2);
-    subtotal = Number(subtotal).toFixed(2);
-    //Custom subsidiary
-    const subsidiaryAddress = handleSubsidiaryAddressFields(currentSubsidiary);
-    //Custom item
-    if (recordType === "customerpayment") {
-      const dataForPayment = handleDataForPayment(
-        currentRecord,
-        taxDataBase,
-        mapUnitsDataBase,
-        true,
-        suiteTax
-      );
-      customItem = dataForPayment.taxesForPayment;
-      totalTaxesForPayment = dataForPayment.totalPaymentTaxes;
-      totalPaymentAmount = dataForPayment.totalPaymentAmount;
-    } else {
-      customItem = handleDataForFvNc(
-        currentRecord,
-        taxDataBase,
-        mapUnitsDataBase,
-        false,
-        suiteTax
-      );
-    }
-    //Related CFDIS
-    const relatedCfdis = handleRelatedCfdis(currentRecord);
-    return {
-      customRecordData: {
-        serie,
-        folio,
-        ...(relatedCfdis && { relatedCfdis }),
-        montoEnLetra,
-        prodMod,
-      },
-      summary: {
-        total,
-        subtotal,
-      },
-      customSubsidiaryData: {
-        address: subsidiaryAddress,
-      },
-      customItem,
-      ...(recordType === "customerpayment" && {
-        totalTaxesForPayment,
-        totalPaymentAmount,
-      }),
-    };
   };
   const handleDataForTransfer = () => {
     const handler = {};
@@ -2944,12 +1765,1402 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       return null;
     }
   };
+
+  /* -------------------------------------SUITE TAX--------------------------------------- */
+  const handleCustomItemSuiteTax = (
+    newItems,
+    totalDiscount,
+    taxDataBase,
+    mapUnitsDataBase,
+    isPayment,
+    currentRecord,
+    globalDiscount,
+    newSubTotal,
+    total
+  ) => {
+    let retExist = false;
+    let trasExist = false;
+    const newItemDescriptions = [];
+    const taxItemDetails = [];
+    const taxSummary = { summaryRet: [], summaryTras: [] };
+    const satUnitCodes = [];
+    const discounts = [];
+    const objImpuesto = [];
+    const quantityItems = [];
+    const totalTaxDetailLines = currentRecord.getLineCount({
+      sublistId: "taxdetails",
+    });
+    //Tax details
+    for (let i = 0; i < newItems.length; i++) {
+      const unit = newItems[i].unit;
+      const discount = newItems[i].discount;
+      const quantity = newItems[i].quantity;
+      //Units
+      const tempSatCode = mapUnitsDataBase.find(
+        (element) => element.netsuiteCode === unit
+      );
+      //Description
+      satUnitCodes.push(tempSatCode.satCode);
+      newItemDescriptions.push(handleDescCorrection(newItems[i].description));
+      //Quantity
+      quantityItems.push(quantity);
+      //Discounts
+      discounts.push({
+        item: i,
+        discount,
+      });
+    }
+    for (let i = 0; i < totalTaxDetailLines; i++) {
+      const taxCode = currentRecord.getSublistValue({
+        sublistId: "taxdetails",
+        fieldId: "taxcode",
+        line: i,
+      });
+      const taxBasis = currentRecord.getSublistValue({
+        sublistId: "taxdetails",
+        fieldId: "taxbasis",
+        line: i,
+      });
+      const taxRate = currentRecord.getSublistValue({
+        sublistId: "taxdetails",
+        fieldId: "taxrate",
+        line: i,
+      });
+      const taxAmount = currentRecord.getSublistValue({
+        sublistId: "taxdetails",
+        fieldId: "taxamount",
+        line: i,
+      });
+      //Try to load taxcode
+      const taxRecord = taxDataBase.taxCodeData.find(
+        (taxCodeElement) => taxCodeElement.taxCodeId === Number(taxCode)
+      );
+      //Obj impuesto
+      objImpuesto.push(taxRecord.objetoImpuesto);
+      /*    
+      4	Exempt	
+      2	Reduced
+      1	Standard	
+      3	Zero 
+      */
+      if (Number(taxRecord.taxRateType) !== 2) {
+        //Es traslado
+        trasExist = true;
+        const taxTrasDetails = {
+          isGroup: 0,
+          exempt: Number(taxRecord.taxRateType) === 4 ? true : false,
+          base: taxBasis,
+          impuesto: keepBefore(taxRecord.customCode, " -"),
+          tipoFactor: "Tasa",
+          tasaOcuota: taxRate,
+          importe: taxAmount,
+        };
+        taxItemDetails.push({
+          item: i,
+          taxTrasDetails,
+        });
+        //Summary
+        //Push summary
+        const exist = taxSummary.summaryTras.find(
+          (element) =>
+            element.impuesto === keepBefore(taxRecord.customCode, " -") &&
+            element.tasaOcuota === taxRate
+        );
+        if (!exist) {
+          taxSummary.summaryTras.push({
+            base: taxTrasDetails.base,
+            impuesto: taxTrasDetails.impuesto,
+            tipoFactor: taxTrasDetails.tipoFactor,
+            tasaOcuota: taxTrasDetails.tasaOcuota,
+            importe: taxTrasDetails.importe,
+          });
+        } else {
+          exist.importe = (
+            Number(exist.importe) + Number(taxTrasDetails.importe)
+          ).toFixed(2);
+          exist.base = (
+            Number(exist.base) + Number(taxTrasDetails.base)
+          ).toFixed(2);
+        }
+      } else {
+        //Es retención
+        retExist = true;
+        const taxRetDetails = {
+          isGroup: 0,
+          exempt: Number(taxRecord.taxRateType) === 4 ? true : false,
+          base: taxBasis,
+          impuesto: keepBefore(taxRecord.customCode, " -"),
+          tipoFactor: "Tasa",
+          tasaOcuota: taxRate,
+          importe: taxAmount,
+        };
+        taxItemDetails.push({
+          item: i,
+          taxRetDetails,
+        });
+        //Summary
+        //Push summary
+        const exist = taxSummary.summaryRet.find(
+          (element) =>
+            element.impuesto === keepBefore(taxRecord.customCode, " -") &&
+            element.tasaOcuota === taxRate
+        );
+        if (!exist) {
+          taxSummary.summaryRet.push({
+            base: taxRetDetails.base,
+            impuesto: taxRetDetails.impuesto,
+            tipoFactor: taxRetDetails.tipoFactor,
+            tasaOcuota: taxRetDetails.tasaOcuota,
+            importe: taxRetDetails.importe,
+          });
+        } else {
+          exist.importe = (
+            Number(exist.importe) + Number(taxRetDetails.importe)
+          ).toFixed(2);
+          exist.base = (
+            Number(exist.base) + Number(taxRetDetails.base)
+          ).toFixed(2);
+        }
+      }
+    }
+    const taxTotal = handleTaxTotal(taxSummary);
+
+    return {
+      ...(retExist && { retExist }),
+      ...(trasExist && { trasExist }),
+      taxItemDetails,
+      taxTotal,
+      taxSummary,
+      satUnitCodes,
+      ...((totalDiscount > 0 || globalDiscount) && {
+        discounts: {
+          totalDiscount,
+          discounts,
+        },
+      }),
+      objImpuesto,
+      newItemDescriptions,
+      newSubTotal,
+      quantityItems,
+    };
+  };
+  /* ------------------------------------------------------------------------------------- */
+
+  /* -------------------------------------LEGACY TAX-------------------------------------- */
+  const handleGlobalExempt = (newTaxSummary) => {
+    let globalExempt = false;
+    if (newTaxSummary.summaryTras.length === 1) {
+      if (!newTaxSummary.summaryTras[0].exempt) {
+        globalExempt = true;
+      }
+    } else {
+      for (let i = 0; i < newTaxSummary.summaryTras.length; i++) {
+        if (!newTaxSummary.summaryTras[i].exempt) {
+          globalExempt = true;
+          break;
+        }
+      }
+    }
+    return globalExempt;
+  };
+  const handleGlobalObjImpuesto = (objImpuesto) => {
+    let globalObjImpuesto = false;
+    if (objImpuesto.length === 1) {
+      if (objImpuesto[0] === "02 - Sí objeto de impuesto.") {
+        globalObjImpuesto = true;
+      }
+    } else {
+      for (let i = 0; i < objImpuesto.length; i++) {
+        if (objImpuesto[i] === "02 - Sí objeto de impuesto.") {
+          globalObjImpuesto = true;
+          break;
+        }
+      }
+    }
+    return globalObjImpuesto;
+  };
+  const handleCustomItem = (
+    newItems,
+    totalDiscount,
+    taxDataBase,
+    mapUnitsDataBase,
+    isPayment,
+    globalDiscount,
+    newSubTotal,
+    total
+  ) => {
+    let retExist = false;
+    let trasExist = false;
+    const newItemDescriptions = [];
+    const taxItemDetails = [];
+    const taxSummary = { summaryRet: [], summaryTras: [] };
+    const satUnitCodes = [];
+    const discounts = [];
+    const objImpuesto = [];
+    const quantityItems = [];
+    for (let i = 0; i < newItems.length; i++) {
+      const discount = newItems[i].discount;
+      const taxcodeId = newItems[i].taxcodeId;
+      const taxAmount = newItems[i].taxAmount;
+      const amount = newItems[i].amount;
+      const unit = newItems[i].unit;
+      const quantity = newItems[i].quantity;
+
+      //Units
+      const tempSatCode = mapUnitsDataBase.find(
+        (element) => element.netsuiteCode === unit
+      );
+      satUnitCodes.push(tempSatCode.satCode);
+      //Discounts
+      discounts.push({
+        item: i,
+        discount,
+      });
+      //Description
+      newItemDescriptions.push(handleDescCorrection(newItems[i].description));
+      //Quantity
+      quantityItems.push(quantity);
+      //Taxgroup or taxcode
+      let taxRecord = null;
+      try {
+        //Try to load taxcode
+        taxRecord = taxDataBase.taxCodeData.find(
+          (taxCodeElement) => taxCodeElement.taxCodeId === Number(taxcodeId)
+        );
+        if (taxRecord) {
+          //Objeto de impuesto
+          objImpuesto.push(taxRecord.objetoImpuesto);
+          let taxTrasDetails = null;
+          let taxRetDetails = null;
+          const { customCode: taxcode, rate, exempt } = taxRecord;
+          let newRate = Number(rate.replace("%", ""));
+          const rateRetTemp = newRate;
+          newRate = newRate < 0 ? newRate * -1 : newRate;
+          let newTaxAmount = taxAmount < 0 ? taxAmount * -1 : taxAmount;
+          if (rateRetTemp < 0) {
+            retExist = true;
+            //Es retención
+            taxRetDetails = {
+              isGroup: 0,
+              exempt,
+              base: globalDiscount
+                ? Number(
+                    (Number(newTaxAmount) / (Math.abs(newRate) / 100)).toFixed(
+                      2
+                    )
+                  )
+                : Number(amount),
+              impuesto: keepBefore(taxcode, " -"),
+              tipoFactor: "Tasa",
+              tasaOcuota: newRate,
+              importe: Number(Number(newTaxAmount).toFixed(2)),
+            };
+            //Push summary
+            const exist = taxSummary.summaryRet.find(
+              (element) =>
+                element.impuesto === taxRetDetails.impuesto &&
+                element.tasaOcuota === taxRetDetails.tasaOcuota
+            );
+            if (!exist) {
+              taxSummary.summaryRet.push({
+                base: taxRetDetails.base,
+                impuesto: taxRetDetails.impuesto,
+                tipoFactor: taxRetDetails.tipoFactor,
+                tasaOcuota: taxRetDetails.tasaOcuota,
+                importe: taxRetDetails.importe,
+              });
+            } else {
+              exist.importe = (
+                Number(exist.importe) + Number(taxRetDetails.importe)
+              ).toFixed(2);
+              exist.base = (
+                Number(exist.base) + Number(taxRetDetails.base)
+              ).toFixed(2);
+            }
+          } else {
+            trasExist = true;
+            //Es traslado
+            taxTrasDetails = {
+              isGroup: 0,
+              exempt,
+              base:
+                globalDiscount && !exempt
+                  ? Number(
+                      (
+                        Number(newTaxAmount) /
+                        (Math.abs(newRate) / 100)
+                      ).toFixed(2)
+                    )
+                  : Number(amount),
+              impuesto: keepBefore(taxcode, " -"),
+              tipoFactor: "Tasa",
+              tasaOcuota: newRate,
+              importe: Number(Number(newTaxAmount).toFixed(2)),
+            };
+            //Push summary
+            const exist = taxSummary.summaryTras.find(
+              (element) =>
+                element.impuesto === taxTrasDetails.impuesto &&
+                element.tasaOcuota === taxTrasDetails.tasaOcuota
+            );
+            if (!exist) {
+              taxSummary.summaryTras.push({
+                exempt: taxTrasDetails.exempt,
+                base: taxTrasDetails.base,
+                impuesto: taxTrasDetails.impuesto,
+                tipoFactor: taxTrasDetails.tipoFactor,
+                tasaOcuota: taxTrasDetails.tasaOcuota,
+                importe: taxTrasDetails.importe,
+                objImpuesto: taxRecord.objetoImpuesto,
+              });
+            } else {
+              exist.importe = (
+                Number(exist.importe) + Number(taxTrasDetails.importe)
+              ).toFixed(2);
+              exist.base = (
+                Number(exist.base) + Number(taxTrasDetails.base)
+              ).toFixed(2);
+            }
+          }
+          taxItemDetails.push({
+            item: i,
+            ...(taxRetDetails && { taxRetDetails }),
+            ...(taxTrasDetails && { taxTrasDetails }),
+          });
+        } else {
+          //Try to load taxgroup
+          taxRecord = taxDataBase.taxGroupData.find(
+            (taxCodeElement) => taxCodeElement.taxGroupId === Number(taxcodeId)
+          );
+          if (taxRecord) {
+            //Objeto de impuesto
+            objImpuesto.push(taxRecord.codes[0].objetoImpuesto);
+            const taxListDetails = handleTaxGroupDetails(
+              taxRecord,
+              amount,
+              taxAmount,
+              isPayment,
+              globalDiscount
+            );
+            if (taxListDetails.isGroup) {
+              let taxRetAuxTemp = null;
+              let taxTrasAuxTemp = null;
+              if (taxListDetails.taxesPerItem.taxRetDetails.length > 0) {
+                retExist = true;
+                taxRetAuxTemp = {
+                  isGroup: taxListDetails.isGroup,
+                  details: taxListDetails.taxesPerItem.taxRetDetails,
+                };
+                //Push summary
+                taxListDetails.taxesPerItem.taxRetDetails.forEach((tax) => {
+                  const exist = taxSummary.summaryRet.find(
+                    (element) =>
+                      element.impuesto === tax.impuesto &&
+                      element.tasaOcuota === tax.tasaOcuota
+                  );
+                  if (!exist) {
+                    taxSummary.summaryRet.push({
+                      base: Number(tax.base),
+                      impuesto: tax.impuesto,
+                      tipoFactor: tax.tipoFactor,
+                      tasaOcuota: tax.tasaOcuota,
+                      importe: Number(Number(tax.importe).toFixed(2)),
+                    });
+                  } else {
+                    exist.importe = (
+                      Number(exist.importe) + Number(tax.importe)
+                    ).toFixed(2);
+                    exist.base = (
+                      Number(exist.base) + Number(tax.base)
+                    ).toFixed(2);
+                  }
+                });
+              }
+              if (taxListDetails.taxesPerItem.taxTrasDetails.length > 0) {
+                trasExist = true;
+                taxTrasAuxTemp = {
+                  isGroup: taxListDetails.isGroup,
+                  details: taxListDetails.taxesPerItem.taxTrasDetails,
+                };
+                //Push summary
+                taxListDetails.taxesPerItem.taxTrasDetails.forEach((tax) => {
+                  const exist = taxSummary.summaryTras.find(
+                    (element) =>
+                      element.impuesto === tax.impuesto &&
+                      element.tasaOcuota === tax.tasaOcuota
+                  );
+                  if (!exist) {
+                    taxSummary.summaryTras.push({
+                      base: Number(tax.base),
+                      impuesto: tax.impuesto,
+                      tipoFactor: tax.tipoFactor,
+                      tasaOcuota: tax.tasaOcuota,
+                      importe: Number(Number(tax.importe).toFixed(2)),
+                      objImpuesto: taxRecord.codes,
+                    });
+                  } else {
+                    exist.importe = (
+                      Number(exist.importe) + Number(tax.importe)
+                    ).toFixed(2);
+                    exist.base = (
+                      Number(exist.base) + Number(tax.base)
+                    ).toFixed(2);
+                  }
+                });
+              }
+              taxItemDetails.push({
+                item: i,
+                ...(taxRetAuxTemp && { taxRetDetails: taxRetAuxTemp }),
+                ...(taxTrasAuxTemp && { taxTrasDetails: taxTrasAuxTemp }),
+              });
+            } else {
+              let taxRetAuxTemp = null;
+              let taxTrasAuxTemp = null;
+              if (taxListDetails.isRet) {
+                retExist = true;
+                taxRetAuxTemp = taxListDetails.taxesPerItem;
+                //Push summary
+                const exist = taxSummary.summaryRet.find(
+                  (element) =>
+                    element.impuesto === taxListDetails.taxesPerItem.impuesto &&
+                    element.tasaOcuota ===
+                      taxListDetails.taxesPerItem.tasaOcuota
+                );
+                if (!exist) {
+                  taxSummary.summaryRet.push({
+                    base: Number(taxListDetails.taxesPerItem.base),
+                    impuesto: taxListDetails.taxesPerItem.impuesto,
+                    tipoFactor: taxListDetails.taxesPerItem.tipoFactor,
+                    tasaOcuota: taxListDetails.taxesPerItem.tasaOcuota,
+                    importe: Number(
+                      Number(taxListDetails.taxesPerItem.importe).toFixed(2)
+                    ),
+                  });
+                } else {
+                  exist.importe = Number(
+                    (
+                      Number(exist.importe) +
+                      Number(taxListDetails.taxesPerItem.importe)
+                    ).toFixed(2)
+                  );
+                  exist.base = Number(
+                    (
+                      Number(exist.base) +
+                      Number(taxListDetails.taxesPerItem.base)
+                    ).toFixed(2)
+                  );
+                }
+              } else {
+                trasExist = true;
+                taxTrasAuxTemp = taxListDetails.taxesPerItem;
+                //Push summary
+                const exist = taxSummary.summaryTras.find(
+                  (element) =>
+                    element.impuesto === taxListDetails.taxesPerItem.impuesto &&
+                    element.tasaOcuota ===
+                      taxListDetails.taxesPerItem.tasaOcuota
+                );
+                if (!exist) {
+                  taxSummary.summaryTras.push({
+                    exempt: taxListDetails.taxesPerItem.exempt,
+                    base: Number(taxListDetails.taxesPerItem.base),
+                    impuesto: taxListDetails.taxesPerItem.impuesto,
+                    tipoFactor: taxListDetails.taxesPerItem.tipoFactor,
+                    tasaOcuota: taxListDetails.taxesPerItem.tasaOcuota,
+                    importe: Number(
+                      Number(taxListDetails.taxesPerItem.importe).toFixed(2)
+                    ),
+                    objImpuesto: taxRecord.codes,
+                  });
+                } else {
+                  exist.importe = Number(
+                    (
+                      Number(exist.importe) +
+                      Number(taxListDetails.taxesPerItem.importe)
+                    ).toFixed(2)
+                  );
+                  exist.base = Number(
+                    (
+                      Number(exist.base) +
+                      Number(taxListDetails.taxesPerItem.base)
+                    ).toFixed(2)
+                  );
+                }
+              }
+              taxItemDetails.push({
+                item: i,
+                ...(taxRetAuxTemp && { taxRetDetails: taxRetAuxTemp }),
+                ...(taxTrasAuxTemp && { taxTrasDetails: taxTrasAuxTemp }),
+              });
+            }
+          }
+        }
+      } catch (error) {
+        log.debug("ERROR EN CALCULO IMPUESTOS", error);
+      }
+    }
+    const taxTotal = handleTaxTotal(taxSummary);
+    const newTaxSummary = handleNewTaxSummary(taxSummary);
+    if (globalDiscount) {
+      handleGlobalDiscountCorrection(
+        newSubTotal,
+        totalDiscount,
+        taxTotal,
+        discounts,
+        total
+      );
+      totalDiscount = handleNewTotalDiscount(discounts);
+    }
+    const globalObjImpuesto = handleGlobalObjImpuesto(objImpuesto);
+    const showTotalIfTraslado = handleGlobalExempt(newTaxSummary);
+    return {
+      ...(retExist && { retExist }),
+      ...(trasExist && { trasExist }),
+      taxItemDetails,
+      taxTotal,
+      taxSummary: newTaxSummary,
+      satUnitCodes,
+      ...((totalDiscount > 0 || globalDiscount) && {
+        discounts: {
+          totalDiscount,
+          discounts,
+        },
+      }),
+      objImpuesto,
+      newItemDescriptions,
+      newSubTotal,
+      quantityItems,
+      globalObjImpuesto,
+      showTotalIfTraslado,
+    };
+  };
+  /* ------------------------------------------------------------------------------------- */
+
+  /* -----------------------------------getGlobalConfig----------------------------------- */
+  const handleAccess = (subsidiary, currentRole, globalConfig) => {
+    //Get credentials
+    if (globalConfig.exist) {
+      try {
+        const impRol = globalConfig.roles.split(",");
+        const implementedSubsidiary = globalConfig.subsidiaryId;
+        //Validating implementation
+        const isRole = impRol.find(
+          (element) => Number(element) === currentRole
+        );
+        if (subsidiary === implementedSubsidiary && isRole) {
+          return true;
+        } else {
+          return false;
+        }
+      } catch (error) {
+        log.debug("ERROR HANDLE ACCESS FUNCTION", error);
+        return false;
+      }
+    } else {
+      return false;
+    }
+  };
+  const handlePerms = (subsidiary, currentRole, recordType, esTraslado) => {
+    //==================================Credentials====================================//
+    let internalIdRegMaestro = null;
+    let subsidiaryId = null;
+    let permisosValidex = "";
+    let permisosPruebaValidex = "";
+    let prodMod = false;
+    let idGuardaDocumentosCarpeta = null;
+    let roles = null;
+    let emailAutomatico = false;
+    let suiteTax = false;
+    let errorInterDescription = "";
+    try {
+      const buscaGlobalConfig = search.create({
+        type: "customrecord_ent_entloc_config_registro",
+        filters: [["custrecord_ent_entloc_subsidiaria", "anyof", subsidiary]],
+        columns: [
+          "internalId",
+          "custrecord_ent_entloc_subsidiaria",
+          "custrecord_ent_entloc_usuario_validex",
+          "custrecord_ent_entloc_usuario_prue_valid",
+          "custrecord_ent_entloc_entorno_prod",
+          "custrecord_ent_entloc_carpeta_archivos",
+          "custrecord_ent_entloc_roles",
+          "custrecord_ent_entloc_roles_fv",
+          "custrecord_ent_entloc_roles_nc",
+          "custrecord_ent_entloc_roles_pc",
+          "custrecord_ent_entloc_roles_ft",
+          "custrecord_ent_entloc_envio_email_auto",
+          "custrecord_ent_entloc_suite_tax",
+        ],
+      });
+      buscaGlobalConfig.run().each((result) => {
+        internalIdRegMaestro = result.getValue({
+          name: "internalId",
+        });
+        subsidiaryId = result.getValue({
+          name: "custrecord_ent_entloc_subsidiaria",
+        });
+        permisosValidex = result.getValue({
+          name: "custrecord_ent_entloc_usuario_validex",
+        });
+        permisosPruebaValidex = result.getValue({
+          name: "custrecord_ent_entloc_usuario_prue_valid",
+        });
+        prodMod = result.getValue({
+          name: "custrecord_ent_entloc_entorno_prod",
+        });
+        idGuardaDocumentosCarpeta = result.getValue({
+          name: "custrecord_ent_entloc_carpeta_archivos",
+        });
+        emailAutomatico = result.getValue({
+          name: "custrecord_ent_entloc_envio_email_auto",
+        });
+        suiteTax = result.getValue({
+          name: "custrecord_ent_entloc_suite_tax",
+        });
+        switch (recordType) {
+          case "invoice":
+            roles = result.getValue({
+              name: "custrecord_ent_entloc_roles_fv",
+            });
+            break;
+          case "creditmemo":
+            roles = result.getValue({
+              name: "custrecord_ent_entloc_roles_nc",
+            });
+            break;
+          case "customerpayment":
+            roles = result.getValue({
+              name: "custrecord_ent_entloc_roles_pc",
+            });
+            break;
+          default:
+            if (esTraslado) {
+              roles = result.getValue({
+                name: "custrecord_ent_entloc_roles_ft",
+              });
+            }
+            break;
+        }
+        if (!roles) {
+          roles = result.getValue({
+            name: "custrecord_ent_entloc_roles",
+          });
+        }
+      });
+    } catch (error) {
+      errorInterDescription += "<br /> " + error;
+      log.debug("ERROR IN HANDLEPERMS FUNCTION", error);
+    }
+    if (!idGuardaDocumentosCarpeta && subsidiaryId) {
+      //==================================Buscando carpeta en gabinete==============================//
+      const parentFolder = handleFolderId("Entersol localización", -20);
+      const cfdiFolder = handleFolderId("CFDI", parentFolder);
+      idGuardaDocumentosCarpeta = cfdiFolder;
+      //Set global folder ID
+      record.submitFields({
+        type: "customrecord_ent_entloc_config_registro",
+        id: internalIdRegMaestro,
+        values: {
+          custrecord_ent_entloc_carpeta_archivos: idGuardaDocumentosCarpeta,
+        },
+      });
+    }
+    //Access flag
+    const access = handleAccess(subsidiary, currentRole, {
+      roles,
+      subsidiaryId,
+      ...(internalIdRegMaestro ? { exist: true } : { exist: false }),
+    });
+    return {
+      ...(internalIdRegMaestro ? { exist: true } : { exist: false }),
+      internalIdRegMaestro,
+      idGuardaDocumentosCarpeta,
+      permisosValidex,
+      subsidiaryId,
+      roles,
+      access,
+      prodMod,
+      emailAutomatico,
+      suiteTax,
+      permisosPruebaValidex,
+    };
+  };
+  /* MAIN */
+  const getGlobalConfig = (subsidiaryId, recordType, esTraslado) => {
+    //Info for access
+    const currentUser = runtime.getCurrentUser();
+    const currentRole = currentUser.role;
+    //Config record info
+    const globalConfig = handlePerms(
+      subsidiaryId,
+      currentRole,
+      recordType,
+      esTraslado
+    );
+    return globalConfig;
+  };
+  /* ------------------------------------------------------------------------------------- */
+
+  /* --------------------------------getExtraCustomData----------------------------------- */
+  /* INVOICE AND CREDIT MEMO FUNCTIONS */
+  const handleSplitDiscountItems = (currentRecord) => {
+    const fullItems = [];
+    const items = [];
+    const discounts = [];
+    let totalDiscount = 0;
+    let globalDiscount = false;
+    let newSubTotal = 0;
+    const totalItemLines = currentRecord.getLineCount({ sublistId: "item" });
+    const globalRate = currentRecord.getValue({
+      fieldId: "discountrate",
+    });
+    const subtotal = Number(
+      currentRecord.getValue({
+        fieldId: "subtotal",
+      })
+    );
+    const total = Number(
+      currentRecord.getValue({
+        fieldId: "total",
+      })
+    );
+    for (let i = 0; i < totalItemLines; i++) {
+      const itemType = currentRecord.getSublistValue({
+        sublistId: "item",
+        fieldId: "itemtype",
+        line: i,
+      });
+      const taxcodeId = currentRecord.getSublistValue({
+        sublistId: "item",
+        fieldId: "taxcode",
+        line: i,
+      });
+      const taxAmount = currentRecord.getSublistValue({
+        sublistId: "item",
+        fieldId: "tax1amt",
+        line: i,
+      });
+      const amount = currentRecord.getSublistValue({
+        sublistId: "item",
+        fieldId: "amount",
+        line: i,
+      });
+      const unit = currentRecord.getSublistValue({
+        sublistId: "item",
+        fieldId: "units",
+        line: i,
+      });
+      const desc = currentRecord.getSublistValue({
+        sublistId: "item",
+        fieldId: "description",
+        line: i,
+      });
+      const quantity = currentRecord.getSublistValue({
+        sublistId: "item",
+        fieldId: "quantity",
+        line: i,
+      });
+      if (itemType === "Discount") {
+        const discline = currentRecord.getSublistValue({
+          sublistId: "item",
+          fieldId: "discline",
+          line: i,
+        });
+        discounts.push({ line: discline, amount, taxAmount });
+      } else {
+        const line = currentRecord.getSublistValue({
+          sublistId: "item",
+          fieldId: "line",
+          line: i,
+        });
+        items.push({
+          line,
+          unit,
+          taxcodeId,
+          amount,
+          taxAmount,
+          desc,
+          quantity,
+        });
+      }
+    }
+    items.forEach((item) => {
+      const discountFound = discounts.find(
+        (element) => element.line === item.line
+      );
+      if (discountFound) {
+        const newAmount = (
+          Number(item.amount) + Number(discountFound.amount)
+        ).toFixed(2);
+        const newTaxAmount = (
+          Number(item.taxAmount) + Number(discountFound.taxAmount)
+        ).toFixed(2);
+        fullItems.push({
+          discount: Math.abs(Number(discountFound.amount)),
+          unit: item.unit,
+          taxcodeId: item.taxcodeId,
+          amount: newAmount,
+          taxAmount: newTaxAmount,
+          description: item.desc,
+          quantity: item.quantity,
+        });
+      } else {
+        fullItems.push({
+          unit: item.unit,
+          taxcodeId: item.taxcodeId,
+          amount: item.amount,
+          taxAmount: item.taxAmount,
+          description: item.desc,
+          quantity: item.quantity,
+        });
+      }
+    });
+    discounts.forEach((discount) => {
+      totalDiscount += Math.abs(Number(discount.amount));
+    });
+    newSubTotal = subtotal + totalDiscount;
+    if (globalRate) {
+      globalDiscount = true;
+      let globalDiscountTotal = 0;
+      fullItems.forEach((item) => {
+        const currentItemDiscount =
+          Number(item.amount) * (Math.abs(globalRate) / 100);
+        globalDiscountTotal += currentItemDiscount;
+        item.amount = Number(
+          (Number(item.amount) - currentItemDiscount).toFixed(2)
+        );
+        item.discount = Number(
+          (
+            Number(item.discount ? item.discount : 0) + currentItemDiscount
+          ).toFixed(2)
+        );
+        item.taxAmount = Number(
+          (
+            Number(item.taxAmount) -
+            Number(item.taxAmount) * (Math.abs(globalRate) / 100)
+          ).toFixed(2)
+        );
+      });
+      totalDiscount += globalDiscountTotal;
+    }
+    handleDiscountCorrection(fullItems, Number(totalDiscount.toFixed(2)));
+    return {
+      fullItems,
+      totalDiscount: Number(totalDiscount.toFixed(2)),
+      globalDiscount,
+      newSubTotal: Number(newSubTotal.toFixed(2)),
+      total,
+    };
+  };
+  const handleDataForFvNc = (
+    currentRecord,
+    taxDataBase,
+    mapUnitsDataBase,
+    isPayment,
+    suiteTax
+  ) => {
+    const {
+      fullItems: newItems,
+      totalDiscount,
+      globalDiscount,
+      newSubTotal,
+      total,
+    } = handleSplitDiscountItems(currentRecord);
+    if (suiteTax) {
+      return handleCustomItemSuiteTax(
+        newItems,
+        totalDiscount,
+        taxDataBase,
+        mapUnitsDataBase,
+        isPayment,
+        currentRecord,
+        globalDiscount,
+        newSubTotal,
+        total
+      );
+    } else {
+      return handleCustomItem(
+        newItems,
+        totalDiscount,
+        taxDataBase,
+        mapUnitsDataBase,
+        isPayment,
+        globalDiscount,
+        newSubTotal,
+        total
+      );
+    }
+  };
+  /* PAYMENT FUNCTIONS */
+  const handleSplitDiscountItemsForPayment = (currentRecord, factor) => {
+    const fullItems = [];
+    const items = [];
+    const discounts = [];
+    let totalDiscount = 0;
+    let globalDiscount = false;
+    let newSubTotal = 0;
+    const totalItemLines = currentRecord.getLineCount({ sublistId: "item" });
+    const tranid = currentRecord.getValue({
+      fieldId: "tranid",
+    });
+    const globalRate = currentRecord.getValue({
+      fieldId: "discountrate",
+    });
+    const subtotal = Number(
+      currentRecord.getValue({
+        fieldId: "subtotal",
+      })
+    );
+    const total = Number(
+      currentRecord.getValue({
+        fieldId: "total",
+      })
+    );
+    for (let i = 0; i < totalItemLines; i++) {
+      const desc = currentRecord.getSublistValue({
+        sublistId: "item",
+        fieldId: "description",
+        line: i,
+      });
+      const itemType = currentRecord.getSublistValue({
+        sublistId: "item",
+        fieldId: "itemtype",
+        line: i,
+      });
+      const taxcodeId = currentRecord.getSublistValue({
+        sublistId: "item",
+        fieldId: "taxcode",
+        line: i,
+      });
+      //Calc taxAmount
+      const taxAmount = currentRecord.getSublistValue({
+        sublistId: "item",
+        fieldId: "tax1amt",
+        line: i,
+      });
+      const calcTaxAmount = Number(
+        (Number(taxAmount) * (factor / 100)).toFixed(2)
+      );
+      //Calc amount
+      const amount = currentRecord.getSublistValue({
+        sublistId: "item",
+        fieldId: "amount",
+        line: i,
+      });
+      const calcAmount = Number((Number(amount) * (factor / 100)).toFixed(2));
+      const unit = currentRecord.getSublistValue({
+        sublistId: "item",
+        fieldId: "units",
+        line: i,
+      });
+      if (itemType === "Discount") {
+        const discline = currentRecord.getSublistValue({
+          sublistId: "item",
+          fieldId: "discline",
+          line: i,
+        });
+        discounts.push({
+          line: discline,
+          amount: calcAmount,
+          taxAmount: calcTaxAmount,
+        });
+      } else {
+        const line = currentRecord.getSublistValue({
+          sublistId: "item",
+          fieldId: "line",
+          line: i,
+        });
+        items.push({
+          line,
+          unit,
+          taxcodeId,
+          amount: calcAmount,
+          taxAmount: calcTaxAmount,
+          desc,
+        });
+      }
+    }
+    items.forEach((item) => {
+      const discountFound = discounts.find(
+        (element) => element.line === item.line
+      );
+      if (discountFound) {
+        const newAmount = (
+          Number(item.amount) + Number(discountFound.amount)
+        ).toFixed(2);
+        const newTaxAmount = (
+          Number(item.taxAmount) + Number(discountFound.taxAmount)
+        ).toFixed(2);
+        fullItems.push({
+          discount: Math.abs(Number(discountFound.amount)),
+          unit: item.unit,
+          taxcodeId: item.taxcodeId,
+          amount: newAmount,
+          taxAmount: newTaxAmount,
+          description: item.desc,
+        });
+      } else {
+        fullItems.push({
+          unit: item.unit,
+          taxcodeId: item.taxcodeId,
+          amount: item.amount,
+          taxAmount: item.taxAmount,
+          description: item.desc,
+        });
+      }
+    });
+    discounts.forEach((discount) => {
+      totalDiscount += Math.abs(Number(discount.amount));
+    });
+    newSubTotal = subtotal + totalDiscount;
+    if (globalRate) {
+      globalDiscount = true;
+      let globalDiscountTotal = 0;
+      fullItems.forEach((item) => {
+        const currentItemDiscount =
+          Number(item.amount) * (Math.abs(globalRate) / 100);
+        globalDiscountTotal += currentItemDiscount;
+        item.amount = Number(
+          (Number(item.amount) - currentItemDiscount).toFixed(2)
+        );
+        item.discount = Number(
+          (
+            Number(item.discount ? item.discount : 0) + currentItemDiscount
+          ).toFixed(2)
+        );
+        item.taxAmount = Number(
+          (
+            Number(item.taxAmount) -
+            Number(item.taxAmount) * (Math.abs(globalRate) / 100)
+          ).toFixed(2)
+        );
+      });
+      totalDiscount += globalDiscountTotal;
+    }
+    handleDiscountCorrection(fullItems, Number(totalDiscount.toFixed(2)));
+    return {
+      fullItems,
+      totalDiscount: Number(totalDiscount.toFixed(2)),
+      globalDiscount,
+      newSubTotal: Number(newSubTotal.toFixed(2)),
+      total,
+    };
+  };
+  const handleTaxesForPayment = (
+    invoiceRecord,
+    paymentAmount,
+    taxDataBase,
+    mapUnitsDataBase,
+    isPayment,
+    suiteTax
+  ) => {
+    const currentRecord = invoiceRecord;
+    const invoiceAmount = invoiceRecord.getValue({
+      fieldId: "total",
+    });
+    const porcentajePago =
+      (Number(paymentAmount) * 100) / Number(invoiceAmount);
+    //CALCULATE
+    const {
+      fullItems: newItems,
+      totalDiscount,
+      globalDiscount,
+      newSubTotal,
+      total,
+    } = handleSplitDiscountItemsForPayment(currentRecord, porcentajePago);
+    let itemFullSummary = null;
+    if (suiteTax) {
+      itemFullSummary = handleCustomItemSuiteTax(
+        newItems,
+        totalDiscount,
+        taxDataBase,
+        mapUnitsDataBase,
+        isPayment,
+        currentRecord,
+        false
+      );
+    } else {
+      itemFullSummary = handleCustomItem(
+        newItems,
+        totalDiscount,
+        taxDataBase,
+        mapUnitsDataBase,
+        isPayment,
+        globalDiscount,
+        newSubTotal,
+        total
+      );
+    }
+    return itemFullSummary;
+  };
+  const handleRelatedInvoiceObjImp = (
+    invoiceRelated,
+    taxDataBase,
+    suiteTax
+  ) => {
+    let invoiceObjImpuesto = false;
+    try {
+      const totalLines = invoiceRelated.getLineCount({
+        sublistId: suiteTax ? "taxdetails" : "item",
+      });
+      for (let i = 0; i < totalLines; i++) {
+        const taxCode = Number(
+          invoiceRelated.getSublistValue({
+            sublistId: suiteTax ? "taxdetails" : "item",
+            fieldId: "taxcode",
+            line: i,
+          })
+        );
+        let found = null;
+        if (!suiteTax) {
+          found = taxDataBase.taxGroupData.find(
+            (element) => element.taxGroupId === taxCode
+          );
+        }
+        if (found) {
+          found.codes.forEach((element) => {
+            if (element.objetoImpuesto === "02 - Sí objeto de impuesto.") {
+              invoiceObjImpuesto = true;
+            }
+          });
+        } else {
+          found = taxDataBase.taxCodeData.find(
+            (element) => element.taxCodeId === taxCode
+          );
+          if (found.objetoImpuesto === "02 - Sí objeto de impuesto.") {
+            invoiceObjImpuesto = true;
+          }
+        }
+        if (invoiceObjImpuesto) {
+          break;
+        }
+      }
+      return invoiceObjImpuesto;
+    } catch (error) {
+      log.debug("ERROR handleRelatedInvoiceObjImp", error);
+      return invoiceObjImpuesto;
+    }
+  };
+  const handleDataForPayment = (
+    currentRecord,
+    taxDataBase,
+    mapUnitsDataBase,
+    isPayment,
+    suiteTax
+  ) => {
+    let taxesForPayment = [];
+    let totalPaymentTaxesList = [];
+    let totalPaymentAmount = 0;
+    const totalApplyLines = currentRecord.getLineCount({ sublistId: "apply" });
+    const paymentId = currentRecord.id;
+    const paymentDate = currentRecord.getValue({
+      fieldId: "createddate",
+    });
+    const paymentForm = currentRecord.getText({
+      fieldId: "custbody_ent_entloc_forma_pago",
+    });
+    const currencyId = currentRecord.getValue({
+      fieldId: "custbody_ent_entloc_moneda_pago",
+    });
+    const currency = handleCurrencySymbol(currencyId);
+    const exchangeRate = currentRecord.getValue({
+      fieldId: "exchangerate",
+    });
+    const customExchangeRate = currentRecord.getValue({
+      fieldId: "custbody_ent_entloc_tipo_cambio_pago",
+    });
+    for (let i = 0; i < totalApplyLines; i++) {
+      const apply = currentRecord.getSublistValue({
+        sublistId: "apply",
+        fieldId: "apply",
+        line: i,
+      });
+      if (apply) {
+        const amount = currentRecord.getSublistValue({
+          sublistId: "apply",
+          fieldId: "amount",
+          line: i,
+        });
+        const total = currentRecord.getSublistValue({
+          sublistId: "apply",
+          fieldId: "total",
+          line: i,
+        });
+        const internalInvoiceId = currentRecord.getSublistValue({
+          sublistId: "apply",
+          fieldId: "internalid",
+          line: i,
+        });
+        const invoiceRelated = record.load({
+          type: "invoice",
+          id: internalInvoiceId,
+        });
+        const invoiceCurrencyId = invoiceRelated.getValue({
+          fieldId: "currency",
+        });
+        const invoiceCurrency = handleCurrencySymbol(invoiceCurrencyId);
+        const invoiceObjImpuesto = handleRelatedInvoiceObjImp(
+          invoiceRelated,
+          taxDataBase,
+          suiteTax
+        );
+        //Exchange rate
+        const globalExchangeRate = handleGlobalExchangeRate(
+          currency,
+          invoiceCurrency,
+          customExchangeRate
+        );
+        //Equivalencia
+        const docToEquivalence = handleDocToEquivalence(
+          currency,
+          invoiceCurrency,
+          exchangeRate,
+          customExchangeRate
+        );
+        //Taxes summary for payment
+        const resultTaxes = handleTaxesForPayment(
+          invoiceRelated,
+          amount,
+          taxDataBase,
+          mapUnitsDataBase,
+          isPayment,
+          suiteTax
+        );
+        totalPaymentTaxesList.push({
+          resultTaxes: resultTaxes.taxSummary,
+          globalExchangeRate,
+        });
+        totalPaymentAmount += Number(
+          (amount / Number(docToEquivalence)).toFixed(2)
+        );
+        taxesForPayment.push({
+          taxes: resultTaxes,
+          docToRel: handleDocRelData(
+            invoiceRelated,
+            paymentId,
+            amount,
+            docToEquivalence,
+            invoiceObjImpuesto
+          ),
+          paymentData: {
+            monto: Number((amount / Number(docToEquivalence)).toFixed(2)),
+            paymentDate,
+            paymentForm,
+            currency,
+            ...(currency === invoiceCurrency || currency === "MXN"
+              ? { exchangeRate: 1 }
+              : { exchangeRate: customExchangeRate }),
+          },
+        });
+      }
+    }
+    const recalcAmounts = handleRecalcAmountsForPayment(taxesForPayment);
+    const totalPaymentTaxes = handleTotalTaxesForPayment(totalPaymentTaxesList);
+    return {
+      taxesForPayment: recalcAmounts,
+      totalPaymentTaxes,
+      totalPaymentAmount: Number(
+        (totalPaymentAmount * customExchangeRate).toFixed(2)
+      ),
+    };
+  };
+  /* MAIN */
+  const getExtraCustomData = (
+    currentRecord,
+    currentSubsidiary,
+    longitudSerie,
+    longitudFolio,
+    prodMod,
+    suiteTax
+  ) => {
+    //Get taxGroup data
+    const taxDataBase = suiteTax
+      ? handleTaxGroupDataSuiteTax()
+      : handleTaxGroupData();
+    //Get mapUnit data
+    const mapUnitsDataBase = handleSatMappingUnits();
+    let total = currentRecord.getValue({
+      fieldId: "total",
+    });
+    let subtotal = currentRecord.getValue({
+      fieldId: "subtotal",
+    });
+    const tranid = currentRecord.getValue({
+      fieldId: "tranid",
+    });
+    const recordType = currentRecord.type;
+    //Monto en letra
+    const currency = currentRecord.getText({
+      fieldId: "currencysymbol",
+    });
+    const montoEnLetra = handleMontoEnLetra(total, currency);
+
+    let customItem = null;
+    let totalTaxesForPayment = null;
+    let totalPaymentAmount = 0;
+
+    //Custom transaction
+    const { serie, folio } = handleFolioSerie(
+      tranid,
+      longitudSerie,
+      longitudFolio
+    );
+    //Summary
+    total = Number(total).toFixed(2);
+    subtotal = Number(subtotal).toFixed(2);
+    //Custom subsidiary
+    const subsidiaryAddress = handleSubsidiaryAddressFields(currentSubsidiary);
+    //Custom item
+    if (recordType === "customerpayment") {
+      const dataForPayment = handleDataForPayment(
+        currentRecord,
+        taxDataBase,
+        mapUnitsDataBase,
+        true,
+        suiteTax
+      );
+      customItem = dataForPayment.taxesForPayment;
+      totalTaxesForPayment = dataForPayment.totalPaymentTaxes;
+      totalPaymentAmount = dataForPayment.totalPaymentAmount;
+    } else {
+      customItem = handleDataForFvNc(
+        currentRecord,
+        taxDataBase,
+        mapUnitsDataBase,
+        false,
+        suiteTax
+      );
+    }
+    //Related CFDIS
+    const relatedCfdis = handleRelatedCfdis(currentRecord);
+    return {
+      customRecordData: {
+        serie,
+        folio,
+        ...(relatedCfdis && { relatedCfdis }),
+        montoEnLetra,
+        prodMod,
+      },
+      summary: {
+        total,
+        subtotal,
+      },
+      customSubsidiaryData: {
+        address: subsidiaryAddress,
+      },
+      customItem,
+      ...(recordType === "customerpayment" && {
+        totalTaxesForPayment,
+        totalPaymentAmount,
+      }),
+    };
+  };
+  /* ------------------------------------------------------------------------------------- */
   return {
     getGlobalConfig,
     getUserConfig,
     getUserConfigTras,
     getPdfRendered,
-    getExtraCustomData,
     getExtraCustomDataTraslado,
     getCertExtraData,
     getFolderId,
@@ -2958,5 +3169,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     getXmlCustomerTemplate,
     getPdfCustomerTemplate,
     getCustomerDataObj,
+    getExtraCustomData,
   };
 });

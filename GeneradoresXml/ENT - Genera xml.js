@@ -53,7 +53,6 @@ define([
       globalData,
       extraData,
     };
-    log.debug("CUSTOMDATA", customFullData);
     //Add custom data source
     renderXml.addCustomDataSource({
       format: render.DataSource.OBJECT,
@@ -112,7 +111,6 @@ define([
     }
     //Global config
     const globalConfig = funcionesLoc.getGlobalConfig(subsidiaryId, recordType);
-    log.debug("GLOBALCONFIG", globalConfig);
     //User config
     const userConfig = funcionesLoc.getUserConfig(
       globalConfig.internalIdRegMaestro,
