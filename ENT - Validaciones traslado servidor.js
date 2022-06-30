@@ -8,7 +8,7 @@ define(["N/record", "N/search"], (record, search) => {
     handler.getSatStateCode = (code) => {
       let stateRecordId = "";
       const customrecord_ent_cp_lista_estados_satSearchObj = search.create({
-        type: "customrecord_ent_cp_lista_estados_sat",
+        type: "customrecord_ent_entloc_estados_sat",
         filters: [["custrecord_ent_cp_cat_estados_nombre_cor", "is", code]],
         columns: ["internalid"],
       });

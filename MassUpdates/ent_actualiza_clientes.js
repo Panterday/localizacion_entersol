@@ -47,7 +47,7 @@ define(["N/record", "N/search"], (record, search) => {
   const handleUsoCfdiSearch = () => {
     const usoCfdiDataBase = [];
     const usoCfdiSearch = search.create({
-      type: "customrecordcustomlist_ent_entloc_uso_cf",
+      type: "customrecord_ent_entloc_uso_cfdi",
       filters: [],
       columns: [
         "internalid",
@@ -125,6 +125,7 @@ define(["N/record", "N/search"], (record, search) => {
     return formaPagoDataBase;
   };
   const each = (params) => {
+    log.debug("EXECUTING MASS UPDATE", "EXECUTING MASS UPDATE");
     const customerRecord = record.load({
       type: params.type,
       id: params.id,

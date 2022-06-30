@@ -13,12 +13,20 @@ define(["N/render", "N/record", "funcionesLoc"], (
     subsidiaryRecord,
     customerRecord,
     userConfig,
-    customPdfCustomerTemplate
+    customPdfCustomerTemplate,
+    longitudSerie,
+    longitudFolio,
+    prodMod,
+    suiteTax
   ) => {
     try {
       const extraData = funcionesLoc.getExtraCustomData(
         currentRecord,
-        subsidiaryRecord
+        subsidiaryRecord,
+        longitudSerie,
+        longitudFolio,
+        prodMod,
+        suiteTax
       );
       const renderer = render.create();
       renderer.addRecord("record", currentRecord);
@@ -131,7 +139,11 @@ define(["N/render", "N/record", "funcionesLoc"], (
       subsidiaryRecord,
       customerRecord,
       userConfig,
-      customPdfCustomerTemplate
+      customPdfCustomerTemplate,
+      userConfig.longitudSerie,
+      userConfig.longitudFolio,
+      globalConfig.prodMod,
+      globalConfig.suiteTax
     );
     const errorCase = `
     <?xml version="1.0"?><!DOCTYPE pdf PUBLIC "-//big.faceless.org//report" "report-1.1.dtd">

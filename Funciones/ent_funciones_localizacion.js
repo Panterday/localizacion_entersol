@@ -1104,6 +1104,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     };
   };
   const handleTotalTaxesForPayment = (resultTaxes) => {
+    log.debug("RESULT TAXES", resultTaxes);
     let resultTrasTaxesList = [];
     let paymentTrasTaxesTotals = [];
     let resultRetTaxesList = [];
@@ -1111,6 +1112,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     resultTaxes.forEach((invoice) => {
       if (invoice.resultTaxes.summaryTras) {
         invoice.resultTaxes.summaryTras.forEach((trasTaxElement) => {
+          log.debug("TAXT TRAS ELÑEMENTO", trasTaxElement.exempt);
           resultTrasTaxesList.push({
             ...(trasTaxElement.exempt && { exempt: trasTaxElement.exempt }),
             base: (
@@ -1141,6 +1143,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         });
       }
     });
+    log.debug("RESUL TAX TRAS TAXE", resultTrasTaxesList);
     for (let i = 0; i < resultTrasTaxesList.length; i++) {
       if (paymentTrasTaxesTotals.length === 0) {
         paymentTrasTaxesTotals.push({
@@ -1148,6 +1151,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           impuesto: resultTrasTaxesList[i].impuesto,
           tasaOcuota: resultTrasTaxesList[i].tasaOcuota,
           importe: Number(resultTrasTaxesList[i].importe),
+          exempt: resultTrasTaxesList[i].exempt,
         });
       } else {
         const found = paymentTrasTaxesTotals.find(
@@ -1171,6 +1175,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
             impuesto: resultTrasTaxesList[i].impuesto,
             tasaOcuota: resultTrasTaxesList[i].tasaOcuota,
             importe: Number(resultTrasTaxesList[i].importe),
+            exempt: resultTrasTaxesList[i].exempt,
           });
         }
       }
@@ -1805,10 +1810,16 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       //Quantity
       quantityItems.push(quantity);
       //Discounts
-      discounts.push({
-        item: i,
-        discount,
-      });
+      if (discount) {
+        discounts.push({
+          item: i,
+          discount,
+        });
+      } else {
+        discounts.push({
+          item: i,
+        });
+      }
     }
     for (let i = 0; i < totalTaxDetailLines; i++) {
       const taxCode = currentRecord.getSublistValue({
@@ -1924,7 +1935,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       }
     }
     const taxTotal = handleTaxTotal(taxSummary);
-
+    const globalObjImpuesto = handleGlobalObjImpuesto(objImpuesto);
+    const showTotalIfTraslado = handleGlobalExempt(taxSummary);
+    log.debug("DISCOUNTS", discounts);
     return {
       ...(retExist && { retExist }),
       ...(trasExist && { trasExist }),
@@ -1942,6 +1955,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       newItemDescriptions,
       newSubTotal,
       quantityItems,
+      globalObjImpuesto,
+      showTotalIfTraslado,
     };
   };
   /* ------------------------------------------------------------------------------------- */
@@ -2005,7 +2020,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       const amount = newItems[i].amount;
       const unit = newItems[i].unit;
       const quantity = newItems[i].quantity;
-
       //Units
       const tempSatCode = mapUnitsDataBase.find(
         (element) => element.netsuiteCode === unit
@@ -3122,6 +3136,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       customItem = dataForPayment.taxesForPayment;
       totalTaxesForPayment = dataForPayment.totalPaymentTaxes;
       totalPaymentAmount = dataForPayment.totalPaymentAmount;
+      log.debug("CUSTOM ITEM PAYMENT", customItem);
+      log.debug("TOTAL TAXES PAYMENT", totalTaxesForPayment);
     } else {
       customItem = handleDataForFvNc(
         currentRecord,
@@ -3130,6 +3146,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         false,
         suiteTax
       );
+      log.debug("CUSTOM ITEM", customItem);
     }
     //Related CFDIS
     const relatedCfdis = handleRelatedCfdis(currentRecord);

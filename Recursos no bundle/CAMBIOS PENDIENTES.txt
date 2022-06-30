@@ -13,8 +13,9 @@ Resolver el tema de artículos de tipo kit (Es opcional, no se considera.)
 
 Agregar campo para definir una serie personalizada.
 
-CANTIDAD CON DECIMALES LISTA EN CUSTOM ITEM PASAR A CUSTOM ITEM SUITE TAX
-
 MONEDA DEL BANCO 
 
 NO TIPO DE CAMBIO CON MISMA MONEDA PAGE INIT
+
+SUITE TAX EL PRO
+Corregir impresión desde botón.

@@ -94,12 +94,12 @@
                 <cartaporte20:Ubicaciones>
                     <cartaporte20:Ubicacion 
                         TipoUbicacion="Origen" 
-                        RFCRemitenteDestinatario="${subsidiary.federalidnumber}" 
+                        RFCRemitenteDestinatario="BTT050511TK0" 
                         FechaHoraSalidaLlegada="${record.custbody_ent_entloc_fecha_hora_prog_sa?string.iso_nz}"
                     >
                         <cartaporte20:Domicilio 
-                            Estado="${record.custbody_ent_entloc_clave_estado_sat}" 
-                            CodigoPostal="${record.custbody_ent_entloc_cp_origen}"
+                            Estado="DIF" 
+                            CodigoPostal="03900"
                         />
                     </cartaporte20:Ubicacion>
                     <cartaporte20:Ubicacion 
@@ -120,16 +120,16 @@
                     NumTotalMercancias="${customItem.totalArticulos}"
                 >
                 <#list record.item as item>
-                        <cartaporte20:Mercancia 
-                            ${getAttrPair("BienesTransp", item.custcol_ent_entloc_sat_clv_pro_view?keep_before(" -"), item.custcol_ent_entloc_sat_clave_p_s_hidd?keep_before(" -"))}
-                            Descripcion="${item.description}" 
-                            Cantidad="${item.quantity}" 
-                            ClaveUnidad="${customItem.satUnitCodes[item?index]?keep_before(" -")}" 
-                            PesoEnKg="${item.custcol_ent_entloc_peso_en_kg}"
-                            ${getAttrMaterialPeligroso("MaterialPeligroso", item.custcol_ent_entloc_material_peligroso, item.custcol_ent_entloc_material_peligroso)}
-                            ${getAttrMaterialPeligroso("CveMaterialPeligroso", item.custcol_ent_entloc_material_peligroso, item.custcol_ent_entloc_clave_mat_peligros?keep_before(" -"))}
-                            ${getAttrMaterialPeligroso("Embalaje", item.custcol_ent_entloc_material_peligroso, item.custcol_ent_entloc_embalaje?keep_before(" -"))}
-                        />
+                    <cartaporte20:Mercancia 
+                        ${getAttrPair("BienesTransp", item.custcol_ent_entloc_sat_clv_pro_view?keep_before(" -"), item.custcol_ent_entloc_sat_clave_p_s_hidd?keep_before(" -"))}
+                        Descripcion="${item.description}" 
+                        Cantidad="${item.quantity}" 
+                        ClaveUnidad="${customItem.satUnitCodes[item?index]?keep_before(" -")}" 
+                        PesoEnKg="${item.custcol_ent_entloc_peso_en_kg}"
+                        ${getAttrMaterialPeligroso("MaterialPeligroso", item.custcol_ent_entloc_material_peligroso, item.custcol_ent_entloc_material_peligroso)}
+                        ${getAttrMaterialPeligroso("CveMaterialPeligroso", item.custcol_ent_entloc_material_peligroso, item.custcol_ent_entloc_clave_mat_peligros?keep_before(" -"))}
+                        ${getAttrMaterialPeligroso("Embalaje", item.custcol_ent_entloc_material_peligroso, item.custcol_ent_entloc_embalaje?keep_before(" -"))}
+                    />
                 </#list>
                 <cartaporte20:Autotransporte 
                     PermSCT="${record.custbody_ent_entloc_clave_perm_sct}" 
