@@ -110,7 +110,7 @@ define([
           recordType,
           globalConfig.access
         );
-        if (userConfig.aplica && !uuid) {
+        /* if (userConfig.aplica && !uuid) {
           if (userConfig.habilitaCertDosPasos) {
             if (xmlPrev && !estatusCert) {
               handleCertButton(recordId, recordType, form);
@@ -120,9 +120,9 @@ define([
           } else {
             handleCertButton(recordId, recordType, form);
           }
-        }
-        /* handleGenerationButton(recordType, recordId, form);
-        handleCertButton(recordId, recordType, form); */
+        } */
+        handleGenerationButton(recordType, recordId, form);
+        handleCertButton(recordId, recordType, form);
       } catch (error) {
         log.debug("MAIN BUTTON ERROR", error);
       }
