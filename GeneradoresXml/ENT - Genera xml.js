@@ -47,6 +47,7 @@ define([
       prodMod,
       suiteTax
     );
+    log.debug("EXTRA DATA", extraData);
     //Global custom data
     const globalData = customData.getDataForInvoice();
     const customFullData = {

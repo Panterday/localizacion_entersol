@@ -1,30 +1,165 @@
-<cfdi:Comprobante xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:pago20="http://www.sat.gob.mx/Pagos20" xmlns:cfdi="http://www.sat.gob.mx/cfd/4" Moneda="XXX" Total="0" xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd http://www.sat.gob.mx/Pagos20 http://www.sat.gob.mx/sitio_internet/cfd/Pagos/Pagos20.xsd" Exportacion="01" TipoDeComprobante="P" SubTotal="0" LugarExpedicion="29960" Fecha="2022-06-22T14:35:52" Folio="00038" Serie="PAG" Version="4.0">
-<cfdi:Emisor Rfc="IIA040805DZ4" Nombre="INDISTRIA ILUMINADORA DE ALMACENES" RegimenFiscal="601"/>
-<cfdi:Receptor Rfc="MOFY900516NL1" Nombre="YADIRA MAGALY MONTAÑEZ FELIX" DomicilioFiscalReceptor="91779" RegimenFiscalReceptor="612" UsoCFDI="CP01"/>
-<cfdi:Conceptos>
-<cfdi:Concepto ClaveProdServ="84111506" Cantidad="1" ClaveUnidad="ACT" Descripcion="Pago" ValorUnitario="0" Importe="0" ObjetoImp="01"/>
-</cfdi:Conceptos>
-<cfdi:Complemento>
-<pago20:Pagos Version="2.0">
-<pago20:Totales MontoTotalPagos="22637.52" TotalTrasladosBaseIVA16="20542.21" TotalTrasladosImpuestoIVA16="3286.75"/>
-<pago20:Pago FechaPago="2022-06-24T14:35:00" FormaDePagoP="01" MonedaP="MXN" Monto="22637.52" TipoCambioP="1">
-<pago20:DoctoRelacionado EquivalenciaDR="1" IdDocumento="95eacf08-d29b-48c3-88ea-247c0cf19852" ImpPagado="22637.52" ImpSaldoAnt="22637.52" ImpSaldoInsoluto="0" MonedaDR="MXN" NumParcialidad="1" ObjetoImpDR="02">
-<pago20:ImpuestosDR>
-<pago20:TrasladosDR>
-<pago20:TrasladoDR BaseDR="8317.8" ImporteDR="1330.85" ImpuestoDR="002" TasaOCuotaDR="0.160000" TipoFactorDR="Tasa"/>
-<pago20:TrasladoDR BaseDR="8349.9" ImporteDR="1335.98" ImpuestoDR="002" TasaOCuotaDR="0.160000" TipoFactorDR="Tasa"/>
-<pago20:TrasladoDR BaseDR="3554.6" ImporteDR="319.91" ImpuestoDR="003" TasaOCuotaDR="0.090000" TipoFactorDR="Tasa"/>
-<pago20:TrasladoDR BaseDR="3874.51" ImporteDR="619.92" ImpuestoDR="002" TasaOCuotaDR="0.160000" TipoFactorDR="Tasa"/>
-</pago20:TrasladosDR>
-</pago20:ImpuestosDR>
-</pago20:DoctoRelacionado>
-<pago20:ImpuestosP>
-<pago20:TrasladosP>
-<pago20:TrasladoP BaseP="20542.21" ImporteP="3286.75" ImpuestoP="002" TasaOCuotaP="0.160000" TipoFactorP="Tasa"/>
-<pago20:TrasladoP BaseP="3554.60" ImporteP="319.91" ImpuestoP="003" TasaOCuotaP="0.090000" TipoFactorP="Tasa"/>
-</pago20:TrasladosP>
-</pago20:ImpuestosP>
-</pago20:Pago>
-</pago20:Pagos>
-</cfdi:Complemento>
+<?xml version="1.0" encoding="utf-8"?>
+<!--Setting locale for MEXICO-->
+<#setting locale = "es_MX">
+<!--Certification date-->
+<#assign aDateTime = .now>
+<!--Zeros number-->
+<#assign zeros = "0.00">
+<#assign customItem = customData.extraData.customItem>
+<#assign totalTaxesForPayment = customData.extraData.totalTaxesForPayment>
+<#assign totalPaymentAmount = customData.extraData.totalPaymentAmount>
+<#assign customRecordData = customData.extraData.customRecordData>
+<#function getAttrPair attr value1 value2>
+   <#if value1?has_content>
+    <#assign result="${attr}=\"${value1}\"">
+    <#return result>
+  <#else>
+	<#assign result="${attr}=\"${value2}\"">
+    <#return result>
+  </#if>  
+</#function>
+<#function getAttrOne attr value1>
+   <#if value1?has_content>
+    <#assign result="${attr}=\"${value1}\"">
+    <#return result>
+  </#if>  
+</#function>
+<#function getNodePair node attr value>
+   <#if value?has_content>
+    <#assign result="<${node} ${attr}=\"${value}\" />">
+    <#return result>
+  </#if>  
+</#function>
+<#function getTrasTaxAttr>
+	<#assign taxesAttrList = "">
+	<#list totalTaxesForPayment.paymentTrasTaxesTotals as totalTax>
+		<#if totalTax.exempt?has_content>
+			<#if totalTax.exempt == "true">
+				<#assign taxesAttrList= taxesAttrList + " " + "TotalTrasladosBaseIVAExento=\"${totalTax.base}\"">
+			</#if>
+		<#elseif totalTax.impuesto == "002" && totalTax.tasaOcuota == "16">
+			<#assign baseRounded = totalTax.base?number?string["0.00"]>
+			<#assign amountRounded = totalTax.importe?number?string["0.00"]>
+			<#assign taxesAttrList= taxesAttrList + " " + "TotalTrasladosBaseIVA16=\"${baseRounded}\" TotalTrasladosImpuestoIVA16=\"${amountRounded}\"">
+		<#elseif totalTax.impuesto == "002" && totalTax.tasaOcuota == "8">
+			<#assign taxesAttrList= taxesAttrList + " " + "TotalTrasladosBaseIVA8=\"${totalTax.base}\" TotalTrasladosImpuestoIVA8=\"${totalTax.importe}\"">
+		<#elseif totalTax.impuesto == "002" && totalTax.tasaOcuota == "0">
+			<#assign taxesAttrList= taxesAttrList + " " + "TotalTrasladosBaseIVA0=\"${totalTax.base}\" TotalTrasladosImpuestoIVA0=\"${totalTax.importe}\"">
+		</#if>
+	</#list>
+	<#return taxesAttrList>
+</#function>
+<#function getRetTaxAttr>
+	<#assign taxesAttrList = "">
+	<#list totalTaxesForPayment.paymentRetTaxesTotals as totalTax>
+		<#if totalTax.impuesto == "002">
+			<#assign taxesAttrList= taxesAttrList + " " + "TotalRetencionesIVA=\"${totalTax.importe}\"">
+		<#elseif totalTax.impuesto == "001">
+			<#assign taxesAttrList= taxesAttrList + " " + "TotalRetencionesISR=\"${totalTax.importe}\"">
+		<#else>
+			<#assign taxesAttrList= taxesAttrList + " " + "TotalRetencionesIEPS=\"${totalTax.importe}\"">
+		</#if>
+	</#list>
+	<#return taxesAttrList>
+</#function>
+<!--Transform a string from $0,0.00 to 0.00-->
+<#function formatFromCurrency amount>
+	<#assign result = amount?keep_after("$")?replace(",", "")?number?string[zeros]>
+	<#return result>
+</#function>
+<#function formatFromString amount>
+	<#assign result = amount?number?string[zeros]>
+	<#return result>
+</#function>
+<#function formatRate amount>
+	<#assign result = ((amount?number)/100)?string["0.000000"]>
+	<#return result>
+</#function>
+<#function formatStringDate value>
+	<#assign stringDate = aDateTime?string.iso_nz>	
+	<#return value?date?iso_utc+"T"+stringDate?keep_after("T")?keep_before(".")>
+</#function>
+<#function formatDate value>
+	<#return value?string.iso_nz>
+</#function>
+<#assign cfdiDate = .now>
+<#if record.custbody_ent_entloc_nueva_fecha_cfdi4?has_content>
+	<#assign cfdiDate = formatDate(record.custbody_ent_entloc_nueva_fecha_cfdi4)>
+<#else>
+	<#assign cfdiDate = formatStringDate(record.trandate)>
+</#if>
+<#function getAttrObjImp value>
+	<#if value?has_content>
+		<#return "02">
+	<#else>
+		<#return "01">
+	</#if>
+</#function>
+<cfdi:Comprobante 
+    xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd http://www.sat.gob.mx/Pagos20 http://www.sat.gob.mx/sitio_internet/cfd/Pagos/Pagos20.xsd" 
+    xmlns:pago20="http://www.sat.gob.mx/Pagos20" 
+    xmlns:cfdi="http://www.sat.gob.mx/cfd/4" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    Version="4.0" 
+    Serie="${customRecordData.serie}" 
+	Folio="${customRecordData.folio}" 
+    Fecha="${cfdiDate}" 
+    SubTotal="0" 
+    Moneda="XXX" 
+    Total="0" 
+    TipoDeComprobante="P" 
+    Exportacion="01"
+    LugarExpedicion="${customData.extraData.customSubsidiaryData.address.zip}"
+>
+    <#if customRecordData.relatedCfdis?has_content>
+		<#list customRecordData.relatedCfdis as relatedCfdi>
+			<cfdi:CfdiRelacionados TipoRelacion="${relatedCfdi.tipoRelacion?keep_before(" -")}">
+				<#list relatedCfdi.transacciones as transaccion>
+					<cfdi:CfdiRelacionado UUID="${transaccion.uuid}"/>
+				</#list>
+			</cfdi:CfdiRelacionados>
+		</#list>
+	</#if>
+	<#if customRecordData.prodMod == "true">
+		<cfdi:Emisor 
+			Rfc="${subsidiary.federalidnumber}" 
+			Nombre="${subsidiary.custrecord_ent_entloc_razon_social}" 
+			RegimenFiscal="${subsidiary.custrecord_ent_entloc_regimen_fiscal?keep_before(" -")}"
+		/>
+	<#else>
+		<cfdi:Emisor 
+			Rfc="IIA040805DZ4" 
+			Nombre="INDISTRIA ILUMINADORA DE ALMACENES" 
+			RegimenFiscal="601"
+		/>
+	</#if>
+	<cfdi:Receptor 
+		Rfc="${customer.custentity_ent_entloc_rfc}" 
+		Nombre="${customer.custentity_ent_entloc_nombre_legal_sat}" 
+		DomicilioFiscalReceptor="${customer.billzip}" 
+		RegimenFiscalReceptor="${record.custbody_ent_entloc_reg_fis_receptor?keep_before(" -")}" 
+		UsoCFDI="CP01"
+	/> 
+	<cfdi:Conceptos>
+        <cfdi:Concepto ClaveProdServ="84111506" Cantidad="1" ClaveUnidad="ACT" Descripcion="Pago" ValorUnitario="0" Importe="0" ObjetoImp="01" />
+    </cfdi:Conceptos>
+	<cfdi:Complemento>
+		<pago20:Pagos Version="2.0">
+		<pago20:Totales MontoTotalPagos="858.2" TotalTrasladosBaseIVA16="739.80" TotalTrasladosImpuestoIVA16="118.20"/>
+		<pago20:Pago FechaPago="2022-07-07T13:33:00" FormaDePagoP="01" MonedaP="USD" Monto="42.91" TipoCambioP="20">
+		<pago20:DoctoRelacionado EquivalenciaDR="20" IdDocumento="c5530aa7-6bd7-4d14-9276-08114a17cf35" ImpPagado="858.17" ImpSaldoAnt="858.17" ImpSaldoInsoluto="0" MonedaDR="MXN" NumParcialidad="1" ObjetoImpDR="02">
+		<pago20:ImpuestosDR>
+		<pago20:TrasladosDR>
+		<pago20:TrasladoDR BaseDR="739.8" ImporteDR="118.37" ImpuestoDR="002" TasaOCuotaDR="0.160000" TipoFactorDR="Tasa"/>
+		</pago20:TrasladosDR>
+		</pago20:ImpuestosDR>
+		</pago20:DoctoRelacionado>
+		<pago20:ImpuestosP>
+		<pago20:TrasladosP>
+		<pago20:TrasladoP BaseP="36.99" ImporteP="5.91" ImpuestoP="002" TasaOCuotaP="0.160000" TipoFactorP="Tasa"/>
+		</pago20:TrasladosP>
+		</pago20:ImpuestosP>
+		</pago20:Pago>
+		</pago20:Pagos>
+	</cfdi:Complemento>
 </cfdi:Comprobante>

@@ -150,24 +150,24 @@
 				${getTrasTaxAttr()} 
 				${getRetTaxAttr()} 
 			/>
-			<#list customItem as item>
-				<pago20:Pago 
-					FechaPago="${record.createddate?string.iso_nz?keep_before(".")}" 
-					FormaDePagoP="${item.paymentData.paymentForm?keep_before(" -")}" 
-					MonedaP="${item.paymentData.currency}" 
-					Monto="${item.paymentData.monto}" 
-					TipoCambioP="${item.paymentData.exchangeRate}"
-					${getAttrOne("NumOperacion", record.custbody_ent_entloc_num_operacion)}
-					${getAttrOne("RfcEmisorCtaOrd", record.custbody_ent_entloc_rfc_cuenta_ord)}
-					${getAttrOne("NomBancoOrdExt", record.custbody_ent_entloc_nombanco_ord_ext)}
-					${getAttrOne("CtaOrdenante", record.custbody_ent_entloc_cuenta_ordenanante)}
-					${getAttrOne("RfcEmisorCtaBen", record.custbody_ent_entloc_rfc_emisor_cta_ben)}
-					${getAttrOne("CtaBeneficiario", record.custbody_ent_entloc_cuenta_ben)}
-					${getAttrOne("TipoCadPago", record.custbody_ent_entloc_tipo_cad_pago)}
-					${getAttrOne("CertPago", record.custbody_ent_entloc_cert_pago)}
-					${getAttrOne("CadPago", record.custbody_ent_entloc_cadena_pago)}
-					${getAttrOne("SelloPago", record.custbody_ent_entloc_sello_pago)}
-				> 	
+			<pago20:Pago 
+				FechaPago="${record.createddate?string.iso_nz?keep_before(".")}" 
+				FormaDePagoP="${customData.extraData.paymentGlobalData.paymentForm?keep_before(" -")}" 
+				MonedaP="${customData.extraData.paymentGlobalData.currency}" 
+				Monto="${customData.extraData.paymentGlobalData.monto}" 
+				TipoCambioP="${customData.extraData.paymentGlobalData.exchangeRate}"
+				${getAttrOne("NumOperacion", record.custbody_ent_entloc_num_operacion)}
+				${getAttrOne("RfcEmisorCtaOrd", record.custbody_ent_entloc_rfc_cuenta_ord)}
+				${getAttrOne("NomBancoOrdExt", record.custbody_ent_entloc_nombanco_ord_ext)}
+				${getAttrOne("CtaOrdenante", record.custbody_ent_entloc_cuenta_ordenanante)}
+				${getAttrOne("RfcEmisorCtaBen", record.custbody_ent_entloc_rfc_emisor_cta_ben)}
+				${getAttrOne("CtaBeneficiario", record.custbody_ent_entloc_cuenta_ben)}
+				${getAttrOne("TipoCadPago", record.custbody_ent_entloc_tipo_cad_pago)}
+				${getAttrOne("CertPago", record.custbody_ent_entloc_cert_pago)}
+				${getAttrOne("CadPago", record.custbody_ent_entloc_cadena_pago)}
+				${getAttrOne("SelloPago", record.custbody_ent_entloc_sello_pago)}
+			> 	
+				<#list customItem as item>
 					<pago20:DoctoRelacionado 
 						EquivalenciaDR="${item.docToRel.docToEquivalence}" 
 						IdDocumento="${item.docToRel.invoiceUuid}" 
@@ -213,30 +213,86 @@
 							</pago20:ImpuestosDR>
 						</#if>
 					</pago20:DoctoRelacionado>
-					<#if item.taxes.globalObjImpuesto == "true">
-						<pago20:ImpuestosP>
-							<#if item.taxes.retExist?has_content>
-								<pago20:RetencionesP>
-									<#list item.taxes.taxSummary.summaryRet as summaryElement>
-										<pago20:RetencionP ImporteP="${summaryElement.importe}" ImpuestoP="${summaryElement.impuesto}"/>
-									</#list>
-								</pago20:RetencionesP>
+				</#list>
+                <#if customData.extraData.totalTaxesForPayment.paymentRetTaxesTotalsForSummary?has_content || customData.extraData.totalTaxesForPayment.paymentTrasTaxesTotalsForSummary?has_content>
+                    <pago20:ImpuestosP>
+                        <#if customData.extraData.totalTaxesForPayment.paymentRetTaxesTotalsForSummary?has_content>
+                            <pago20:RetencionesP>
+                                <#list customData.extraData.totalTaxesForPayment.paymentRetTaxesTotalsForSummary as summaryElement>
+                                    <pago20:RetencionP ImporteP="${summaryElement.importe}" ImpuestoP="${summaryElement.impuesto}"/>
+                                </#list>
+                            </pago20:RetencionesP>
+                        </#if>
+                        <#if customData.extraData.totalTaxesForPayment.paymentTrasTaxesTotalsForSummary?has_content>
+                            <pago20:TrasladosP>
+                                <#list customData.extraData.totalTaxesForPayment.paymentTrasTaxesTotalsForSummary as summaryElement>
+                                    <#if summaryElement.exempt?has_content>
+                                        <pago20:TrasladoP BaseP="${summaryElement.base}" ImpuestoP="${summaryElement.impuesto}" TipoFactorP="Exento"/>
+                                    <#else>
+                                        <pago20:TrasladoP BaseP="${summaryElement.base}" ImporteP="${summaryElement.importe}" ImpuestoP="${summaryElement.impuesto}" TasaOCuotaP="${formatRate(summaryElement.tasaOcuota)}" TipoFactorP="Tasa"/>
+                                    </#if>
+                                </#list>
+                            </pago20:TrasladosP>
+                        </#if>
+                    </pago20:ImpuestosP>
+                </#if>
+			</pago20:Pago>
+			<#if record.custbody_ent_entloc_fraje_habilitar_fa == true>
+				<pago20:Pago 
+					FechaPago="${record.createddate?string.iso_nz?keep_before(".")}" 
+					FormaDePagoP="17" 
+					MonedaP="${customData.extraData.paymentGlobalData.currency}" 
+					TipoCambioP="${customData.extraData.paymentGlobalData.exchangeRate}"
+				>
+					<#list customData.extraData.factoraje.customItemFactoraje as item>
+						<pago20:DoctoRelacionado 
+							EquivalenciaDR="${item.docToRel.docToEquivalence}" 
+							IdDocumento="${item.docToRel.invoiceUuid}" 
+							ImpPagado="${item.docToRel.importePagado}" 
+							ImpSaldoAnt="${item.docToRel.importePagado}" 
+							ImpSaldoInsoluto="0" 
+							MonedaDR="${item.docToRel.invoiceCurrency}" 
+							NumParcialidad="2" 
+							ObjetoImpDR="${getAttrObjImp(item.docToRel.invoiceObjImpuesto)}"
+						>
+							<#if item.taxes.globalObjImpuesto == "true">
+								<pago20:ImpuestosDR>
+									<#if item.taxes.retExist?has_content>
+										<pago20:RetencionesDR>
+											<#list item.taxes.taxItemDetails as taxItem>
+												<#if taxItem.taxRetDetails.isGroup?number == 0>
+													<pago20:RetencionDR BaseDR="${taxItem.taxRetDetails.base}" ImporteDR="${taxItem.taxRetDetails.importe}" ImpuestoDR="${taxItem.taxRetDetails.impuesto}" TasaOCuotaDR="${formatRate(taxItem.taxRetDetails.tasaOcuota)}" TipoFactorDR="${taxItem.taxRetDetails.tipoFactor}"/>
+												<#else>
+													<#list taxItem.taxRetDetails.details as taxPerItem>
+														<pago20:RetencionDR BaseDR="${taxPerItem.base}" ImporteDR="${taxPerItem.importe}" ImpuestoDR="${taxPerItem.impuesto}" TasaOCuotaDR="${formatRate(taxPerItem.tasaOcuota)}" TipoFactorDR="${taxPerItem.tipoFactor}"/>
+													</#list>
+												</#if>
+											</#list>
+										</pago20:RetencionesDR>
+									</#if>
+									<#if item.taxes.trasExist?has_content>
+										<pago20:TrasladosDR>
+											<#list item.taxes.taxItemDetails as taxItem>
+												<#if taxItem.taxTrasDetails.isGroup?number == 0>
+													<#if taxItem.taxTrasDetails.exempt == "true">
+														<pago20:TrasladoDR BaseDR="${taxItem.taxTrasDetails.base}" ImpuestoDR="${taxItem.taxTrasDetails.impuesto}" TipoFactorDR="Exento"/>
+													<#else>
+														<pago20:TrasladoDR BaseDR="${taxItem.taxTrasDetails.base}" ImporteDR="${taxItem.taxTrasDetails.importe}" ImpuestoDR="${taxItem.taxTrasDetails.impuesto}" TasaOCuotaDR="${formatRate(taxItem.taxTrasDetails.tasaOcuota)}" TipoFactorDR="${taxItem.taxTrasDetails.tipoFactor}"/>
+													</#if>
+												<#else>
+													<#list taxItem.taxTrasDetails.details as taxPerItem>
+														<pago20:TrasladoDR BaseDR="${taxPerItem.base}" ImporteDR="${taxPerItem.importe}" ImpuestoDR="${taxPerItem.impuesto}" TasaOCuotaDR="${formatRate(taxPerItem.tasaOcuota)}" TipoFactorDR="${taxPerItem.tipoFactor}"/>
+													</#list>
+												</#if>
+											</#list>
+										</pago20:TrasladosDR>
+									</#if>
+								</pago20:ImpuestosDR>
 							</#if>
-							<#if item.taxes.trasExist?has_content>
-								<pago20:TrasladosP>
-									<#list item.taxes.taxSummary.summaryTras as summaryElement>
-										<#if summaryElement.exempt?has_content>
-											<pago20:TrasladoP BaseP="${summaryElement.base}" ImpuestoP="${summaryElement.impuesto}" TipoFactorP="Exento"/>
-										<#else>
-											<pago20:TrasladoP BaseP="${summaryElement.base}" ImporteP="${summaryElement.importe}" ImpuestoP="${summaryElement.impuesto}" TasaOCuotaP="${formatRate(summaryElement.tasaOcuota)}" TipoFactorP="${summaryElement.tipoFactor}"/>
-										</#if>
-									</#list>
-								</pago20:TrasladosP>
-							</#if>
-						</pago20:ImpuestosP>
-					</#if>
+						</pago20:DoctoRelacionado>
+					</#list>
 				</pago20:Pago>
-			</#list>
+			</#if>
 		</pago20:Pagos>
 	</cfdi:Complemento>
 </cfdi:Comprobante>

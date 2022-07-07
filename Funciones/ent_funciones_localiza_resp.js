@@ -1148,18 +1148,15 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     };
   };
   const handleTotalTaxesForPayment = (resultTaxes) => {
-    log.debug("RESULT TAXES FOR PROCESSING CONVER", resultTaxes);
+    log.debug("RESULT TAXES", resultTaxes);
     let resultTrasTaxesList = [];
-    let resultTrasTaxesListForSummary = [];
     let paymentTrasTaxesTotals = [];
-    let paymentTrasTaxesTotalsForSummary = [];
     let resultRetTaxesList = [];
-    let resultRetTaxesListForSummary = [];
     let paymentRetTaxesTotals = [];
-    let paymentRetTaxesTotalsForSummary = [];
     resultTaxes.forEach((invoice) => {
       if (invoice.resultTaxes.summaryTras) {
         invoice.resultTaxes.summaryTras.forEach((trasTaxElement) => {
+          log.debug("TAXT TRAS ELÑEMENTO", trasTaxElement.exempt);
           resultTrasTaxesList.push({
             ...(trasTaxElement.exempt && { exempt: trasTaxElement.exempt }),
             base: (
@@ -1171,14 +1168,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
             importe: (
               Number(trasTaxElement.importe) * invoice.globalExchangeRate
             ).toFixed(2),
-          });
-          resultTrasTaxesListForSummary.push({
-            ...(trasTaxElement.exempt && { exempt: trasTaxElement.exempt }),
-            base: Number(trasTaxElement.base).toFixed(2),
-            impuesto: trasTaxElement.impuesto,
-            tipoFactor: trasTaxElement.tipoFactor,
-            tasaOcuota: trasTaxElement.tasaOcuota,
-            importe: Number(trasTaxElement.importe).toFixed(2),
           });
         });
       }
@@ -1195,17 +1184,10 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
               Number(retTaxElement.importe) * invoice.globalExchangeRate
             ).toFixed(2),
           });
-          resultRetTaxesListForSummary.push({
-            base: Number(retTaxElement.base).toFixed(2),
-            impuesto: retTaxElement.impuesto,
-            tipoFactor: retTaxElement.tipoFactor,
-            tasaOcuota: retTaxElement.tasaOcuota,
-            importe: Number(retTaxElement.importe).toFixed(2),
-          });
         });
       }
     });
-    log.debug("SUMMARY TEMP", resultTrasTaxesListForSummary);
+    log.debug("RESUL TAX TRAS TAXE", resultTrasTaxesList);
     for (let i = 0; i < resultTrasTaxesList.length; i++) {
       if (paymentTrasTaxesTotals.length === 0) {
         paymentTrasTaxesTotals.push({
@@ -1242,43 +1224,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         }
       }
     }
-    for (let i = 0; i < resultTrasTaxesListForSummary.length; i++) {
-      if (paymentTrasTaxesTotalsForSummary.length === 0) {
-        paymentTrasTaxesTotalsForSummary.push({
-          base: Number(resultTrasTaxesListForSummary[i].base),
-          impuesto: resultTrasTaxesListForSummary[i].impuesto,
-          tasaOcuota: resultTrasTaxesListForSummary[i].tasaOcuota,
-          importe: Number(resultTrasTaxesListForSummary[i].importe),
-          exempt: resultTrasTaxesListForSummary[i].exempt,
-        });
-      } else {
-        const found = paymentTrasTaxesTotalsForSummary.find(
-          (e) =>
-            e.impuesto === resultTrasTaxesListForSummary[i].impuesto &&
-            e.tasaOcuota === resultTrasTaxesListForSummary[i].tasaOcuota
-        );
-        if (found) {
-          const tempImporte =
-            Number(found.importe) +
-            Number(resultTrasTaxesListForSummary[i].importe);
-          const tempBase =
-            Number(found.base) + Number(resultTrasTaxesListForSummary[i].base);
-          found.importe = Number(tempImporte.toFixed(2));
-          found.base = Number(tempBase.toFixed(2));
-        } else {
-          paymentTrasTaxesTotalsForSummary.push({
-            ...(resultTrasTaxesListForSummary[i].exempt && {
-              exempt: resultTrasTaxesListForSummary[i].exempt,
-            }),
-            base: Number(resultTrasTaxesListForSummary[i].base),
-            impuesto: resultTrasTaxesListForSummary[i].impuesto,
-            tasaOcuota: resultTrasTaxesListForSummary[i].tasaOcuota,
-            importe: Number(resultTrasTaxesListForSummary[i].importe),
-            exempt: resultTrasTaxesListForSummary[i].exempt,
-          });
-        }
-      }
-    }
     for (let i = 0; i < resultRetTaxesList.length; i++) {
       if (paymentRetTaxesTotals.length === 0) {
         paymentRetTaxesTotals.push({
@@ -1310,48 +1255,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         }
       }
     }
-    for (let i = 0; i < resultRetTaxesListForSummary.length; i++) {
-      if (paymentRetTaxesTotals.length === 0) {
-        paymentRetTaxesTotalsForSummary.push({
-          base: Number(resultRetTaxesListForSummary[i].base),
-          impuesto: resultRetTaxesListForSummary[i].impuesto,
-          tasaOcuota: resultRetTaxesListForSummary[i].tasaOcuota,
-          importe: Number(resultRetTaxesListForSummary[i].importe),
-        });
-      } else {
-        const found = paymentRetTaxesTotalsForSummary.find(
-          (e) =>
-            e.impuesto === resultRetTaxesListForSummary[i].impuesto &&
-            e.tasaOcuota === resultRetTaxesListForSummary[i].tasaOcuota
-        );
-        if (found) {
-          const tempImporte =
-            Number(found.importe) +
-            Number(resultRetTaxesListForSummary[i].importe);
-          const tempBase =
-            Number(found.base) + Number(resultRetTaxesListForSummary[i].base);
-          found.importe = Number(tempImporte.toFixed(2));
-          found.base = Number(tempBase.toFixed(2));
-        } else {
-          paymentRetTaxesTotalsForSummary.push({
-            base: Number(resultRetTaxesListForSummary[i].base),
-            impuesto: resultRetTaxesListForSummary[i].impuesto,
-            tasaOcuota: resultRetTaxesListForSummary[i].tasaOcuota,
-            importe: Number(resultRetTaxesListForSummary[i].importe),
-          });
-        }
-      }
-    }
-    log.debug(
-      "PAYMENTTRASTAXESTOTALSSUMMARY",
-      paymentTrasTaxesTotalsForSummary
-    );
-    log.debug("PAYMENT TRAS TAXE FOR ATRR", paymentTrasTaxesTotals);
     return {
       paymentTrasTaxesTotals,
-      paymentTrasTaxesTotalsForSummary,
       paymentRetTaxesTotals,
-      paymentRetTaxesTotalsForSummary,
     };
   };
   const handleCurrencySymbol = (currencyId) => {
@@ -1421,8 +1327,10 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           const currentAmount =
             Number(summaryElement.importe) /
             Number(item.docToRel.docToEquivalence);
-          summaryElement.base = Number(currentBase.toFixed(2));
-          summaryElement.importe = Number(currentAmount.toFixed(2));
+          const convertedBase = handleConvertedDecimals(currentBase, 2);
+          const convertedAmount = handleConvertedDecimals(currentAmount, 2);
+          summaryElement.base = convertedBase;
+          summaryElement.importe = convertedAmount;
         });
       }
       if (item.taxes.retExist) {
@@ -1434,10 +1342,10 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           const currentAmount =
             Number(summaryElement.importe) /
             Number(item.docToRel.docToEquivalence);
-          /* const convertedBase = handleConvertedDecimals(currentBase, 2);
-          const convertedAmount = handleConvertedDecimals(currentAmount, 2); */
-          summaryElement.base = Number(currentBase.toFixed(2));
-          summaryElement.importe = Number(currentAmount.toFixed(2));
+          const convertedBase = handleConvertedDecimals(currentBase, 2);
+          const convertedAmount = handleConvertedDecimals(currentAmount, 2);
+          summaryElement.base = convertedBase;
+          summaryElement.importe = convertedAmount;
         });
       }
     });
@@ -1983,11 +1891,11 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       //Obj impuesto
       objImpuesto.push(taxRecord.objetoImpuesto);
       /*    
-      4	Exempt	
-      2	Reduced
-      1	Standard	
-      3	Zero 
-      */
+        4	Exempt	
+        2	Reduced
+        1	Standard	
+        3	Zero 
+        */
       if (Number(taxRecord.taxRateType) !== 2) {
         //Es traslado
         trasExist = true;
@@ -2071,6 +1979,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     const taxTotal = handleTaxTotal(taxSummary);
     const globalObjImpuesto = handleGlobalObjImpuesto(objImpuesto);
     const showTotalIfTraslado = handleGlobalExempt(taxSummary);
+    log.debug("DISCOUNTS", discounts);
     return {
       ...(retExist && { retExist }),
       ...(trasExist && { trasExist }),
@@ -2134,6 +2043,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     newSubTotal,
     total
   ) => {
+    log.debug("newItems", newItems);
     let retExist = false;
     let trasExist = false;
     const newItemDescriptions = [];
@@ -3194,16 +3104,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     const habilitarFactoraje = currentRecord.getValue({
       fieldId: "custbody_ent_entloc_fraje_habilitar_fa",
     });
-    const paymentAmountTotal = currentRecord.getValue({
-      fieldId: "payment",
-    });
-    //Equivalencia
-    const docToEquivalence = handleDocToEquivalence(
-      currency,
-      invoiceCurrencySymbol,
-      exchangeRate,
-      customExchangeRate
-    );
     //Obtener datos de factura de compra si se requiere factoraje
     if (habilitarFactoraje) {
       const vendorBillId = currentRecord.getValue({
@@ -3222,7 +3122,16 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         customExchangeRate,
         paymentId
       );
+      log.debug("Factoraje OBJ", factorajeObj);
     }
+    const paymentGlobalData = {
+      paymentDate,
+      paymentForm,
+      currency,
+      ...(currency === invoiceCurrencySymbol || currency === "MXN"
+        ? { exchangeRate: 1 }
+        : { exchangeRate: customExchangeRate }),
+    };
     for (let i = 0; i < totalApplyLines; i++) {
       const apply = currentRecord.getSublistValue({
         sublistId: "apply",
@@ -3264,6 +3173,14 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           invoiceCurrency,
           customExchangeRate
         );
+        //Equivalencia
+        const docToEquivalence = handleDocToEquivalence(
+          currency,
+          invoiceCurrency,
+          exchangeRate,
+          customExchangeRate
+        );
+        log.debug("DOC TO EQ", docToEquivalence);
         //Taxes summary for payment
         const resultTaxes = handleTaxesForPayment(
           invoiceRelated,
@@ -3292,20 +3209,10 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         });
       }
     }
-    const paymentGlobalData = {
-      monto: Number((paymentAmountTotal / Number(docToEquivalence)).toFixed(2)),
-      paymentDate,
-      paymentForm,
-      currency,
-      ...(currency === invoiceCurrencySymbol || currency === "MXN"
-        ? { exchangeRate: 1 }
-        : { exchangeRate: customExchangeRate }),
-    };
-    log.debug("TAXES FOR PAYMENT FIRST", taxesForPayment);
     const recalcAmounts = handleRecalcAmountsForPayment(taxesForPayment);
-    log.debug("TOTAL TAXES SUMMARY", totalPaymentTaxesList);
     const totalPaymentTaxes = handleTotalTaxesForPayment(totalPaymentTaxesList);
-    log.debug("TAXES SUMMARY AFTER CALC", totalPaymentTaxes);
+    log.debug("TOTAL PAYMENT AMOUNT", totalPaymentAmount);
+    log.debug("CUSTOM EXCHANGE RATE", customExchangeRate);
     return {
       paymentGlobalData,
       taxesForPayment: recalcAmounts,
@@ -3377,6 +3284,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       totalPaymentAmount = dataForPayment.totalPaymentAmount;
       paymentGlobalData = dataForPayment.paymentGlobalData;
       factoraje = dataForPayment.factoraje;
+      log.debug("CUSTOM ITEM PAYMENT", customItem);
+      log.debug("TOTAL TAXES PAYMENT", totalTaxesForPayment);
     } else {
       customItem = handleDataForFvNc(
         currentRecord,
@@ -3385,6 +3294,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         false,
         suiteTax
       );
+      log.debug("CUSTOM ITEM", customItem);
     }
     //Related CFDIS
     const relatedCfdis = handleRelatedCfdis(currentRecord);

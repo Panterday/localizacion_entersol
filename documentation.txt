@@ -161,4 +161,10 @@ CFDI 4.0
 
         CFDI 4.0 Sat fig. transporte	
 
-    
+    Factoraje
+        Campos de línea de transacción (gastos)
+            CFDI 4.0 : Factura de venta
+            CFDI 4.0 : UUID factura de venta
+        Campos de transacción 
+            CFDI 4.0 : Habilitar factoraje
+            CFDI 4.0 : Orden de compra relacionada

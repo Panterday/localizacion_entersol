@@ -19,3 +19,5 @@ NO TIPO DE CAMBIO CON MISMA MONEDA PAGE INIT
 
 SUITE TAX EL PRO
 Corregir impresión desde botón.
+
+CORREGIR la generación del XML previo al aplicar el proceso de 1 paso.
