@@ -1148,7 +1148,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     };
   };
   const handleTotalTaxesForPayment = (resultTaxes) => {
-    log.debug("RESULT TAXES FOR PROCESSING CONVER", resultTaxes);
     let resultTrasTaxesList = [];
     let resultTrasTaxesListForSummary = [];
     let paymentTrasTaxesTotals = [];
@@ -1205,7 +1204,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         });
       }
     });
-    log.debug("SUMMARY TEMP", resultTrasTaxesListForSummary);
     for (let i = 0; i < resultTrasTaxesList.length; i++) {
       if (paymentTrasTaxesTotals.length === 0) {
         paymentTrasTaxesTotals.push({
@@ -1342,11 +1340,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         }
       }
     }
-    log.debug(
-      "PAYMENTTRASTAXESTOTALSSUMMARY",
-      paymentTrasTaxesTotalsForSummary
-    );
-    log.debug("PAYMENT TRAS TAXE FOR ATRR", paymentTrasTaxesTotals);
     return {
       paymentTrasTaxesTotals,
       paymentTrasTaxesTotalsForSummary,
@@ -1421,8 +1414,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           const currentAmount =
             Number(summaryElement.importe) /
             Number(item.docToRel.docToEquivalence);
-          summaryElement.base = Number(currentBase.toFixed(2));
-          summaryElement.importe = Number(currentAmount.toFixed(2));
+          summaryElement.base = handleConvertedDecimals(currentBase, 2);
+          summaryElement.importe = handleConvertedDecimals(currentAmount, 2);
         });
       }
       if (item.taxes.retExist) {
@@ -1434,10 +1427,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           const currentAmount =
             Number(summaryElement.importe) /
             Number(item.docToRel.docToEquivalence);
-          /* const convertedBase = handleConvertedDecimals(currentBase, 2);
-          const convertedAmount = handleConvertedDecimals(currentAmount, 2); */
-          summaryElement.base = Number(currentBase.toFixed(2));
-          summaryElement.importe = Number(currentAmount.toFixed(2));
+          summaryElement.base = handleConvertedDecimals(currentBase, 2);
+          summaryElement.importe = handleConvertedDecimals(currentAmount, 2);
         });
       }
     });
@@ -2094,15 +2085,17 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
   };
   const handleGlobalExempt = (newTaxSummary) => {
     let globalExempt = false;
-    if (newTaxSummary.summaryTras.length === 1) {
-      if (!newTaxSummary.summaryTras[0].exempt) {
-        globalExempt = true;
-      }
-    } else {
-      for (let i = 0; i < newTaxSummary.summaryTras.length; i++) {
-        if (!newTaxSummary.summaryTras[i].exempt) {
+    if (newTaxSummary.summaryTras) {
+      if (newTaxSummary.summaryTras.length === 1) {
+        if (!newTaxSummary.summaryTras[0].exempt) {
           globalExempt = true;
-          break;
+        }
+      } else {
+        for (let i = 0; i < newTaxSummary.summaryTras.length; i++) {
+          if (!newTaxSummary.summaryTras[i].exempt) {
+            globalExempt = true;
+            break;
+          }
         }
       }
     }
@@ -3093,6 +3086,15 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     const docToRelFactoraje = [];
     const tempDocToRel = [];
     const customItemFactoraje = [];
+    const totalPaymentTaxesList = [];
+    let totalPaymentAmount = 0;
+    //Equivalencia
+    const docToEquivalence = handleDocToEquivalence(
+      currency,
+      invoiceCurrencySymbol,
+      exchangeRate,
+      customExchangeRate
+    );
     if (vendorBillId) {
       const vendorBillRecord = record.load({
         type: "vendorbill",
@@ -3114,7 +3116,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         });
         const amount = vendorBillRecord.getSublistValue({
           sublistId: "item",
-          fieldId: "amount",
+          fieldId: "rate",
           line: i,
         });
         const invoiceRecord = record.load({
@@ -3129,18 +3131,26 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           isPayment,
           suiteTax
         );
-        //Equivalencia
-        const docToEquivalence = handleDocToEquivalence(
+        //Exchange rate
+        const globalExchangeRate = handleGlobalExchangeRate(
           currency,
           invoiceCurrencySymbol,
-          exchangeRate,
           customExchangeRate
         );
+        //Summary
+        totalPaymentTaxesList.push({
+          resultTaxes: tempResponseTaxes.taxSummary,
+          globalExchangeRate,
+        });
         //Obj impuesto
         const invoiceObjImpuesto = handleRelatedInvoiceObjImp(
           invoiceRecord,
           taxDataBase,
           suiteTax
+        );
+        //Total payment
+        totalPaymentAmount += Number(
+          (amount / Number(docToEquivalence)).toFixed(2)
         );
         customItemFactoraje.push({
           taxes: tempResponseTaxes,
@@ -3154,9 +3164,20 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         });
       }
     }
+    const recalcAmounts = handleRecalcAmountsForPayment(customItemFactoraje);
+    const totalTaxesForPayment = handleTotalTaxesForPayment(
+      totalPaymentTaxesList
+    );
     return {
       habilitarFactoraje,
-      customItemFactoraje,
+      customItemFactoraje: recalcAmounts,
+      totalTaxesForPayment,
+      totalPaymentAmount: Number(
+        (totalPaymentAmount * customExchangeRate).toFixed(2)
+      ),
+      docToEquivalence,
+      customExchangeRate,
+      currency,
     };
   };
   const handleDataForPayment = (
@@ -3278,7 +3299,10 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           globalExchangeRate,
         });
         totalPaymentAmount += Number(
-          (amount / Number(docToEquivalence)).toFixed(2)
+          handleConvertedDecimals(
+            Number(paymentAmountTotal) / Number(docToEquivalence),
+            2
+          )
         );
         taxesForPayment.push({
           taxes: resultTaxes,
@@ -3293,7 +3317,10 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       }
     }
     const paymentGlobalData = {
-      monto: Number((paymentAmountTotal / Number(docToEquivalence)).toFixed(2)),
+      monto: handleConvertedDecimals(
+        Number(paymentAmountTotal) / Number(docToEquivalence),
+        2
+      ),
       paymentDate,
       paymentForm,
       currency,
@@ -3301,11 +3328,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         ? { exchangeRate: 1 }
         : { exchangeRate: customExchangeRate }),
     };
-    log.debug("TAXES FOR PAYMENT FIRST", taxesForPayment);
     const recalcAmounts = handleRecalcAmountsForPayment(taxesForPayment);
-    log.debug("TOTAL TAXES SUMMARY", totalPaymentTaxesList);
     const totalPaymentTaxes = handleTotalTaxesForPayment(totalPaymentTaxesList);
-    log.debug("TAXES SUMMARY AFTER CALC", totalPaymentTaxes);
     return {
       paymentGlobalData,
       taxesForPayment: recalcAmounts,
@@ -3314,7 +3338,123 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         (totalPaymentAmount * customExchangeRate).toFixed(2)
       ),
       factoraje: factorajeObj,
+      docToEquivalence,
+      customExchangeRate,
+      currency,
     };
+  };
+  const handleCustomCalcsForFactoraje = (dataForPayment) => {
+    let paymentMonto = 0;
+    let factorajeMonto = 0;
+    for (
+      let i = 0;
+      i < dataForPayment.totalPaymentTaxes.paymentTrasTaxesTotals.length;
+      i++
+    ) {
+      const foundTotalElement =
+        dataForPayment.factoraje.totalTaxesForPayment.paymentTrasTaxesTotals.find(
+          (element) =>
+            dataForPayment.totalPaymentTaxes.paymentTrasTaxesTotals[i]
+              .impuesto === element.impuesto &&
+            dataForPayment.totalPaymentTaxes.paymentTrasTaxesTotals[i]
+              .tasaOcuota === element.tasaOcuota
+        );
+      if (foundTotalElement) {
+        dataForPayment.totalPaymentTaxes.paymentTrasTaxesTotals[i].base =
+          Number(
+            (
+              dataForPayment.totalPaymentTaxes.paymentTrasTaxesTotals[i].base +
+              foundTotalElement.base
+            ).toFixed(2)
+          );
+        dataForPayment.totalPaymentTaxes.paymentTrasTaxesTotals[i].importe =
+          Number(
+            (
+              dataForPayment.totalPaymentTaxes.paymentTrasTaxesTotals[i]
+                .importe + foundTotalElement.importe
+            ).toFixed(2)
+          );
+      }
+    }
+    for (
+      let i = 0;
+      i < dataForPayment.totalPaymentTaxes.paymentRetTaxesTotals.length;
+      i++
+    ) {
+      const foundTotalElement =
+        dataForPayment.factoraje.totalTaxesForPayment.paymentRetTaxesTotals.find(
+          (element) =>
+            dataForPayment.totalPaymentTaxes.paymentRetTaxesTotals[i]
+              .impuesto === element.impuesto &&
+            dataForPayment.totalPaymentTaxes.paymentRetTaxesTotals[i]
+              .tasaOcuota === element.tasaOcuota
+        );
+      if (foundTotalElement) {
+        dataForPayment.totalPaymentTaxes.paymentRetTaxesTotals[i].base = Number(
+          (
+            dataForPayment.totalPaymentTaxes.paymentRetTaxesTotals[i].base +
+            foundTotalElement.base
+          ).toFixed(2)
+        );
+        dataForPayment.totalPaymentTaxes.paymentRetTaxesTotals[i].importe =
+          Number(
+            (
+              dataForPayment.totalPaymentTaxes.paymentRetTaxesTotals[i]
+                .importe + foundTotalElement.importe
+            ).toFixed(2)
+          );
+      }
+    }
+    dataForPayment.taxesForPayment.forEach((paymentElement) => {
+      const foundFactoraje = dataForPayment.factoraje.customItemFactoraje.find(
+        (factorajeElement) =>
+          factorajeElement.docToRel.invoiceUuid ===
+          paymentElement.docToRel.invoiceUuid
+      );
+      if (foundFactoraje) {
+        paymentElement.docToRel.importePagado = Number(
+          (
+            paymentElement.docToRel.importePagado -
+            foundFactoraje.docToRel.importePagado
+          ).toFixed(2)
+        );
+        paymentMonto = Number(
+          (paymentMonto + paymentElement.docToRel.importePagado).toFixed(2)
+        );
+      }
+    });
+    dataForPayment.factoraje.customItemFactoraje.forEach((factorajeElement) => {
+      factorajeMonto = Number(
+        (factorajeMonto + factorajeElement.docToRel.importePagado).toFixed(2)
+      );
+    });
+    if (dataForPayment.factoraje.currency === "MXN") {
+      dataForPayment.factoraje.totalPaymentAmount = Number(
+        (factorajeMonto * dataForPayment.factoraje.customExchangeRate).toFixed(
+          2
+        )
+      );
+    } else {
+      dataForPayment.factoraje.totalPaymentAmount = Number(
+        (factorajeMonto / dataForPayment.factoraje.docToEquivalence).toFixed(2)
+      );
+    }
+    if (dataForPayment.currency === "MXN") {
+      dataForPayment.paymentGlobalData.monto = Number(
+        (paymentMonto * dataForPayment.customExchangeRate).toFixed(2)
+      );
+    } else {
+      dataForPayment.paymentGlobalData.monto = Number(
+        (paymentMonto / dataForPayment.docToEquivalence).toFixed(2)
+      );
+    }
+    dataForPayment.totalPaymentAmount = Number(
+      (
+        (dataForPayment.paymentGlobalData.monto +
+          dataForPayment.factoraje.totalPaymentAmount) *
+        dataForPayment.customExchangeRate
+      ).toFixed(2)
+    );
   };
   const getExtraCustomData = (
     currentRecord,
@@ -3345,6 +3485,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       fieldId: "currencysymbol",
     });
     const montoEnLetra = handleMontoEnLetra(total, currency);
+    const isFactoraje = currentRecord.getValue({
+      fieldId: "custbody_ent_entloc_fraje_habilitar_fa",
+    });
 
     let customItem = null;
     let totalTaxesForPayment = null;
@@ -3372,6 +3515,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         true,
         suiteTax
       );
+      if (isFactoraje) {
+        handleCustomCalcsForFactoraje(dataForPayment);
+      }
       customItem = dataForPayment.taxesForPayment;
       totalTaxesForPayment = dataForPayment.totalPaymentTaxes;
       totalPaymentAmount = dataForPayment.totalPaymentAmount;

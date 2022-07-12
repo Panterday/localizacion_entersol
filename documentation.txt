@@ -163,8 +163,14 @@ CFDI 4.0
 
     Factoraje
         Campos de línea de transacción (gastos)
-            CFDI 4.0 : Factura de venta
-            CFDI 4.0 : UUID factura de venta
+            *CFDI 4.0 : Factura de venta
+            *CFDI 4.0 : UUID factura de venta
         Campos de transacción 
             CFDI 4.0 : Habilitar factoraje
-            CFDI 4.0 : Orden de compra relacionada
+            CFDI 4.0 : Factura de compra relacionada
+            CFDI 4.0 : Proveedor fideicomiso
+            CFDI 4.0 : Código postal fideicomiso
+            CFDI 4.0 : Nombre legal fideicomiso
+            CFDI 4.0 : Régimen fiscal fideicomiso
+            CFDI 4.0 : RFC fideicomiso
+            CFDI 4.0 : Uso de CFDI de fideicomiso

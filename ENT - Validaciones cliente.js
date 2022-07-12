@@ -62,6 +62,12 @@ define(["N/record", "N/search", "N/ui/message"], (record, search, message) => {
     handleCustomerFields(currentRecord);
     //Account currency
     const currencyAccount = getCurrencyAccount(currentRecord);
+    const isFactoraje = currentRecord.getValue({
+      fieldId: "custbody_ent_entloc_fraje_habilitar_fa",
+    });
+    const facturaCompraField = currentRecord.getField({
+      fieldId: "custbody_ent_entloc_fraje_oc_relaciona",
+    });
     if (
       !currentRecord.getValue({
         fieldId: "custbody_ent_entloc_moneda_pago",
@@ -80,6 +86,11 @@ define(["N/record", "N/search", "N/ui/message"], (record, search, message) => {
         fieldId: "custbody_ent_entloc_tipo_cambio_pago",
         value: 1,
       });
+    }
+    if (isFactoraje) {
+      facturaCompraField.isDisabled = false;
+    } else {
+      facturaCompraField.isDisabled = true;
     }
   };
   const paymentFieldChanged = (context) => {
@@ -108,11 +119,94 @@ define(["N/record", "N/search", "N/ui/message"], (record, search, message) => {
         exchangeRateField.isDisabled = false;
       }
     }
+    if (context.fieldId === "custbody_ent_entloc_fraje_oc_relaciona") {
+      log.debug("SELECCIONANDO FAC COMPRA", "FAC COMPRA");
+      const facturaCompraId = currentRecord.getValue({
+        fieldId: "custbody_ent_entloc_fraje_oc_relaciona",
+      });
+      const totalApplyLines = currentRecord.getLineCount({
+        sublistId: "apply",
+      });
+      for (let j = 0; j < totalApplyLines; j++) {
+        currentRecord.selectLine({
+          sublistId: "apply",
+          line: j,
+        });
+        currentRecord.setCurrentSublistValue({
+          sublistId: "apply",
+          fieldId: "apply",
+          value: false,
+        });
+      }
+      if (facturaCompraId) {
+        const facturaCompraRecord = record.load.promise({
+          type: "vendorbill",
+          id: facturaCompraId,
+        });
+        facturaCompraRecord.then(
+          (objRecord) => {
+            const totalFacCompraLines = objRecord.getLineCount({
+              sublistId: "item",
+            });
+            for (let i = 0; i < totalFacCompraLines; i++) {
+              const invoiceRefId = objRecord.getSublistValue({
+                sublistId: "item",
+                fieldId: "custcol_ent_entloc_fraje_ref_fv",
+                line: i,
+              });
+              for (let j = 0; j < totalApplyLines; j++) {
+                const invoiceLineRefId = currentRecord.getSublistValue({
+                  sublistId: "apply",
+                  fieldId: "internalid",
+                  line: j,
+                });
+                if (invoiceRefId === invoiceLineRefId) {
+                  log.debug("INVOICE REF ID LINE", invoiceLineRefId);
+                  currentRecord.selectLine({
+                    sublistId: "apply",
+                    line: j,
+                  });
+                  currentRecord.setCurrentSublistValue({
+                    sublistId: "apply",
+                    fieldId: "apply",
+                    value: true,
+                  });
+                }
+              }
+            }
+          },
+          (error) => {
+            log.error({
+              title: "Unable to load record",
+              details: error.name,
+            });
+          }
+        );
+      }
+    }
+    if (context.fieldId === "custbody_ent_entloc_fraje_habilitar_fa") {
+      const isFactoraje = currentRecord.getValue({
+        fieldId: "custbody_ent_entloc_fraje_habilitar_fa",
+      });
+      const facturaCompraField = currentRecord.getField({
+        fieldId: "custbody_ent_entloc_fraje_oc_relaciona",
+      });
+      if (isFactoraje) {
+        facturaCompraField.isDisabled = false;
+      } else {
+        facturaCompraField.isDisabled = true;
+      }
+    }
   };
   const paymentSaveRecord = (context) => {
     const currencyMsg = message.create({
       title: "Falta el valor para tipo de cambio",
       message: `Debe ingresar un tipo de cambio distinto de 1`,
+      type: message.Type.WARNING,
+    });
+    const facturaCompraMsg = message.create({
+      title: "Factoraje: Falta referencia de factura de compra",
+      message: `Si desea utilizar factoraje, seleccione una factura de compra en el campo: CFDI 4.0 : FACTURA DE COMPRA RELACIONADA, en la Subficha CFDI 4.0.`,
       type: message.Type.WARNING,
     });
     const currentRecord = context.currentRecord;
@@ -145,7 +239,25 @@ define(["N/record", "N/search", "N/ui/message"], (record, search, message) => {
       });
       return false;
     } else {
-      return true;
+      //Factoraje
+      const isFactoraje = currentRecord.getValue({
+        fieldId: "custbody_ent_entloc_fraje_habilitar_fa",
+      });
+      const facturaCompra = currentRecord.getValue({
+        fieldId: "custbody_ent_entloc_fraje_oc_relaciona",
+      });
+      if (isFactoraje && !facturaCompra) {
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
+        facturaCompraMsg.show({
+          duration: 10000,
+        });
+        return false;
+      } else {
+        return true;
+      }
     }
   };
   const handleUuid = (invoiceId) => {
@@ -206,7 +318,7 @@ define(["N/record", "N/search", "N/ui/message"], (record, search, message) => {
           });
           if (!usoCfdiFac) {
             const usoCfdiCliente = customerRecord.getValue({
-              fieldId: "custentity_ent_entloc_metodo_pago",
+              fieldId: "custentity_ent_entloc_uso_cfdi",
             });
             currentRecord.setValue({
               fieldId: "custbody_ent_entloc_uso_cfdi",
@@ -299,10 +411,12 @@ define(["N/record", "N/search", "N/ui/message"], (record, search, message) => {
         const regimenFiscalFac = currentRecord.getValue({
           fieldId: "custbody_ent_entloc_reg_fis_receptor",
         });
+        log.debug("USO CFDI FACTURA", usoCfdiFac);
         if (!usoCfdiFac) {
           const usoCfdiCliente = customerRecord.getValue({
             fieldId: "custentity_ent_entloc_uso_cfdi",
           });
+          log.debug("USO CFDI CLIENTE", usoCfdiCliente);
           currentRecord.setValue({
             fieldId: "custbody_ent_entloc_uso_cfdi",
             value: usoCfdiCliente,
@@ -336,7 +450,7 @@ define(["N/record", "N/search", "N/ui/message"], (record, search, message) => {
           });
         }
       } catch (error) {
-        log.debug("ERROR", error);
+        log.debug("ERROR PAGE INIT LOAD", error);
       }
     } else if (currentRecord.type === "customerpayment") {
       paymentPageInit(currentRecord);

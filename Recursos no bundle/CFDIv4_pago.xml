@@ -242,6 +242,7 @@
 					FechaPago="${record.createddate?string.iso_nz?keep_before(".")}" 
 					FormaDePagoP="17" 
 					MonedaP="${customData.extraData.paymentGlobalData.currency}" 
+					Monto="${customData.extraData.factoraje.totalPaymentAmount}"
 					TipoCambioP="${customData.extraData.paymentGlobalData.exchangeRate}"
 				>
 					<#list customData.extraData.factoraje.customItemFactoraje as item>
@@ -291,6 +292,28 @@
 							</#if>
 						</pago20:DoctoRelacionado>
 					</#list>
+					<#if customData.extraData.factoraje.totalTaxesForPayment.paymentRetTaxesTotalsForSummary?has_content || customData.extraData.factoraje.totalTaxesForPayment.paymentTrasTaxesTotalsForSummary?has_content>
+						<pago20:ImpuestosP>
+							<#if customData.extraData.factoraje.totalTaxesForPayment.paymentRetTaxesTotalsForSummary?has_content>
+								<pago20:RetencionesP>
+									<#list customData.extraData.factoraje.totalTaxesForPayment.paymentRetTaxesTotalsForSummary as summaryElement>
+										<pago20:RetencionP ImporteP="${summaryElement.importe}" ImpuestoP="${summaryElement.impuesto}"/>
+									</#list>
+								</pago20:RetencionesP>
+							</#if>
+							<#if customData.extraData.factoraje.totalTaxesForPayment.paymentTrasTaxesTotalsForSummary?has_content>
+								<pago20:TrasladosP>
+									<#list customData.extraData.factoraje.totalTaxesForPayment.paymentTrasTaxesTotalsForSummary as summaryElement>
+										<#if summaryElement.exempt?has_content>
+											<pago20:TrasladoP BaseP="${summaryElement.base}" ImpuestoP="${summaryElement.impuesto}" TipoFactorP="Exento"/>
+										<#else>
+											<pago20:TrasladoP BaseP="${summaryElement.base}" ImporteP="${summaryElement.importe}" ImpuestoP="${summaryElement.impuesto}" TasaOCuotaP="${formatRate(summaryElement.tasaOcuota)}" TipoFactorP="Tasa"/>
+										</#if>
+									</#list>
+								</pago20:TrasladosP>
+							</#if>
+						</pago20:ImpuestosP>
+					</#if>
 				</pago20:Pago>
 			</#if>
 		</pago20:Pagos>
