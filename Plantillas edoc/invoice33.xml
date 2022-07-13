@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!--Setting locale for MEXICO-->
+<#setting locale = "es_MX">
+<!--Certification date-->
+<#assign aDateTime = .now>
+<!--Zeros number-->
+<#assign zeros = "0.00">
+<#assign customItem = customData.extraData.customItem>
+<#assign customRecordData = customData.extraData.customRecordData>
+<#assign descuentoTotal = customData.extraData.customItem.discounts.totalDiscount>
+<#function getAttrPair attr value1 value2>
+   <#if value1?has_content>
+    <#assign result="${attr}=\"${value1}\"">
+    <#return result>
+  <#else>
+	<#assign result="${attr}=\"${value2}\"">
+    <#return result>
+  </#if>  
+</#function>
+<#function getAttrExist attr value>
+	<#if value?has_content>
+		<#assign result="${attr}=\"${value}\"">
+		<#return result>
+	</#if>  
+</#function>
+<#function getNodePair node attr value>
+   <#if value?has_content>
+    <#assign result="<${node} ${attr}=\"${value}\" />">
+    <#return result>
+  </#if>  
+</#function>
+<!--Transform a string from $0,0.00 to 0.00-->
+<#function formatFromCurrency amount>
+	<#assign result = amount?keep_after("$")?replace(",", "")?number?string[zeros]>
+	<#return result>
+</#function>
+<#function formatFromString amount>
+	<#if amount?has_content>
+		<#assign result = amount?number?string[zeros]>
+		<#return result>
+	</#if>
+</#function>
+<#function formatRate amount>
+	<#assign result = ((amount?number)/100)?string["0.000000"]>
+	<#return result>
+</#function>
+<#function formatExchangeRate amount>
+	<#assign result = amount?keep_after("$")?replace(",", "")?number?string["0.0000"]>
+	<#return result>
+</#function>
+<#function getExchangeRate currency>
+	<#if currency != "MXN" && currency != "XXX">
+		<#assign exchangeRateNumber = formatExchangeRate(record.exchangerate)>
+		<#assign result = "TipoCambio=\"${exchangeRateNumber}\"">
+		<#return result>
+	</#if>
+</#function>
+<#function formatStringDate value>
+	<#assign stringDate = aDateTime?string.iso_nz>	
+	<#return value?date?iso_utc+"T"+stringDate?keep_after("T")?keep_before(".")>
+</#function>
+<#function formatDate value>
+	<#return value?string.iso_nz>
+</#function>
+<#assign cfdiDate = .now>
+<#if record.custbody_ent_entloc_nueva_fecha_cfdi4?has_content>
+	<#assign cfdiDate = formatDate(record.custbody_ent_entloc_nueva_fecha_cfdi4)>
+<#else>
+	<#assign cfdiDate = formatStringDate(record.trandate)>
+</#if>
+<#function getAttrExistTaxTotal attr value exempt>
+	<#if value?has_content && exempt == "true">
+		<#assign result="${attr}=\"${value}\"">
+		<#return result>
+	</#if>  
+</#function>
+<cfdi:Comprobante 
+	xmlns:cfdi="http://www.sat.gob.mx/cfd/3" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://www.sat.gob.mx/cfd/3 http://www.sat.gob.mx/sitio_internet/cfd/3/cfdv33.xsd" 
+	Version="3.3" 
+	Fecha="${cfdiDate}"
+	Serie="${customRecordData.serie}" 
+	Folio="${customRecordData.folio}" 
+	FormaPago="${record.custbody_ent_entloc_forma_pago?keep_before(" -")}" 
+	SubTotal="${customItem.newSubTotal?number?string[zeros]}" 
+	Moneda="${record.currencysymbol}"
+	${getExchangeRate(record.currencysymbol)}
+	Total="${formatFromCurrency(record.total)}" 
+	${getAttrExist("Descuento", formatFromString(customItem.discounts.totalDiscount))}
+	TipoDeComprobante="I" 
+	MetodoPago="${record.custbody_ent_entloc_ent_metodo_pago?keep_before(" -")}" 
+	LugarExpedicion="${customData.extraData.customSubsidiaryData.address.zip}" 
+> 
+	<#if customRecordData.relatedCfdis?has_content>
+		<#list customRecordData.relatedCfdis as relatedCfdi>
+			<cfdi:CfdiRelacionados TipoRelacion="${relatedCfdi.tipoRelacion?keep_before(" -")}">
+				<#list relatedCfdi.transacciones as transaccion>
+					<cfdi:CfdiRelacionado UUID="${transaccion.uuid}"/>
+				</#list>
+			</cfdi:CfdiRelacionados>
+		</#list>
+	</#if>
+	<#if customRecordData.prodMod == "true">
+		<cfdi:Emisor 
+			Rfc="${subsidiary.federalidnumber}" 
+			Nombre="${subsidiary.custrecord_ent_entloc_razon_social}" 
+			RegimenFiscal="${subsidiary.custrecord_ent_entloc_regimen_fiscal?keep_before(" -")}"
+		/>
+	<#else>
+		<cfdi:Emisor 
+			Rfc="IIA040805DZ4" 
+			Nombre="INDISTRIA ILUMINADORA DE ALMACENES" 
+			RegimenFiscal="601"
+		/>
+	</#if> 
+	<cfdi:Receptor 
+		Rfc="${customer.custentity_ent_entloc_rfc}"
+		Nombre="${customer.custentity_ent_entloc_nombre_legal_sat}" 
+		UsoCFDI="${record.custbody_ent_entloc_uso_cfdi?keep_before(" -")}"
+	/>
+	<cfdi:Conceptos>
+		<#assign itemIndex = -1>
+		<#list record.item as item>
+			<#if item.itemtype != "Discount">
+				<#assign itemIndex = itemIndex + 1>
+				<cfdi:Concepto 
+					Cantidad="${customItem.quantityItems[itemIndex]}" 
+					NoIdentificacion="${item.custcol_ent_entloc_no_identificacion}" 
+					Descripcion="${customItem.newItemDescriptions[itemIndex]}"
+					${getAttrExist("Descuento", formatFromString(customItem.discounts.discounts[itemIndex].discount))}
+					ValorUnitario="${formatFromCurrency(item.rate)}" 
+					Importe="${formatFromCurrency(item.amount)}"
+					${getAttrPair("ClaveProdServ", item.custcol_ent_entloc_sat_clv_pro_view?keep_before(" -"), item.custcol_ent_entloc_sat_clave_p_s_hidd?keep_before(" -"))}
+					ClaveUnidad="${customItem.satUnitCodes[itemIndex]?keep_before(" -")}" 
+				>
+					<#if customItem.objImpuesto[itemIndex]?keep_before(" -") != "01">
+						<#if customItem.taxItemDetails?has_content>
+							<cfdi:Impuestos> 
+								<#if customItem.taxItemDetails[itemIndex].taxTrasDetails.isGroup?number == 0>
+									<#if customItem.taxItemDetails[itemIndex].taxTrasDetails.exempt == "true">
+										<cfdi:Traslados> 
+											<cfdi:Traslado 
+												Base="${formatFromString(customItem.taxItemDetails[itemIndex].taxTrasDetails.base)}" 
+												Impuesto="${customItem.taxItemDetails[itemIndex].taxTrasDetails.impuesto}" 
+												TipoFactor="Exento" 
+											/> 
+										</cfdi:Traslados>
+									<#else>
+										<cfdi:Traslados> 
+											<cfdi:Traslado 
+												Base="${formatFromString(customItem.taxItemDetails[itemIndex].taxTrasDetails.base)}" 
+												Impuesto="${customItem.taxItemDetails[itemIndex].taxTrasDetails.impuesto}" 
+												TipoFactor="${customItem.taxItemDetails[itemIndex].taxTrasDetails.tipoFactor}" 
+												TasaOCuota="${formatRate(customItem.taxItemDetails[itemIndex].taxTrasDetails.tasaOcuota)}" 
+												Importe="${formatFromString(customItem.taxItemDetails[itemIndex].taxTrasDetails.importe)}"
+											/> 
+										</cfdi:Traslados>
+									</#if>
+								<#else>
+									<cfdi:Traslados> 
+										<#list customItem.taxItemDetails[itemIndex].taxTrasDetails.details as taxElement>
+											<cfdi:Traslado 
+												Base="${formatFromString(taxElement.base)}" 
+												Impuesto="${taxElement.impuesto}" 
+												TipoFactor="${taxElement.tipoFactor}" 
+												TasaOCuota="${formatRate(taxElement.tasaOcuota)}" 
+												Importe="${formatFromString(taxElement.importe)}"
+											/> 
+										</#list>
+									</cfdi:Traslados>
+								</#if>
+								<#if customItem.taxItemDetails[itemIndex].taxRetDetails.isGroup?number == 0>
+									<cfdi:Retenciones> 
+										<cfdi:Retencion 
+											Base="${formatFromString(customItem.taxItemDetails[itemIndex].taxRetDetails.base)}" 
+											Impuesto="${customItem.taxItemDetails[itemIndex].taxRetDetails.impuesto}" 
+											TipoFactor="${customItem.taxItemDetails[itemIndex].taxRetDetails.tipoFactor}" 
+											TasaOCuota="${formatRate(customItem.taxItemDetails[itemIndex].taxRetDetails.tasaOcuota)}" 
+											Importe="${formatFromString(customItem.taxItemDetails[itemIndex].taxRetDetails.importe)}"
+										/> 
+									</cfdi:Retenciones>
+								<#else>
+									<cfdi:Retenciones> 
+										<#list customItem.taxItemDetails[itemIndex].taxRetDetails.details as taxElement>
+											<cfdi:Retencion 
+												Base="${formatFromString(taxElement.base)}" 
+												Impuesto="${taxElement.impuesto}" 
+												TipoFactor="${taxElement.tipoFactor}" 
+												TasaOCuota="${formatRate(taxElement.tasaOcuota)}" 
+												Importe="${formatFromString(taxElement.importe)}"
+											/> 
+										</#list>
+									</cfdi:Retenciones>
+								</#if>
+							</cfdi:Impuestos> 
+						</#if> 
+					</#if>
+                    <#if item.custcol_ent_num_pedimento?has_content>
+                        <cfdi:InformacionAduanera NumeroPedimento="${item.custcol_ent_num_pedimento}"/>
+                    </#if>
+				</cfdi:Concepto> 
+			</#if>
+		</#list> 
+	</cfdi:Conceptos> 
+	<#if customItem.taxSummary?has_content>
+		<#if customItem.globalObjImpuesto == "true">
+			<#assign trasTotalTax = formatFromString(customItem.taxTotal.totalTraslados)>
+			<cfdi:Impuestos 
+				${getAttrExistTaxTotal("TotalImpuestosTrasladados", trasTotalTax, customItem.showTotalIfTraslado)}
+				${getAttrExist("TotalImpuestosRetenidos", formatFromString(customItem.taxTotal.totalRetenciones))}
+			> 
+				<#if customItem.taxSummary.summaryRet?has_content>
+					<cfdi:Retenciones> 
+						<#list customItem.taxSummary.summaryRet as elementSummary>
+								<cfdi:Retencion 
+									Importe="${formatFromString(elementSummary.importe)}" 
+									Impuesto="${elementSummary.impuesto}" 
+								/> 
+						</#list>
+					</cfdi:Retenciones> 
+				</#if>	
+				<#if customItem.taxSummary.summaryTras?has_content>
+					<cfdi:Traslados> 
+						<#list customItem.taxSummary.summaryTras as elementSummary>
+							<#if elementSummary.exempt?has_content>
+								<#if elementSummary.objImpuesto == "true">
+									<cfdi:Traslado 
+										Base="${formatFromString(elementSummary.base)}"
+										Impuesto="${elementSummary.impuesto}" 
+										TipoFactor="Exento"
+									/>
+								</#if>
+							<#else> 
+								<cfdi:Traslado 
+									Impuesto="${elementSummary.impuesto}" 
+									TipoFactor="${elementSummary.tipoFactor}"
+									TasaOCuota="${formatRate(elementSummary.tasaOcuota)}" 
+									Importe="${formatFromString(elementSummary.importe)}" 
+								/> 
+							</#if>
+						</#list>
+					</cfdi:Traslados> 
+				</#if>
+			</cfdi:Impuestos> 
+		</#if>
+	</#if>
+</cfdi:Comprobante>
