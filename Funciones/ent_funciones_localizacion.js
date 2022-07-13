@@ -520,7 +520,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       folio,
     };
   };
-  /* ------------------------------------------------------------------------------------- */
 
   const getUserConfig = (globalConfigRecordId, recordType, access) => {
     if (access) {
@@ -1014,9 +1013,13 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
   };
   const handleDiscountCorrection = (fullItems, totalDiscount) => {
     let tempTotalDiscount = 0;
+    log.debug("FULLITEMS TO PROCESS", fullItems);
     fullItems.forEach((item) => {
-      tempTotalDiscount += item.discount;
+      if (item.discount) {
+        tempTotalDiscount += item.discount;
+      }
     });
+    log.debug("TEMP TOTAL DISCOPUNT", tempTotalDiscount);
     tempTotalDiscount = Number(tempTotalDiscount.toFixed(2));
     if (tempTotalDiscount !== totalDiscount) {
       const discDifference = Number(
@@ -1625,49 +1628,81 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     //==================================Buscando carpeta en gabinete==============================//
     let folderId = null;
     //Busca carpeta
-    const folderSearchObj = search.create({
-      type: "folder",
-      filters: [
-        ["name", "is", folderName],
-        "AND",
-        ["istoplevel", "is", "F"],
-        "AND",
-        ["predecessor", "anyof", parentFolder],
-      ],
-      columns: ["internalid"],
-    });
-    const searchResultCount = folderSearchObj.runPaged().count;
-    if (searchResultCount > 0) {
-      folderSearchObj.run().each((result) => {
-        folderId = result.getValue({
-          name: "internalid",
-        });
+    if (parentFolder) {
+      const folderSearchObj = search.create({
+        type: "folder",
+        filters: [
+          ["name", "is", folderName],
+          "AND",
+          ["istoplevel", "is", "F"],
+          "AND",
+          ["predecessor", "anyof", parentFolder],
+        ],
+        columns: ["internalid"],
       });
-    } else {
-      try {
-        const folderRecord = record.create({
-          type: record.Type.FOLDER,
-        });
-        folderRecord.setValue({
-          fieldId: "name",
-          value: folderName,
-        });
-        folderRecord.setValue({
-          fieldId: "parent",
-          value: parentFolder,
-        });
-        if (subsidiaryId) {
-          folderRecord.setValue({
-            fieldId: "subsidiary",
-            value: subsidiaryId,
+      const searchResultCount = folderSearchObj.runPaged().count;
+      if (searchResultCount > 0) {
+        folderSearchObj.run().each((result) => {
+          folderId = result.getValue({
+            name: "internalid",
           });
-        }
-        folderId = folderRecord.save({
-          enableSourcing: true,
-          ignoreMandatoryFields: true,
         });
-      } catch (error) {
-        log.debug("handleFolderId", error);
+      } else {
+        try {
+          const folderRecord = record.create({
+            type: record.Type.FOLDER,
+          });
+          folderRecord.setValue({
+            fieldId: "name",
+            value: folderName,
+          });
+          folderRecord.setValue({
+            fieldId: "parent",
+            value: parentFolder,
+          });
+          if (subsidiaryId) {
+            folderRecord.setValue({
+              fieldId: "subsidiary",
+              value: subsidiaryId,
+            });
+          }
+          folderId = folderRecord.save({
+            enableSourcing: true,
+            ignoreMandatoryFields: true,
+          });
+        } catch (error) {
+          log.debug("handleFolderId", error);
+        }
+      }
+    } else {
+      const folderSearchObj = search.create({
+        type: "folder",
+        filters: [["name", "is", folderName], "AND", ["istoplevel", "is", "T"]],
+        columns: ["internalid"],
+      });
+      const searchResultCount = folderSearchObj.runPaged().count;
+      if (searchResultCount > 0) {
+        folderSearchObj.run().each((result) => {
+          folderId = result.getValue({
+            name: "internalid",
+          });
+        });
+      } else {
+        try {
+          const folderRecord = record.create({
+            type: record.Type.FOLDER,
+          });
+          folderRecord.setValue({
+            fieldId: "name",
+            value: folderName,
+          });
+          folderId = folderRecord.save({
+            enableSourcing: true,
+            ignoreMandatoryFields: true,
+          });
+        } catch (error) {
+          log.debug("handleFolderId", error);
+        }
       }
     }
     return folderId;
@@ -2136,6 +2171,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     const discounts = [];
     const objImpuesto = [];
     const quantityItems = [];
+    log.debug("NEW ITEMS", newItems);
     for (let i = 0; i < newItems.length; i++) {
       const discount = newItems[i].discount;
       const taxcodeId = newItems[i].taxcodeId;
@@ -2587,8 +2623,17 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     }
     if (!idGuardaDocumentosCarpeta && subsidiaryId) {
       //==================================Buscando carpeta en gabinete==============================//
-      const parentFolder = handleFolderId("Entersol localización", -20);
-      const cfdiFolder = handleFolderId("CFDI", parentFolder);
+      const userDocumentsCfdi = handleFolderId(
+        "Documentos usuario Entersol CFDI",
+        null,
+        null
+      );
+      const parentFolder = handleFolderId(
+        "Entersol localización",
+        userDocumentsCfdi,
+        null
+      );
+      const cfdiFolder = handleFolderId("CFDI", parentFolder, null);
       idGuardaDocumentosCarpeta = cfdiFolder;
       //Set global folder ID
       record.submitFields({
@@ -2713,6 +2758,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         });
       }
     }
+    log.debug("DISCOUNTS LIST", discounts);
+    log.debug("ITEM LIST", items);
     items.forEach((item) => {
       const discountFound = discounts.find(
         (element) => element.line === item.line
@@ -2772,7 +2819,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       });
       totalDiscount += globalDiscountTotal;
     }
+    log.debug("FULL ITEMS AFTER", fullItems);
     handleDiscountCorrection(fullItems, Number(totalDiscount.toFixed(2)));
+    log.debug("FULL ITEMS TO RETURN", fullItems);
     return {
       fullItems,
       totalDiscount: Number(totalDiscount.toFixed(2)),

@@ -135,11 +135,10 @@ define([
           handleCertButton(recordId, recordType, form);
         } else {
           if (userConfig.aplica && !uuid) {
+            handleGenerationButton(recordType, recordId, form);
             if (userConfig.habilitaCertDosPasos) {
               if (xmlPrev && !estatusCert) {
                 handleCertButton(recordId, recordType, form);
-              } else {
-                handleGenerationButton(recordType, recordId, form);
               }
             } else {
               handleCertButton(recordId, recordType, form);
