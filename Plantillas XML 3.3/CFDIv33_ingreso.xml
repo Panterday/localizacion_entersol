@@ -197,7 +197,11 @@
 						</#if> 
 					</#if>
                     <#if item.custcol_ent_num_pedimento?has_content>
-                        <cfdi:InformacionAduanera NumeroPedimento="${item.custcol_ent_num_pedimento}"/>
+						<#list item.custcol_ent_num_pedimento?split("|||") as pedimento>
+							<#if pedimento?has_content>
+                        		<cfdi:InformacionAduanera NumeroPedimento="${pedimento}"/>
+							</#if>
+						</#list>
                     </#if>
 				</cfdi:Concepto> 
 			</#if>

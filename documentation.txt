@@ -174,3 +174,9 @@ CFDI 4.0
             CFDI 4.0 : Régimen fiscal fideicomiso
             CFDI 4.0 : RFC fideicomiso
             CFDI 4.0 : Uso de CFDI de fideicomiso
+            CFDI 4.0 : Moneda cuenta (Oculto)
+
+    Nuevos campos
+        Campos de transacción
+            ENT - Versión de CFDI 
+            CFDI 4.0 : Monto pagado

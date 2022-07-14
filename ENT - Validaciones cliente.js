@@ -197,6 +197,15 @@ define(["N/record", "N/search", "N/ui/message"], (record, search, message) => {
         facturaCompraField.isDisabled = true;
       }
     }
+    if (context.fieldId === "custbody_ent_entloc_moneda_cuenta") {
+      const monedaCuenta = currentRecord.getValue({
+        fieldId: "custbody_ent_entloc_moneda_cuenta",
+      });
+      currentRecord.setValue({
+        fieldId: "custbody_ent_entloc_moneda_pago",
+        value: monedaCuenta,
+      });
+    }
   };
   const paymentSaveRecord = (context) => {
     const currencyMsg = message.create({
