@@ -144,22 +144,22 @@
         <cfdi:Concepto ClaveProdServ="84111506" Cantidad="1" ClaveUnidad="ACT" Descripcion="Pago" ValorUnitario="0" Importe="0" ObjetoImp="01" />
     </cfdi:Conceptos>
 	<cfdi:Complemento>
-		<pago20:Pagos Version="2.0">
-		<pago20:Totales MontoTotalPagos="858.2" TotalTrasladosBaseIVA16="739.80" TotalTrasladosImpuestoIVA16="118.20"/>
-		<pago20:Pago FechaPago="2022-07-07T13:33:00" FormaDePagoP="01" MonedaP="USD" Monto="42.91" TipoCambioP="20">
-		<pago20:DoctoRelacionado EquivalenciaDR="20" IdDocumento="c5530aa7-6bd7-4d14-9276-08114a17cf35" ImpPagado="858.17" ImpSaldoAnt="858.17" ImpSaldoInsoluto="0" MonedaDR="MXN" NumParcialidad="1" ObjetoImpDR="02">
-		<pago20:ImpuestosDR>
-		<pago20:TrasladosDR>
-		<pago20:TrasladoDR BaseDR="739.8" ImporteDR="118.37" ImpuestoDR="002" TasaOCuotaDR="0.160000" TipoFactorDR="Tasa"/>
-		</pago20:TrasladosDR>
-		</pago20:ImpuestosDR>
-		</pago20:DoctoRelacionado>
-		<pago20:ImpuestosP>
-		<pago20:TrasladosP>
-		<pago20:TrasladoP BaseP="36.99" ImporteP="5.91" ImpuestoP="002" TasaOCuotaP="0.160000" TipoFactorP="Tasa"/>
-		</pago20:TrasladosP>
-		</pago20:ImpuestosP>
-		</pago20:Pago>
-		</pago20:Pagos>
-	</cfdi:Complemento>
+    <pago20:Pagos Version="2.0">
+    <pago20:Totales MontoTotalPagos="253.27" TotalTrasladosBaseIVA16="218.34" TotalTrasladosImpuestoIVA16="34.93"/>
+        <pago20:Pago FechaPago="2022-06-29T15:12:00" FormaDePagoP="01" MonedaP="MXN" Monto="253.27" TipoCambioP="1">
+        <pago20:DoctoRelacionado EquivalenciaDR="0.0507" IdDocumento="b63be7eb-2578-4248-9fbd-650632f123e3" ImpPagado="12.84" ImpSaldoAnt="12.84" ImpSaldoInsoluto="0" MonedaDR="USD" NumParcialidad="1" ObjetoImpDR="02">
+        <pago20:ImpuestosDR>
+        <pago20:TrasladosDR>
+        <pago20:TrasladoDR BaseDR="11.07" ImporteDR="1.77" ImpuestoDR="002" TasaOCuotaDR="0.160000" TipoFactorDR="Tasa"/>
+        </pago20:TrasladosDR>
+        </pago20:ImpuestosDR>
+        </pago20:DoctoRelacionado>
+        <pago20:ImpuestosP>
+        <pago20:TrasladosP>
+        <pago20:TrasladoP BaseP="218.34" ImporteP="34.93" ImpuestoP="002" TasaOCuotaP="0.160000" TipoFactorP="Tasa"/>
+        </pago20:TrasladosP>
+        </pago20:ImpuestosP>
+        </pago20:Pago>
+    </pago20:Pagos>
+</cfdi:Complemento>
 </cfdi:Comprobante>

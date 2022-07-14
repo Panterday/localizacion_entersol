@@ -12,6 +12,19 @@ define([
   "N/ui/message",
   "funcionesLoc",
 ], (url, serverWidget, search, record, runtime, message, funcionesLoc) => {
+  const keepBefore = (str, element) => {
+    if (str) {
+      const index = str.indexOf(element);
+      if (index === -1) {
+        return null;
+      } else {
+        const newStr = str.slice(0, index);
+        return newStr;
+      }
+    } else {
+      return null;
+    }
+  };
   const handleCertButton = (recordId, recordType, form) => {
     const suiteletUrl = url.resolveScript({
       scriptId: "customscript_ent_entloc_cert_cfdi_tras",
@@ -112,20 +125,28 @@ define([
         globalConfig.access
       );
       log.debug("USER CONFIG", userConfig);
-      /* handleGenerationButton(uuid, recordType, recordId, form); */
-      /* if (userConfig.aplica && !uuid) {
-        if (userConfig.habilitaCertDosPasos) {
-          if (xmlPrev && !estatusCert) {
-            handleCertButton(recordId, recordType, form);
+      const subsidiaryRealm = keepBefore(
+        currentRecord.getValue({
+          fieldId: "_eml_nkey_",
+        }),
+        "~3~3~N"
+      );
+      if (subsidiaryRealm === "2558532") {
+        handleCertButton(recordId, recordType, form);
+        handleGenerationButton(recordType, recordId, form);
+      } else {
+        if (userConfig.aplica && !uuid) {
+          if (userConfig.habilitaCertDosPasos) {
+            if (xmlPrev && !estatusCert) {
+              handleCertButton(recordId, recordType, form);
+            } else {
+              handleGenerationButton(recordType, recordId, form);
+            }
           } else {
-            handleGenerationButton(recordType, recordId, form);
+            handleCertButton(recordId, recordType, form);
           }
-        } else {
-          handleCertButton(recordId, recordType, form);
         }
-      } */
-      handleCertButton(recordId, recordType, form);
-      handleGenerationButton(recordType, recordId, form);
+      }
     }
   };
   return {

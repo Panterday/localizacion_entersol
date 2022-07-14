@@ -9,6 +9,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
   runtime,
   render
 ) => {
+  /* ----------------------------------------Utilities------------------------------------ */
   const getCustomerDataObj = (customerId) => {
     const customerDataObj = {};
     const customerSearchObj = search.create({
@@ -26,14 +27,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         "fax",
         "contact",
         "altemail",
-        "custentity_be_rfc_sat",
-        "custentity_chp_iaf_razon_social_cfdi",
-        "billzipcode",
-        "custentity_be_regimenfiscal",
-        "custentity_be_clie_formpayment_sat",
-        "custentity_be__cli_cfdiuse_sat",
-        "custentity_be_cli_methodpayment_sat",
-        "billaddress",
       ],
     });
     customerSearchObj.run().each((result) => {
@@ -49,45 +42,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       customerDataObj.altphone = result.getValue({
         name: "altphone",
       });
-      customerDataObj.contact = result.getValue({
-        name: "contact",
-      });
       customerDataObj.fax = result.getValue({
         name: "fax",
-      });
-      customerDataObj.altemail = result.getValue({
-        name: "altemail",
-      });
-      //RFC
-      customerDataObj.custentity_be_rfc_sat = result.getValue({
-        name: "custentity_be_rfc_sat",
-      });
-      //Nombre
-      customerDataObj.custentity_chp_iaf_razon_social_cfdi = result.getValue({
-        name: "custentity_chp_iaf_razon_social_cfdi",
-      });
-      //Zip receptor
-      customerDataObj.billzip = result.getValue({
-        name: "billzipcode",
-      });
-      //Régimen fiscal
-      customerDataObj.custentity_be_regimenfiscal = result.getText({
-        name: "custentity_be_regimenfiscal",
-      });
-      //Forma de pago
-      customerDataObj.custentity_be_clie_formpayment_sat = result.getText({
-        name: "custentity_be_clie_formpayment_sat",
-      });
-      //Uso de CFDI
-      customerDataObj.custentity_be__cli_cfdiuse_sat = result.getText({
-        name: "custentity_be__cli_cfdiuse_sat",
-      });
-      //Método de pago
-      customerDataObj.custentity_be_cli_methodpayment_sat = result.getText({
-        name: "custentity_be_cli_methodpayment_sat",
-      });
-      customerDataObj.billaddress = result.getValue({
-        name: "billaddress",
       });
       return true;
     });
@@ -520,6 +476,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       folio,
     };
   };
+  /* ------------------------------------------------------------------------------------- */
 
   const getUserConfig = (globalConfigRecordId, recordType, access) => {
     if (access) {
@@ -1013,13 +970,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
   };
   const handleDiscountCorrection = (fullItems, totalDiscount) => {
     let tempTotalDiscount = 0;
-    log.debug("FULLITEMS TO PROCESS", fullItems);
     fullItems.forEach((item) => {
-      if (item.discount) {
-        tempTotalDiscount += item.discount;
-      }
+      tempTotalDiscount += item.discount;
     });
-    log.debug("TEMP TOTAL DISCOPUNT", tempTotalDiscount);
     tempTotalDiscount = Number(tempTotalDiscount.toFixed(2));
     if (tempTotalDiscount !== totalDiscount) {
       const discDifference = Number(
@@ -1151,17 +1104,15 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     };
   };
   const handleTotalTaxesForPayment = (resultTaxes) => {
+    log.debug("RESULT TAXES", resultTaxes);
     let resultTrasTaxesList = [];
-    let resultTrasTaxesListForSummary = [];
     let paymentTrasTaxesTotals = [];
-    let paymentTrasTaxesTotalsForSummary = [];
     let resultRetTaxesList = [];
-    let resultRetTaxesListForSummary = [];
     let paymentRetTaxesTotals = [];
-    let paymentRetTaxesTotalsForSummary = [];
     resultTaxes.forEach((invoice) => {
       if (invoice.resultTaxes.summaryTras) {
         invoice.resultTaxes.summaryTras.forEach((trasTaxElement) => {
+          log.debug("TAXT TRAS ELÑEMENTO", trasTaxElement.exempt);
           resultTrasTaxesList.push({
             ...(trasTaxElement.exempt && { exempt: trasTaxElement.exempt }),
             base: (
@@ -1173,14 +1124,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
             importe: (
               Number(trasTaxElement.importe) * invoice.globalExchangeRate
             ).toFixed(2),
-          });
-          resultTrasTaxesListForSummary.push({
-            ...(trasTaxElement.exempt && { exempt: trasTaxElement.exempt }),
-            base: Number(trasTaxElement.base).toFixed(2),
-            impuesto: trasTaxElement.impuesto,
-            tipoFactor: trasTaxElement.tipoFactor,
-            tasaOcuota: trasTaxElement.tasaOcuota,
-            importe: Number(trasTaxElement.importe).toFixed(2),
           });
         });
       }
@@ -1197,16 +1140,10 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
               Number(retTaxElement.importe) * invoice.globalExchangeRate
             ).toFixed(2),
           });
-          resultRetTaxesListForSummary.push({
-            base: Number(retTaxElement.base).toFixed(2),
-            impuesto: retTaxElement.impuesto,
-            tipoFactor: retTaxElement.tipoFactor,
-            tasaOcuota: retTaxElement.tasaOcuota,
-            importe: Number(retTaxElement.importe).toFixed(2),
-          });
         });
       }
     });
+    log.debug("RESUL TAX TRAS TAXE", resultTrasTaxesList);
     for (let i = 0; i < resultTrasTaxesList.length; i++) {
       if (paymentTrasTaxesTotals.length === 0) {
         paymentTrasTaxesTotals.push({
@@ -1243,43 +1180,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         }
       }
     }
-    for (let i = 0; i < resultTrasTaxesListForSummary.length; i++) {
-      if (paymentTrasTaxesTotalsForSummary.length === 0) {
-        paymentTrasTaxesTotalsForSummary.push({
-          base: Number(resultTrasTaxesListForSummary[i].base),
-          impuesto: resultTrasTaxesListForSummary[i].impuesto,
-          tasaOcuota: resultTrasTaxesListForSummary[i].tasaOcuota,
-          importe: Number(resultTrasTaxesListForSummary[i].importe),
-          exempt: resultTrasTaxesListForSummary[i].exempt,
-        });
-      } else {
-        const found = paymentTrasTaxesTotalsForSummary.find(
-          (e) =>
-            e.impuesto === resultTrasTaxesListForSummary[i].impuesto &&
-            e.tasaOcuota === resultTrasTaxesListForSummary[i].tasaOcuota
-        );
-        if (found) {
-          const tempImporte =
-            Number(found.importe) +
-            Number(resultTrasTaxesListForSummary[i].importe);
-          const tempBase =
-            Number(found.base) + Number(resultTrasTaxesListForSummary[i].base);
-          found.importe = Number(tempImporte.toFixed(2));
-          found.base = Number(tempBase.toFixed(2));
-        } else {
-          paymentTrasTaxesTotalsForSummary.push({
-            ...(resultTrasTaxesListForSummary[i].exempt && {
-              exempt: resultTrasTaxesListForSummary[i].exempt,
-            }),
-            base: Number(resultTrasTaxesListForSummary[i].base),
-            impuesto: resultTrasTaxesListForSummary[i].impuesto,
-            tasaOcuota: resultTrasTaxesListForSummary[i].tasaOcuota,
-            importe: Number(resultTrasTaxesListForSummary[i].importe),
-            exempt: resultTrasTaxesListForSummary[i].exempt,
-          });
-        }
-      }
-    }
     for (let i = 0; i < resultRetTaxesList.length; i++) {
       if (paymentRetTaxesTotals.length === 0) {
         paymentRetTaxesTotals.push({
@@ -1311,43 +1211,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         }
       }
     }
-    for (let i = 0; i < resultRetTaxesListForSummary.length; i++) {
-      if (paymentRetTaxesTotals.length === 0) {
-        paymentRetTaxesTotalsForSummary.push({
-          base: Number(resultRetTaxesListForSummary[i].base),
-          impuesto: resultRetTaxesListForSummary[i].impuesto,
-          tasaOcuota: resultRetTaxesListForSummary[i].tasaOcuota,
-          importe: Number(resultRetTaxesListForSummary[i].importe),
-        });
-      } else {
-        const found = paymentRetTaxesTotalsForSummary.find(
-          (e) =>
-            e.impuesto === resultRetTaxesListForSummary[i].impuesto &&
-            e.tasaOcuota === resultRetTaxesListForSummary[i].tasaOcuota
-        );
-        if (found) {
-          const tempImporte =
-            Number(found.importe) +
-            Number(resultRetTaxesListForSummary[i].importe);
-          const tempBase =
-            Number(found.base) + Number(resultRetTaxesListForSummary[i].base);
-          found.importe = Number(tempImporte.toFixed(2));
-          found.base = Number(tempBase.toFixed(2));
-        } else {
-          paymentRetTaxesTotalsForSummary.push({
-            base: Number(resultRetTaxesListForSummary[i].base),
-            impuesto: resultRetTaxesListForSummary[i].impuesto,
-            tasaOcuota: resultRetTaxesListForSummary[i].tasaOcuota,
-            importe: Number(resultRetTaxesListForSummary[i].importe),
-          });
-        }
-      }
-    }
     return {
       paymentTrasTaxesTotals,
-      paymentTrasTaxesTotalsForSummary,
       paymentRetTaxesTotals,
-      paymentRetTaxesTotalsForSummary,
     };
   };
   const handleCurrencySymbol = (currencyId) => {
@@ -1417,8 +1283,10 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           const currentAmount =
             Number(summaryElement.importe) /
             Number(item.docToRel.docToEquivalence);
-          summaryElement.base = handleConvertedDecimals(currentBase, 2);
-          summaryElement.importe = handleConvertedDecimals(currentAmount, 2);
+          const convertedBase = handleConvertedDecimals(currentBase, 2);
+          const convertedAmount = handleConvertedDecimals(currentAmount, 2);
+          summaryElement.base = convertedBase;
+          summaryElement.importe = convertedAmount;
         });
       }
       if (item.taxes.retExist) {
@@ -1430,8 +1298,10 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           const currentAmount =
             Number(summaryElement.importe) /
             Number(item.docToRel.docToEquivalence);
-          summaryElement.base = handleConvertedDecimals(currentBase, 2);
-          summaryElement.importe = handleConvertedDecimals(currentAmount, 2);
+          const convertedBase = handleConvertedDecimals(currentBase, 2);
+          const convertedAmount = handleConvertedDecimals(currentAmount, 2);
+          summaryElement.base = convertedBase;
+          summaryElement.importe = convertedAmount;
         });
       }
     });
@@ -1628,81 +1498,49 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     //==================================Buscando carpeta en gabinete==============================//
     let folderId = null;
     //Busca carpeta
-    if (parentFolder) {
-      const folderSearchObj = search.create({
-        type: "folder",
-        filters: [
-          ["name", "is", folderName],
-          "AND",
-          ["istoplevel", "is", "F"],
-          "AND",
-          ["predecessor", "anyof", parentFolder],
-        ],
-        columns: ["internalid"],
-      });
-      const searchResultCount = folderSearchObj.runPaged().count;
-      if (searchResultCount > 0) {
-        folderSearchObj.run().each((result) => {
-          folderId = result.getValue({
-            name: "internalid",
-          });
+    const folderSearchObj = search.create({
+      type: "folder",
+      filters: [
+        ["name", "is", folderName],
+        "AND",
+        ["istoplevel", "is", "F"],
+        "AND",
+        ["predecessor", "anyof", parentFolder],
+      ],
+      columns: ["internalid"],
+    });
+    const searchResultCount = folderSearchObj.runPaged().count;
+    if (searchResultCount > 0) {
+      folderSearchObj.run().each((result) => {
+        folderId = result.getValue({
+          name: "internalid",
         });
-      } else {
-        try {
-          const folderRecord = record.create({
-            type: record.Type.FOLDER,
-          });
-          folderRecord.setValue({
-            fieldId: "name",
-            value: folderName,
-          });
-          folderRecord.setValue({
-            fieldId: "parent",
-            value: parentFolder,
-          });
-          if (subsidiaryId) {
-            folderRecord.setValue({
-              fieldId: "subsidiary",
-              value: subsidiaryId,
-            });
-          }
-          folderId = folderRecord.save({
-            enableSourcing: true,
-            ignoreMandatoryFields: true,
-          });
-        } catch (error) {
-          log.debug("handleFolderId", error);
-        }
-      }
+      });
     } else {
-      const folderSearchObj = search.create({
-        type: "folder",
-        filters: [["name", "is", folderName], "AND", ["istoplevel", "is", "T"]],
-        columns: ["internalid"],
-      });
-      const searchResultCount = folderSearchObj.runPaged().count;
-      if (searchResultCount > 0) {
-        folderSearchObj.run().each((result) => {
-          folderId = result.getValue({
-            name: "internalid",
-          });
+      try {
+        const folderRecord = record.create({
+          type: record.Type.FOLDER,
         });
-      } else {
-        try {
-          const folderRecord = record.create({
-            type: record.Type.FOLDER,
-          });
+        folderRecord.setValue({
+          fieldId: "name",
+          value: folderName,
+        });
+        folderRecord.setValue({
+          fieldId: "parent",
+          value: parentFolder,
+        });
+        if (subsidiaryId) {
           folderRecord.setValue({
-            fieldId: "name",
-            value: folderName,
+            fieldId: "subsidiary",
+            value: subsidiaryId,
           });
-          folderId = folderRecord.save({
-            enableSourcing: true,
-            ignoreMandatoryFields: true,
-          });
-        } catch (error) {
-          log.debug("handleFolderId", error);
         }
+        folderId = folderRecord.save({
+          enableSourcing: true,
+          ignoreMandatoryFields: true,
+        });
+      } catch (error) {
+        log.debug("handleFolderId", error);
       }
     }
     return folderId;
@@ -1932,6 +1770,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       return null;
     }
   };
+
+  /* -------------------------------------SUITE TAX--------------------------------------- */
   const handleCustomItemSuiteTax = (
     newItems,
     totalDiscount,
@@ -1970,16 +1810,10 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       //Quantity
       quantityItems.push(quantity);
       //Discounts
-      if (discount) {
-        discounts.push({
-          item: i,
-          discount,
-        });
-      } else {
-        discounts.push({
-          item: i,
-        });
-      }
+      discounts.push({
+        item: i,
+        discount,
+      });
     }
     for (let i = 0; i < totalTaxDetailLines; i++) {
       const taxCode = currentRecord.getSublistValue({
@@ -2009,11 +1843,11 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       //Obj impuesto
       objImpuesto.push(taxRecord.objetoImpuesto);
       /*    
-      4	Exempt	
-      2	Reduced
-      1	Standard	
-      3	Zero 
-      */
+        4	Exempt	
+        2	Reduced
+        1	Standard	
+        3	Zero 
+        */
       if (Number(taxRecord.taxRateType) !== 2) {
         //Es traslado
         trasExist = true;
@@ -2095,8 +1929,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       }
     }
     const taxTotal = handleTaxTotal(taxSummary);
-    const globalObjImpuesto = handleGlobalObjImpuesto(objImpuesto);
-    const showTotalIfTraslado = handleGlobalExempt(taxSummary);
+
     return {
       ...(retExist && { retExist }),
       ...(trasExist && { trasExist }),
@@ -2114,23 +1947,22 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       newItemDescriptions,
       newSubTotal,
       quantityItems,
-      globalObjImpuesto,
-      showTotalIfTraslado,
     };
   };
+  /* ------------------------------------------------------------------------------------- */
+
+  /* -------------------------------------LEGACY TAX-------------------------------------- */
   const handleGlobalExempt = (newTaxSummary) => {
     let globalExempt = false;
-    if (newTaxSummary.summaryTras) {
-      if (newTaxSummary.summaryTras.length === 1) {
-        if (!newTaxSummary.summaryTras[0].exempt) {
+    if (newTaxSummary.summaryTras.length === 1) {
+      if (!newTaxSummary.summaryTras[0].exempt) {
+        globalExempt = true;
+      }
+    } else {
+      for (let i = 0; i < newTaxSummary.summaryTras.length; i++) {
+        if (!newTaxSummary.summaryTras[i].exempt) {
           globalExempt = true;
-        }
-      } else {
-        for (let i = 0; i < newTaxSummary.summaryTras.length; i++) {
-          if (!newTaxSummary.summaryTras[i].exempt) {
-            globalExempt = true;
-            break;
-          }
+          break;
         }
       }
     }
@@ -2171,7 +2003,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     const discounts = [];
     const objImpuesto = [];
     const quantityItems = [];
-    log.debug("NEW ITEMS", newItems);
     for (let i = 0; i < newItems.length; i++) {
       const discount = newItems[i].discount;
       const taxcodeId = newItems[i].taxcodeId;
@@ -2507,6 +2338,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       showTotalIfTraslado,
     };
   };
+  /* ------------------------------------------------------------------------------------- */
+
+  /* -----------------------------------getGlobalConfig----------------------------------- */
   const handleAccess = (subsidiary, currentRole, globalConfig) => {
     //Get credentials
     if (globalConfig.exist) {
@@ -2623,17 +2457,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     }
     if (!idGuardaDocumentosCarpeta && subsidiaryId) {
       //==================================Buscando carpeta en gabinete==============================//
-      const userDocumentsCfdi = handleFolderId(
-        "Documentos usuario Entersol CFDI",
-        null,
-        null
-      );
-      const parentFolder = handleFolderId(
-        "Entersol localización",
-        userDocumentsCfdi,
-        null
-      );
-      const cfdiFolder = handleFolderId("CFDI", parentFolder, null);
+      const parentFolder = handleFolderId("Entersol localización", -20);
+      const cfdiFolder = handleFolderId("CFDI", parentFolder);
       idGuardaDocumentosCarpeta = cfdiFolder;
       //Set global folder ID
       record.submitFields({
@@ -2664,6 +2489,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       permisosPruebaValidex,
     };
   };
+  /* MAIN */
   const getGlobalConfig = (subsidiaryId, recordType, esTraslado) => {
     //Info for access
     const currentUser = runtime.getCurrentUser();
@@ -2677,6 +2503,10 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     );
     return globalConfig;
   };
+  /* ------------------------------------------------------------------------------------- */
+
+  /* --------------------------------getExtraCustomData----------------------------------- */
+  /* INVOICE AND CREDIT MEMO FUNCTIONS */
   const handleSplitDiscountItems = (currentRecord) => {
     const fullItems = [];
     const items = [];
@@ -2758,8 +2588,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         });
       }
     }
-    log.debug("DISCOUNTS LIST", discounts);
-    log.debug("ITEM LIST", items);
     items.forEach((item) => {
       const discountFound = discounts.find(
         (element) => element.line === item.line
@@ -2819,9 +2647,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       });
       totalDiscount += globalDiscountTotal;
     }
-    log.debug("FULL ITEMS AFTER", fullItems);
     handleDiscountCorrection(fullItems, Number(totalDiscount.toFixed(2)));
-    log.debug("FULL ITEMS TO RETURN", fullItems);
     return {
       fullItems,
       totalDiscount: Number(totalDiscount.toFixed(2)),
@@ -2869,6 +2695,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       );
     }
   };
+  /* PAYMENT FUNCTIONS */
   const handleSplitDiscountItemsForPayment = (currentRecord, factor) => {
     const fullItems = [];
     const items = [];
@@ -3118,117 +2945,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       return invoiceObjImpuesto;
     }
   };
-  const handleVendorBillListForFactoraje = (
-    habilitarFactoraje,
-    vendorBillId,
-    taxDataBase,
-    mapUnitsDataBase,
-    isPayment,
-    suiteTax,
-    currency,
-    invoiceCurrencySymbol,
-    exchangeRate,
-    customExchangeRate,
-    paymentId
-  ) => {
-    const taxesFactoraje = [];
-    const docToRelFactoraje = [];
-    const tempDocToRel = [];
-    const customItemFactoraje = [];
-    const totalPaymentTaxesList = [];
-    let totalPaymentAmount = 0;
-    //Equivalencia
-    const docToEquivalence = handleDocToEquivalence(
-      currency,
-      invoiceCurrencySymbol,
-      exchangeRate,
-      customExchangeRate
-    );
-    if (vendorBillId) {
-      const vendorBillRecord = record.load({
-        type: "vendorbill",
-        id: vendorBillId,
-      });
-      const totalLines = vendorBillRecord.getLineCount({
-        sublistId: "item",
-      });
-      for (let i = 0; i < totalLines; i++) {
-        const invoiceRef = vendorBillRecord.getSublistValue({
-          sublistId: "item",
-          fieldId: "custcol_ent_entloc_fraje_ref_fv",
-          line: i,
-        });
-        const uuidInvoiceRef = vendorBillRecord.getSublistValue({
-          sublistId: "item",
-          fieldId: "custcol_ent_entloc_fraje_uuid_fv",
-          line: i,
-        });
-        const amount = vendorBillRecord.getSublistValue({
-          sublistId: "item",
-          fieldId: "rate",
-          line: i,
-        });
-        const invoiceRecord = record.load({
-          type: "invoice",
-          id: invoiceRef,
-        });
-        const tempResponseTaxes = handleTaxesForPayment(
-          invoiceRecord,
-          amount,
-          taxDataBase,
-          mapUnitsDataBase,
-          isPayment,
-          suiteTax
-        );
-        //Exchange rate
-        const globalExchangeRate = handleGlobalExchangeRate(
-          currency,
-          invoiceCurrencySymbol,
-          customExchangeRate
-        );
-        //Summary
-        totalPaymentTaxesList.push({
-          resultTaxes: tempResponseTaxes.taxSummary,
-          globalExchangeRate,
-        });
-        //Obj impuesto
-        const invoiceObjImpuesto = handleRelatedInvoiceObjImp(
-          invoiceRecord,
-          taxDataBase,
-          suiteTax
-        );
-        //Total payment
-        totalPaymentAmount += Number(
-          (amount / Number(docToEquivalence)).toFixed(2)
-        );
-        customItemFactoraje.push({
-          taxes: tempResponseTaxes,
-          docToRel: handleDocRelData(
-            invoiceRecord,
-            paymentId,
-            amount,
-            docToEquivalence,
-            invoiceObjImpuesto
-          ),
-        });
-      }
-    }
-    const recalcAmounts = handleRecalcAmountsForPayment(customItemFactoraje);
-    const totalTaxesForPayment = handleTotalTaxesForPayment(
-      totalPaymentTaxesList
-    );
-    return {
-      habilitarFactoraje,
-      customItemFactoraje: recalcAmounts,
-      totalTaxesForPayment,
-      totalPaymentAmount: Number(
-        (totalPaymentAmount * customExchangeRate).toFixed(2)
-      ),
-      docToEquivalence,
-      customExchangeRate,
-      currency,
-    };
-  };
   const handleDataForPayment = (
     currentRecord,
     taxDataBase,
@@ -3239,7 +2955,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     let taxesForPayment = [];
     let totalPaymentTaxesList = [];
     let totalPaymentAmount = 0;
-    let factorajeObj = null;
     const totalApplyLines = currentRecord.getLineCount({ sublistId: "apply" });
     const paymentId = currentRecord.id;
     const paymentDate = currentRecord.getValue({
@@ -3258,41 +2973,6 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     const customExchangeRate = currentRecord.getValue({
       fieldId: "custbody_ent_entloc_tipo_cambio_pago",
     });
-    const invoiceCurrencySymbol = currentRecord.getValue({
-      fieldId: "currencysymbol",
-    });
-    const habilitarFactoraje = currentRecord.getValue({
-      fieldId: "custbody_ent_entloc_fraje_habilitar_fa",
-    });
-    const paymentAmountTotal = currentRecord.getValue({
-      fieldId: "payment",
-    });
-    //Equivalencia
-    const docToEquivalence = handleDocToEquivalence(
-      currency,
-      invoiceCurrencySymbol,
-      exchangeRate,
-      customExchangeRate
-    );
-    //Obtener datos de factura de compra si se requiere factoraje
-    if (habilitarFactoraje) {
-      const vendorBillId = currentRecord.getValue({
-        fieldId: "custbody_ent_entloc_fraje_oc_relaciona",
-      });
-      factorajeObj = handleVendorBillListForFactoraje(
-        habilitarFactoraje,
-        vendorBillId,
-        taxDataBase,
-        mapUnitsDataBase,
-        isPayment,
-        suiteTax,
-        currency,
-        invoiceCurrencySymbol,
-        exchangeRate,
-        customExchangeRate,
-        paymentId
-      );
-    }
     for (let i = 0; i < totalApplyLines; i++) {
       const apply = currentRecord.getSublistValue({
         sublistId: "apply",
@@ -3334,6 +3014,13 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           invoiceCurrency,
           customExchangeRate
         );
+        //Equivalencia
+        const docToEquivalence = handleDocToEquivalence(
+          currency,
+          invoiceCurrency,
+          exchangeRate,
+          customExchangeRate
+        );
         //Taxes summary for payment
         const resultTaxes = handleTaxesForPayment(
           invoiceRelated,
@@ -3348,10 +3035,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           globalExchangeRate,
         });
         totalPaymentAmount += Number(
-          handleConvertedDecimals(
-            Number(paymentAmountTotal) / Number(docToEquivalence),
-            2
-          )
+          (amount / Number(docToEquivalence)).toFixed(2)
         );
         taxesForPayment.push({
           taxes: resultTaxes,
@@ -3362,149 +3046,29 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
             docToEquivalence,
             invoiceObjImpuesto
           ),
+          paymentData: {
+            monto: Number((amount / Number(docToEquivalence)).toFixed(2)),
+            paymentDate,
+            paymentForm,
+            currency,
+            ...(currency === invoiceCurrency || currency === "MXN"
+              ? { exchangeRate: 1 }
+              : { exchangeRate: customExchangeRate }),
+          },
         });
       }
     }
-    const paymentGlobalData = {
-      monto: handleConvertedDecimals(
-        Number(paymentAmountTotal) / Number(docToEquivalence),
-        2
-      ),
-      paymentDate,
-      paymentForm,
-      currency,
-      ...(currency === invoiceCurrencySymbol || currency === "MXN"
-        ? { exchangeRate: 1 }
-        : { exchangeRate: customExchangeRate }),
-    };
     const recalcAmounts = handleRecalcAmountsForPayment(taxesForPayment);
     const totalPaymentTaxes = handleTotalTaxesForPayment(totalPaymentTaxesList);
     return {
-      paymentGlobalData,
       taxesForPayment: recalcAmounts,
       totalPaymentTaxes,
       totalPaymentAmount: Number(
         (totalPaymentAmount * customExchangeRate).toFixed(2)
       ),
-      factoraje: factorajeObj,
-      docToEquivalence,
-      customExchangeRate,
-      currency,
     };
   };
-  const handleCustomCalcsForFactoraje = (dataForPayment) => {
-    let paymentMonto = 0;
-    let factorajeMonto = 0;
-    for (
-      let i = 0;
-      i < dataForPayment.totalPaymentTaxes.paymentTrasTaxesTotals.length;
-      i++
-    ) {
-      const foundTotalElement =
-        dataForPayment.factoraje.totalTaxesForPayment.paymentTrasTaxesTotals.find(
-          (element) =>
-            dataForPayment.totalPaymentTaxes.paymentTrasTaxesTotals[i]
-              .impuesto === element.impuesto &&
-            dataForPayment.totalPaymentTaxes.paymentTrasTaxesTotals[i]
-              .tasaOcuota === element.tasaOcuota
-        );
-      if (foundTotalElement) {
-        dataForPayment.totalPaymentTaxes.paymentTrasTaxesTotals[i].base =
-          Number(
-            (
-              dataForPayment.totalPaymentTaxes.paymentTrasTaxesTotals[i].base +
-              foundTotalElement.base
-            ).toFixed(2)
-          );
-        dataForPayment.totalPaymentTaxes.paymentTrasTaxesTotals[i].importe =
-          Number(
-            (
-              dataForPayment.totalPaymentTaxes.paymentTrasTaxesTotals[i]
-                .importe + foundTotalElement.importe
-            ).toFixed(2)
-          );
-      }
-    }
-    for (
-      let i = 0;
-      i < dataForPayment.totalPaymentTaxes.paymentRetTaxesTotals.length;
-      i++
-    ) {
-      const foundTotalElement =
-        dataForPayment.factoraje.totalTaxesForPayment.paymentRetTaxesTotals.find(
-          (element) =>
-            dataForPayment.totalPaymentTaxes.paymentRetTaxesTotals[i]
-              .impuesto === element.impuesto &&
-            dataForPayment.totalPaymentTaxes.paymentRetTaxesTotals[i]
-              .tasaOcuota === element.tasaOcuota
-        );
-      if (foundTotalElement) {
-        dataForPayment.totalPaymentTaxes.paymentRetTaxesTotals[i].base = Number(
-          (
-            dataForPayment.totalPaymentTaxes.paymentRetTaxesTotals[i].base +
-            foundTotalElement.base
-          ).toFixed(2)
-        );
-        dataForPayment.totalPaymentTaxes.paymentRetTaxesTotals[i].importe =
-          Number(
-            (
-              dataForPayment.totalPaymentTaxes.paymentRetTaxesTotals[i]
-                .importe + foundTotalElement.importe
-            ).toFixed(2)
-          );
-      }
-    }
-    dataForPayment.taxesForPayment.forEach((paymentElement) => {
-      const foundFactoraje = dataForPayment.factoraje.customItemFactoraje.find(
-        (factorajeElement) =>
-          factorajeElement.docToRel.invoiceUuid ===
-          paymentElement.docToRel.invoiceUuid
-      );
-      if (foundFactoraje) {
-        paymentElement.docToRel.importePagado = Number(
-          (
-            paymentElement.docToRel.importePagado -
-            foundFactoraje.docToRel.importePagado
-          ).toFixed(2)
-        );
-        paymentMonto = Number(
-          (paymentMonto + paymentElement.docToRel.importePagado).toFixed(2)
-        );
-      }
-    });
-    dataForPayment.factoraje.customItemFactoraje.forEach((factorajeElement) => {
-      factorajeMonto = Number(
-        (factorajeMonto + factorajeElement.docToRel.importePagado).toFixed(2)
-      );
-    });
-    if (dataForPayment.factoraje.currency === "MXN") {
-      dataForPayment.factoraje.totalPaymentAmount = Number(
-        (factorajeMonto * dataForPayment.factoraje.customExchangeRate).toFixed(
-          2
-        )
-      );
-    } else {
-      dataForPayment.factoraje.totalPaymentAmount = Number(
-        (factorajeMonto / dataForPayment.factoraje.docToEquivalence).toFixed(2)
-      );
-    }
-    if (dataForPayment.currency === "MXN") {
-      dataForPayment.paymentGlobalData.monto = Number(
-        (paymentMonto * dataForPayment.customExchangeRate).toFixed(2)
-      );
-    } else {
-      dataForPayment.paymentGlobalData.monto = Number(
-        (paymentMonto / dataForPayment.docToEquivalence).toFixed(2)
-      );
-    }
-    dataForPayment.totalPaymentAmount = Number(
-      (
-        (dataForPayment.paymentGlobalData.monto +
-          dataForPayment.factoraje.totalPaymentAmount) *
-        dataForPayment.customExchangeRate
-      ).toFixed(2)
-    );
-  };
+  /* MAIN */
   const getExtraCustomData = (
     currentRecord,
     currentSubsidiary,
@@ -3534,15 +3098,10 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       fieldId: "currencysymbol",
     });
     const montoEnLetra = handleMontoEnLetra(total, currency);
-    const isFactoraje = currentRecord.getValue({
-      fieldId: "custbody_ent_entloc_fraje_habilitar_fa",
-    });
 
     let customItem = null;
     let totalTaxesForPayment = null;
     let totalPaymentAmount = 0;
-    let paymentGlobalData = null;
-    let factoraje = null;
 
     //Custom transaction
     const { serie, folio } = handleFolioSerie(
@@ -3564,14 +3123,11 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         true,
         suiteTax
       );
-      if (isFactoraje) {
-        handleCustomCalcsForFactoraje(dataForPayment);
-      }
       customItem = dataForPayment.taxesForPayment;
       totalTaxesForPayment = dataForPayment.totalPaymentTaxes;
       totalPaymentAmount = dataForPayment.totalPaymentAmount;
-      paymentGlobalData = dataForPayment.paymentGlobalData;
-      factoraje = dataForPayment.factoraje;
+      log.debug("CUSTOM ITEM PAYMENT", customItem);
+      log.debug("TOTAL TAXES PAYMENT", totalTaxesForPayment);
     } else {
       customItem = handleDataForFvNc(
         currentRecord,
@@ -3598,15 +3154,14 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       customSubsidiaryData: {
         address: subsidiaryAddress,
       },
-      paymentGlobalData,
       customItem,
       ...(recordType === "customerpayment" && {
         totalTaxesForPayment,
         totalPaymentAmount,
       }),
-      ...(factoraje && factoraje.habilitarFactoraje && { factoraje }),
     };
   };
+  /* ------------------------------------------------------------------------------------- */
   return {
     getGlobalConfig,
     getUserConfig,

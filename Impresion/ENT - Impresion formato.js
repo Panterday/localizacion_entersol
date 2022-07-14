@@ -28,6 +28,7 @@ define(["N/render", "N/record", "funcionesLoc"], (
         prodMod,
         suiteTax
       );
+      log.debug("EXTRA DATA", extraData);
       const renderer = render.create();
       renderer.addRecord("record", currentRecord);
       renderer.addRecord("subsidiary", subsidiaryRecord);

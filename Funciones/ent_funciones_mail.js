@@ -17,8 +17,7 @@ define(["N/record", "N/search", "N/file", "N/email", "N/render"], (
     idPdf,
     idXml,
     validexUUID,
-    envioAutomatico,
-    isProd
+    envioAutomatico
   ) => {
     const recordData = (
       recordId,
@@ -73,8 +72,6 @@ define(["N/record", "N/search", "N/file", "N/email", "N/render"], (
         //Definir si el correo del destinatario será de una persona fisica o moral
         let correosEmpresa = [];
         let correoPrincipal = "";
-        let ccCliente = [];
-
         if (rfcCliente.length == 13) {
           //Correo persona física
           correoPrincipal = recordCliente.getValue({
@@ -86,54 +83,6 @@ define(["N/record", "N/search", "N/file", "N/email", "N/render"], (
               "El correo electrónico del cliente asignado a esta transacción no esta definido en la configuración del cliente. Asegúrese de que el cliente tenga una dirección de correo electrónico.";
             errorFlag = true;
           }
-          //CC en registro del cliente
-          if (recordType == "customerpayment") {
-            let ccPago = recordCliente.getValue({
-              fieldId: "custentity_ent_mail_cc_cp",
-            });
-            if (ccPago) {
-              //Si agregan más de una copia por Default
-              const ccDefaultCount = ccPago.includes(",");
-              if (ccDefaultCount) {
-                ccCliente = ccPago.split(",");
-              } else if (ccPago) {
-                ccCliente.push(ccPago);
-              }
-            }
-          }
-          if (recordType == "creditmemo") {
-            let ccNotaCredito = recordCliente.getValue({
-              fieldId: "custentity_ent_mail_cc_nc",
-            });
-            if (ccNotaCredito) {
-              //Si agregan más de una copia por Default
-              const ccDefaultCount = ccNotaCredito.includes(",");
-              if (ccDefaultCount) {
-                ccCliente = ccNotaCredito.split(",");
-              } else if (ccNotaCredito) {
-                ccCliente.push(ccNotaCredito);
-              }
-            }
-          }
-          if (recordType == "invoice") {
-            let ccFactura = recordCliente.getValue({
-              fieldId: "custentity_ent_mail_cc_fv",
-            });
-            if (ccFactura) {
-              //Obtener correo para agregar como copia a correo
-              const ccDefaultEmail = subsidiary.getValue({
-                fieldId: "custrecord_ent_mail_cc_default",
-              });
-              //Si agregan más de una copia por Default
-              const ccDefaultCount = ccFactura.includes(",");
-              if (ccDefaultCount) {
-                ccCliente = ccFactura.split(",");
-              } else if (ccFactura) {
-                ccCliente.push(ccFactura);
-              }
-            }
-          }
-          ccCliente.push(correoPrincipal);
         } else if (rfcCliente.length == 12) {
           //Correo persona moral
           const countContact = recordCliente.getLineCount({
@@ -332,7 +281,7 @@ define(["N/record", "N/search", "N/file", "N/email", "N/render"], (
           msjError,
           pdfFile,
           xmlFile,
-          ccCliente,
+          correoPrincipal,
           correosEmpresa,
           recordId,
           templateId,
@@ -370,10 +319,9 @@ define(["N/record", "N/search", "N/file", "N/email", "N/render"], (
       } = obj;
 
       let emailDoble = false;
-      let flagEmpresa = false;
-      let flagPersona = false;
       let ccDefaults = ccDefault;
       let ccEmailDoble = [];
+      let flagEmpresa = false;
 
       if (!correosEmpresa) {
         correosEmpresa = [];
@@ -423,7 +371,6 @@ define(["N/record", "N/search", "N/file", "N/email", "N/render"], (
 
       try {
         if (correoPrincipal) {
-          flagPersona = true;
           //Envio de correo a personas físicas
           email.send({
             author: remitenteEmailId,
@@ -469,9 +416,6 @@ define(["N/record", "N/search", "N/file", "N/email", "N/render"], (
         if (flagEmpresa) {
           msjError =
             "El cliente cuenta con contactos agregados, pero no se seleccionó ningún tipo de CFDI para enviar en el registro de Contacto.";
-        } else if (flagPersona) {
-          msjError =
-            "El/Los correos definidos para el cliente no estan registrados de la manera correcta, asegúrese de escribirlos con el formato correcto.";
         } else {
           msjError =
             "Los correos definidos como copia en la configuración de la Subsidiaria, en el campo ENT - CC DEFAULT ENVIO EMAIL no estan escritos de la manera correcta. Asegurese de escribir los correos con el formato correcto, separado por comas y sin espacios, ejemplo: correo@dominio.com,correo2@dominio.com,correo3@dominio.com";
@@ -511,40 +455,36 @@ define(["N/record", "N/search", "N/file", "N/email", "N/render"], (
         fieldId: "subsidiary",
       });
 
-      if (isProd) {
-        if (envioAutomatico) {
-          const obtenerDatos = recordData(
-            recordId,
-            recordType,
-            currentRecord,
-            idCliente,
-            subsidiaryId,
-            idXml,
-            idPdf
-          );
-          let { error, msjError } = obtenerDatos;
+      if (envioAutomatico) {
+        const obtenerDatos = recordData(
+          recordId,
+          recordType,
+          currentRecord,
+          idCliente,
+          subsidiaryId,
+          idXml,
+          idPdf
+        );
+        let { error, msjError } = obtenerDatos;
 
-          objEnviarMail = { error, msjError };
-          if (!error) {
-            //Si no hay error en la función de recordData
-            const sendEmail = enviarEmail(obtenerDatos, email);
-            //Si sendEmail tiene un error, lo retorna y es lo que se evalua
-            if (sendEmail) {
-              //Si tiene error, se considera que el único error es para las copias añadidas en el campo
-              objEnviarMail.error = true;
-              objEnviarMail.msjError = sendEmail;
-              return objEnviarMail;
-            } else {
-              //sendEmail no tiene error y se ejecuta correctamente
-              objEnviarMail.msjError = "";
-              return objEnviarMail;
-            }
+        objEnviarMail = { error, msjError };
+        if (!error) {
+          //Si no hay error en la función de recordData
+          const sendEmail = enviarEmail(obtenerDatos, email);
+          //Si sendEmail tiene un error, lo retorna y es lo que se evalua
+          if (sendEmail) {
+            //Si tiene error, se considera que el único error es para las copias añadidas en el campo
+            objEnviarMail.error = true;
+            objEnviarMail.msjError = sendEmail;
+            return objEnviarMail;
           } else {
-            //Si hay error en la función recordData
+            //sendEmail no tiene error y se ejecuta correctamente
+            objEnviarMail.msjError = "";
             return objEnviarMail;
           }
         } else {
-          return false;
+          //Si hay error en la función recordData
+          return objEnviarMail;
         }
       } else {
         return false;
