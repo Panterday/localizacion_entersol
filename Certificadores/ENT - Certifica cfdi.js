@@ -135,7 +135,8 @@ define([
     longitudSerie,
     longitudFolio,
     userConfig,
-    suiteTax
+    suiteTax,
+    mexUuid
   ) => {
     log.debug("HANDLETWOSTEP", "HANDLETWOSTEP");
     //Let's certificate!
@@ -267,6 +268,7 @@ define([
           custbody_ent_entloc_estado_gen_xml: "",
           custbody_ent_entloc_doc_prev: xmlIdToSave,
           custbody_ent_entloc_uuid: validexUUID,
+          ...(!mexUuid && { custbody_mx_cfdi_uuid: validexUUID }),
           custbody_ent_entloc_cadena_qr: validexQr,
           custbody_ent_entloc_cadena_original: validexCadenaOriginal,
           custbody_ent_entloc_pdf_timbrado: idPdfToSave,
@@ -340,7 +342,8 @@ define([
     permisosPruebaValidex,
     longitudSerie,
     longitudFolio,
-    suiteTax
+    suiteTax,
+    mexUuid
   ) => {
     log.debug("HANDLEONESTEP", "HANDLEONESTEP");
     //Extra custom data
@@ -492,6 +495,7 @@ define([
               custbody_ent_entloc_estado_gen_xml: "",
               custbody_ent_entloc_doc_prev: xmlIdToSave,
               custbody_ent_entloc_uuid: validexUUID,
+              ...(!mexUuid && { custbody_mx_cfdi_uuid: validexUUID }),
               custbody_ent_entloc_cadena_qr: validexQr,
               custbody_ent_entloc_cadena_original: validexCadenaOriginal,
               custbody_ent_entloc_pdf_timbrado: idPdfToSave,
@@ -615,6 +619,9 @@ define([
       const tranid = currentRecord.getValue({
         fieldId: "tranid",
       });
+      const mexUuuid = currentRecord.getValue({
+        fieldId: "custbody_mx_cfdi_uuid",
+      });
       const nombreDocumento = `${tranid} - ${subsidiaryRfc}`;
       //Global config
       const globalConfig = funcionesLoc.getGlobalConfig(
@@ -657,7 +664,8 @@ define([
           userConfig.longitudSerie,
           userConfig.longitudFolio,
           userConfig,
-          globalConfig.suiteTax
+          globalConfig.suiteTax,
+          mexUuuid
         );
       } else {
         log.debug("ONE STEP", "ONE STEP");
@@ -679,7 +687,8 @@ define([
           globalConfig.permisosPruebaValidex,
           userConfig.longitudSerie,
           userConfig.longitudFolio,
-          globalConfig.suiteTax
+          globalConfig.suiteTax,
+          mexUuuid
         );
       }
       const scriptObj = runtime.getCurrentScript();
