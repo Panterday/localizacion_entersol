@@ -6,6 +6,18 @@
 to one of the following values:
 copy, create, edit*/
 define(["N/record", "N/search", "N/ui/message"], (record, search, message) => {
+  const handleCurrencySymbol = (currencyId) => {
+    if (currencyId) {
+      const currencySymbol = search.lookupFields({
+        type: search.Type.CURRENCY,
+        id: currencyId,
+        columns: ["symbol"],
+      });
+      return currencySymbol.symbol;
+    } else {
+      return null;
+    }
+  };
   const getCurrencyAccount = (currenRecord) => {
     let accountRecord = null;
     let accountCurrency = null;
@@ -68,6 +80,16 @@ define(["N/record", "N/search", "N/ui/message"], (record, search, message) => {
     const facturaCompraField = currentRecord.getField({
       fieldId: "custbody_ent_entloc_fraje_oc_relaciona",
     });
+    const invoiceCurrencySymbol = currentRecord.getValue({
+      fieldId: "currencysymbol",
+    });
+    const customCurrencyId = currentRecord.getValue({
+      fieldId: "custbody_ent_entloc_moneda_pago",
+    });
+    const customCurrencySymbol = handleCurrencySymbol(customCurrencyId);
+    const montoPagoField = currentRecord.getField({
+      fieldId: "custbody_ent_entloc_monto_pagado",
+    });
     if (
       !currentRecord.getValue({
         fieldId: "custbody_ent_entloc_moneda_pago",
@@ -92,31 +114,58 @@ define(["N/record", "N/search", "N/ui/message"], (record, search, message) => {
     } else {
       facturaCompraField.isDisabled = true;
     }
+    log.debug(
+      "CURRENCIES",
+      `I CURR ${invoiceCurrencySymbol} P CURR ${customCurrencySymbol}`
+    );
+    if (
+      invoiceCurrencySymbol === "MXN" &&
+      customCurrencySymbol !== invoiceCurrencySymbol
+    ) {
+      log.debug("DESBLOQUEO CAMPO CAMPO", "DESBLOQUEO CAMPO");
+      montoPagoField.isDisabled = false;
+    } else {
+      log.debug("BLOQUEO CAMPO", "BLOQUEO CAMPO");
+      montoPagoField.isDisabled = true;
+    }
   };
   const paymentFieldChanged = (context) => {
     const currentRecord = context.currentRecord;
     if (context.fieldId === "custbody_ent_entloc_moneda_pago") {
-      const paymentCurrency = Number(
-        currentRecord.getValue({
-          fieldId: "currency",
-        })
-      );
-      const customCurrency = Number(
+      const invoiceCurrencySymbol = currentRecord.getValue({
+        fieldId: "currencysymbol",
+      });
+      const customCurrencyId = Number(
         currentRecord.getValue({
           fieldId: "custbody_ent_entloc_moneda_pago",
         })
       );
+      const customCurrencySymbol = handleCurrencySymbol(customCurrencyId);
       const exchangeRateField = currentRecord.getField({
         fieldId: "custbody_ent_entloc_tipo_cambio_pago",
       });
-      if (paymentCurrency === customCurrency || customCurrency === 1) {
+      const montoPagoField = currentRecord.getField({
+        fieldId: "custbody_ent_entloc_monto_pagado",
+      });
+      if (
+        invoiceCurrencySymbol === "MXN" &&
+        customCurrencySymbol !== invoiceCurrencySymbol
+      ) {
+        log.debug("DESBLOQUEO CAMPO CAMPO", "DESBLOQUEO CAMPO");
+        montoPagoField.isDisabled = false;
+        exchangeRateField.isDisabled = false;
+      } else {
+        log.debug("BLOQUEO CAMPO", "BLOQUEO CAMPO");
+        montoPagoField.isDisabled = true;
         exchangeRateField.isDisabled = true;
+        currentRecord.setValue({
+          fieldId: "custbody_ent_entloc_monto_pagado",
+          value: "",
+        });
         currentRecord.setValue({
           fieldId: "custbody_ent_entloc_tipo_cambio_pago",
           value: 1,
         });
-      } else {
-        exchangeRateField.isDisabled = false;
       }
     }
     if (context.fieldId === "custbody_ent_entloc_fraje_oc_relaciona") {
@@ -206,11 +255,35 @@ define(["N/record", "N/search", "N/ui/message"], (record, search, message) => {
         value: monedaCuenta,
       });
     }
+    if (context.fieldId === "custbody_ent_entloc_monto_pagado") {
+      const montoPago = Number(
+        currentRecord.getValue({
+          fieldId: "payment",
+        })
+      );
+      const montoPagado = Number(
+        currentRecord.getValue({
+          fieldId: context.fieldId,
+        })
+      );
+      if (montoPagado) {
+        const tipoCambio = Number((montoPago / montoPagado).toFixed(4));
+        currentRecord.setValue({
+          fieldId: "custbody_ent_entloc_tipo_cambio_pago",
+          value: tipoCambio,
+        });
+      } else {
+        currentRecord.setValue({
+          fieldId: "custbody_ent_entloc_tipo_cambio_pago",
+          value: 1,
+        });
+      }
+    }
   };
   const paymentSaveRecord = (context) => {
-    const currencyMsg = message.create({
-      title: "Falta el valor para tipo de cambio",
-      message: `Debe ingresar un tipo de cambio distinto de 1`,
+    const montoMsg = message.create({
+      title: "Falta el valor para monto pagado",
+      message: `Debe ingresar un monto pagado para calcular el tipo de cambio.`,
       type: message.Type.WARNING,
     });
     const facturaCompraMsg = message.create({
@@ -219,31 +292,30 @@ define(["N/record", "N/search", "N/ui/message"], (record, search, message) => {
       type: message.Type.WARNING,
     });
     const currentRecord = context.currentRecord;
-    const currencyId = Number(
-      currentRecord.getValue({
-        fieldId: "currency",
-      })
-    );
-    const customCurrencyId = Number(
-      currentRecord.getValue({
-        fieldId: "custbody_ent_entloc_moneda_pago",
-      })
-    );
+    const invoiceCurrencySymbol = currentRecord.getValue({
+      fieldId: "currencysymbol",
+    });
+    const customCurrencyId = currentRecord.getValue({
+      fieldId: "custbody_ent_entloc_moneda_pago",
+    });
     const customExchangeRate = currentRecord.getValue({
       fieldId: "custbody_ent_entloc_tipo_cambio_pago",
     });
-    //paymentCurrency === customCurrency || customCurrency === 1
+    const customCurrencySymbol = handleCurrencySymbol(customCurrencyId);
+    const montoPagado = currentRecord.getValue({
+      fieldId: "custbody_ent_entloc_monto_pagado",
+    });
     if (
-      currencyId !== customCurrencyId &&
-      customCurrencyId !== 1 &&
-      customExchangeRate === 1
+      invoiceCurrencySymbol === "MXN" &&
+      customCurrencySymbol !== invoiceCurrencySymbol &&
+      !montoPagado
     ) {
       //Show message
       window.scrollTo({
         top: 0,
         behavior: "smooth",
       });
-      currencyMsg.show({
+      montoMsg.show({
         duration: 10000,
       });
       return false;

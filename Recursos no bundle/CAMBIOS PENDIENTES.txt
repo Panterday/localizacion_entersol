@@ -5,17 +5,7 @@ si es PUE NO puede ser 99-Por definir.
 
 Limpiar campo fecha
 
-Cancelación
-Convertir el proceso de cancelación a la nueva versión.
-
-Factura de traslado 
-Resolver el tema de artículos de tipo kit (Es opcional, no se considera.)
-
 Agregar campo para definir una serie personalizada.
-
-MONEDA DEL BANCO 
-
-NO TIPO DE CAMBIO CON MISMA MONEDA PAGE INIT
 
 SUITE TAX EL PRO
 Corregir impresión desde botón.

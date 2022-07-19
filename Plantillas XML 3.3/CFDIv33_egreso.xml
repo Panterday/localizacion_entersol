@@ -17,6 +17,12 @@
     <#return result>
   </#if>  
 </#function>
+<#function getAttrExist attr value>
+	<#if value?has_content>
+		<#assign result="${attr}=\"${value}\"">
+		<#return result>
+	</#if>  
+</#function>
 <#function getNodePair node attr value>
    <#if value?has_content>
     <#assign result="<${node} ${attr}=\"${value}\" />">
@@ -68,18 +74,6 @@
 		<#return result>
 	</#if>  
 </#function>
-<#function getAttrExistGlobalDiscount attr value>
-	<#if value?has_content>
-		<#assign result="${attr}=\'${value}\'">
-		<#return result>
-	</#if>  
-</#function>
-<#function getAttrExist attr value>
-	<#if value?has_content>
-		<#assign result="${attr}=\"${value}\"">
-		<#return result>
-	</#if>  
-</#function>
 <cfdi:Comprobante 
 	xmlns:cfdi="http://www.sat.gob.mx/cfd/3" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
@@ -93,6 +87,7 @@
 	Moneda="${record.currencysymbol}"
 	${getExchangeRate(record.currencysymbol)}
 	Total="${formatFromCurrency(record.total)}" 
+	${getAttrExist("Descuento", formatFromString(customItem.discounts.totalDiscount))}
 	TipoDeComprobante="I" 
 	MetodoPago="${record.custbody_ent_entloc_ent_metodo_pago?keep_before(" -")}" 
 	LugarExpedicion="${customData.extraData.customSubsidiaryData.address.zip}" 
@@ -202,7 +197,11 @@
 						</#if> 
 					</#if>
                     <#if item.custcol_ent_num_pedimento?has_content>
-                        <cfdi:InformacionAduanera NumeroPedimento="${item.custcol_ent_num_pedimento}"/>
+						<#list item.custcol_ent_num_pedimento?split("|||") as pedimento>
+							<#if pedimento?has_content>
+                        		<cfdi:InformacionAduanera NumeroPedimento="${pedimento}"/>
+							</#if>
+						</#list>
                     </#if>
 				</cfdi:Concepto> 
 			</#if>

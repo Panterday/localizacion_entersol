@@ -136,7 +136,8 @@ define([
     longitudFolio,
     userConfig,
     suiteTax,
-    mexUuid
+    mexUuid,
+    cfdi44
   ) => {
     log.debug("HANDLETWOSTEP", "HANDLETWOSTEP");
     //Let's certificate!
@@ -233,6 +234,7 @@ define([
           validexUUID,
           validexCadenaOriginal,
           extraCertData,
+          cfdi44: !cfdi44 ? "4.0" : "3.3",
         },
       };
       //Create PDF
@@ -280,6 +282,7 @@ define([
           custbody_ent_entloc_tipo_cfdi: tipoComprobante,
           custbody_ent_entloc_impuestos_items: "",
           custbody_ent_entloc_cfdis_relacionados: "",
+          custbody_ent_entloc_version_cfdi: !cfdi44 ? "4.0" : "3.3",
           custbody_ent_mail_estado_correo: responseMail
             ? responseMail.msjError
             : null,
@@ -343,7 +346,8 @@ define([
     longitudSerie,
     longitudFolio,
     suiteTax,
-    mexUuid
+    mexUuid,
+    cfdi44
   ) => {
     log.debug("HANDLEONESTEP", "HANDLEONESTEP");
     //Extra custom data
@@ -451,6 +455,7 @@ define([
               validexUUID,
               validexCadenaOriginal,
               extraCertData,
+              cfdi44: !cfdi44 ? "4.0" : "3.3",
             },
           };
 
@@ -507,6 +512,7 @@ define([
               custbody_ent_entloc_tipo_cfdi: tipoComprobante,
               custbody_ent_entloc_impuestos_items: "",
               custbody_ent_entloc_cfdis_relacionados: "",
+              custbody_ent_entloc_version_cfdi: !cfdi44 ? "4.0" : "3.3",
               custbody_ent_mail_estado_correo: responseMail
                 ? responseMail.msjError
                 : null,
@@ -665,7 +671,8 @@ define([
           userConfig.longitudFolio,
           userConfig,
           globalConfig.suiteTax,
-          mexUuuid
+          mexUuuid,
+          globalConfig.cfdi44
         );
       } else {
         log.debug("ONE STEP", "ONE STEP");
@@ -688,7 +695,8 @@ define([
           userConfig.longitudSerie,
           userConfig.longitudFolio,
           globalConfig.suiteTax,
-          mexUuuid
+          mexUuuid,
+          globalConfig.cfdi44
         );
       }
       const scriptObj = runtime.getCurrentScript();

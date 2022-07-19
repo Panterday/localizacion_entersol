@@ -55,6 +55,18 @@ define(["N/search", "N/ui/message"], (search, message) => {
               `,
       type: message.Type.WARNING,
     });
+    const advertenciaCfdi33 = message.create({
+      title: "Advertencia",
+      message: `Al deshabilitar este campo, el proceso de certificación se ajustará para la versión de CFDI 4.0, asegúrese de cargar una plantilla XML y PDF compatibles con esta versión.
+              `,
+      type: message.Type.WARNING,
+    });
+    const advertenciaCfdi44 = message.create({
+      title: "Advertencia",
+      message: `Al habilitar este campo, el proceso de certificación se ajustará para la versión de CFDI 3.3, asegúrese de cargar una plantilla XML y PDF compatibles con esta versión.
+              `,
+      type: message.Type.WARNING,
+    });
     if (context.fieldId === "custrecord_ent_entloc_entorno_prod") {
       const currentCheckValue = currentRecord.getValue({
         fieldId: context.fieldId,
@@ -65,6 +77,29 @@ define(["N/search", "N/ui/message"], (search, message) => {
           behavior: "smooth",
         });
         advertenciaDeProduccion.show({
+          duration: 10000,
+        });
+      }
+    }
+    if (context.fieldId === "custrecord_ent_entloc_version_cfdi") {
+      const currentCheckValue = currentRecord.getValue({
+        fieldId: context.fieldId,
+      });
+      log.debug("CURRENT VALYE", typeof currentCheckValue);
+      if (!currentCheckValue) {
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
+        advertenciaCfdi33.show({
+          duration: 10000,
+        });
+      } else {
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
+        advertenciaCfdi44.show({
           duration: 10000,
         });
       }

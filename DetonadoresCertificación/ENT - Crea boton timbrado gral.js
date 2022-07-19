@@ -25,7 +25,7 @@ define([
       return null;
     }
   };
-  const handleCertButton = (recordId, recordType, form) => {
+  const handleCertButton = (recordId, recordType, cfdi44, form) => {
     const suiteletUrl = url.resolveScript({
       scriptId: "customscript_ent_entloc_certifica_cfdi",
       deploymentId: "customdeploy_ent_entloc_certifica_cfdi",
@@ -51,14 +51,17 @@ define([
             });
           </script>
         `;
+    const dynamicVersionText = !cfdi44
+      ? "Certificar XML CFDI 4.0"
+      : "Certificar XML CFDI 3.3";
     //Adding a button to the form
     form.addButton({
       id: "custpage_ent_locent_button_cert",
-      label: "Certificar XML CFDI 4.0",
+      label: dynamicVersionText,
       functionName: `window.open("${target}", "_self")`,
     });
   };
-  const handleGenerationButton = (recordType, recordId, form) => {
+  const handleGenerationButton = (recordType, recordId, cfdi44, form) => {
     const suiteletUrl = url.resolveScript({
       scriptId: "customscript_ent_entloc_genera_xml_previ",
       deploymentId: "customdeploy_ent_entloc_genera_xml_p_imp",
@@ -84,11 +87,13 @@ define([
             });
           </script>
         `;
-
+    const dynamicVersionText = !cfdi44
+      ? "Generar XML CFDI 4.0"
+      : "Generar XML CFDI 3.3";
     //Adding a button to the form
     form.addButton({
       id: "custpage_ent_entloc_gen_btn",
-      label: "Generar XML CFDI 4.0",
+      label: dynamicVersionText,
       functionName: `window.open("${target}", "_self")`,
     });
   };
@@ -130,18 +135,34 @@ define([
           recordType,
           globalConfig.access
         );
+        log.debug("GLOBAL", globalConfig);
         if (subsidiaryRealm === "2558532") {
-          handleGenerationButton(recordType, recordId, form);
-          handleCertButton(recordId, recordType, form);
+          handleGenerationButton(
+            recordType,
+            recordId,
+            globalConfig.cfdi44,
+            form
+          );
+          handleCertButton(recordId, recordType, globalConfig.cfdi44, form);
         } else {
           if (userConfig.aplica && !uuid) {
-            handleGenerationButton(recordType, recordId, form);
+            handleGenerationButton(
+              recordType,
+              recordId,
+              globalConfig.cfdi44,
+              form
+            );
             if (userConfig.habilitaCertDosPasos) {
               if (xmlPrev && !estatusCert) {
-                handleCertButton(recordId, recordType, form);
+                handleCertButton(
+                  recordId,
+                  recordType,
+                  globalConfig.cfdi44,
+                  form
+                );
               }
             } else {
-              handleCertButton(recordId, recordType, form);
+              handleCertButton(recordId, recordType, globalConfig.cfdi44, form);
             }
           }
         }
