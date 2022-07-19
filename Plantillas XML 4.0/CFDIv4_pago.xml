@@ -134,10 +134,10 @@
 		/>
 	</#if>
 	<cfdi:Receptor 
-		Rfc="${customer.custentity_ent_entloc_rfc}" 
-		Nombre="${customer.custentity_ent_entloc_nombre_legal_sat}" 
-		DomicilioFiscalReceptor="${customer.billzip}" 
-		RegimenFiscalReceptor="${record.custbody_ent_entloc_reg_fis_receptor?keep_before(" -")}" 
+		Rfc="<#if record.custbody_ent_entloc_fraje_habilitar_fa == true>${record.custbody_ent_entloc_rfc_fideicomiso}<#else>${customer.custentity_ent_entloc_rfc}</#if>" 
+		Nombre="<#if record.custbody_ent_entloc_fraje_habilitar_fa == true>${record.custbody_ent_entloc_nombre_legal_fide}<#else>${customer.custentity_ent_entloc_nombre_legal_sat}</#if>" 
+		DomicilioFiscalReceptor="<#if record.custbody_ent_entloc_fraje_habilitar_fa == true>${record.custbody_ent_entloc_zip_fideicomiso}<#else>${customer.billzip}</#if>"  
+		RegimenFiscalReceptor="<#if record.custbody_ent_entloc_fraje_habilitar_fa == true>${record.custbody_ent_entloc_reg_fiscal_fide?keep_before(" -")}<#else>${record.custbody_ent_entloc_reg_fis_receptor?keep_before(" -")}</#if>"  
 		UsoCFDI="CP01"
 	/> 
 	<cfdi:Conceptos>

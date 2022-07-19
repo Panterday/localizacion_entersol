@@ -482,7 +482,12 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       return null;
     }
   };
-  const handleFolioSerie = (tranid, longitudSerie, longitudFolio) => {
+  const handleFolioSerie = (
+    tranid,
+    longitudSerie,
+    longitudFolio,
+    seriePersonalizada
+  ) => {
     let serie = null;
     let folio = null;
     const manageFolio = (tranid, longitudFolio) => {
@@ -516,7 +521,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       folio = tranid.replace(/[^0-9]/g, "");
     }
     return {
-      serie,
+      serie: seriePersonalizada ? seriePersonalizada : serie,
       folio,
     };
   };
@@ -560,6 +565,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
             bloqueoEliminacion: globalConfigRecord.getValue({
               fieldId: "custrecord_ent_entloc_bloqueo_eli_fv",
             }),
+            seriePersonalizada: globalConfigRecord.getValue({
+              fieldId: "custrecord_ent_entloc_serie_per_fv",
+            }),
           };
         case "creditmemo":
           return {
@@ -593,6 +601,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
             bloqueoEliminacion: globalConfigRecord.getValue({
               fieldId: "custrecord_ent_entloc_bloqueo_eli_nc",
             }),
+            seriePersonalizada: globalConfigRecord.getValue({
+              fieldId: "custrecord_ent_entloc_serie_per_nc",
+            }),
           };
         case "customerpayment":
           return {
@@ -625,6 +636,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
             }),
             bloqueoEliminacion: globalConfigRecord.getValue({
               fieldId: "custrecord_ent_entloc_bloqueo_eli_pc",
+            }),
+            seriePersonalizada: globalConfigRecord.getValue({
+              fieldId: "custrecord_ent_entloc_serie_per_cp",
             }),
           };
       }
@@ -3229,6 +3243,12 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           type: "invoice",
           id: invoiceRef,
         });
+        const metodoPagoFactura = keepBefore(
+          invoiceRecord.getText({
+            fieldId: "custbody_ent_entloc_ent_metodo_pago",
+          }),
+          " -"
+        );
         const tempResponseTaxes = handleTaxesForPayment(
           invoiceRecord,
           amount,
@@ -3267,6 +3287,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
             docToEquivalence,
             invoiceObjImpuesto
           ),
+          metodoPagoFactura,
         });
       }
     }
@@ -3288,12 +3309,51 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       currency,
     };
   };
+  const dynamicAmountCalc = (
+    cfdi44,
+    invoiceCurrencySymbol,
+    currency,
+    paymentAmountTotal,
+    docToEquivalence,
+    exchangeRate
+  ) => {
+    let newMonto = 0;
+    try {
+      if (cfdi44) {
+        if (invoiceCurrencySymbol !== currency && currency === "MXN") {
+          newMonto = Number(
+            (Number(paymentAmountTotal) * Number(exchangeRate)).toFixed(2)
+          );
+        } else {
+          newMonto = Number(paymentAmountTotal);
+        }
+      } else {
+        newMonto = handleConvertedDecimals(
+          Number(paymentAmountTotal) / Number(docToEquivalence),
+          2
+        );
+      }
+    } catch (error) {
+      log.debug("ERROR DYNAMIC AMOUNT CALC", error);
+    }
+    return newMonto;
+  };
+  const handleCasoFacturaPago = (invoiceCurrencySymbol, currency) => {
+    if (invoiceCurrencySymbol === currency) {
+      return 1;
+    } else if (currency === "MXN") {
+      return 2;
+    } else {
+      return 3;
+    }
+  };
   const handleDataForPayment = (
     currentRecord,
     taxDataBase,
     mapUnitsDataBase,
     isPayment,
-    suiteTax
+    suiteTax,
+    cfdi44
   ) => {
     let taxesForPayment = [];
     let totalPaymentTaxesList = [];
@@ -3381,6 +3441,12 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         const invoiceCurrencyId = invoiceRelated.getValue({
           fieldId: "currency",
         });
+        const metodoPagoFactura = keepBefore(
+          invoiceRelated.getText({
+            fieldId: "custbody_ent_entloc_ent_metodo_pago",
+          }),
+          " -"
+        );
         const invoiceCurrency = handleCurrencySymbol(invoiceCurrencyId);
         const invoiceObjImpuesto = handleRelatedInvoiceObjImp(
           invoiceRelated,
@@ -3416,20 +3482,32 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
             docToEquivalence,
             invoiceObjImpuesto
           ),
+          metodoPagoFactura,
         });
       }
     }
+    log.debug("TAXES DOC TO", taxesForPayment);
+    const calcMonto = dynamicAmountCalc(
+      cfdi44,
+      invoiceCurrencySymbol,
+      currency,
+      paymentAmountTotal,
+      docToEquivalence,
+      exchangeRate
+    );
+    const casoFacturaPago = handleCasoFacturaPago(
+      invoiceCurrencySymbol,
+      currency
+    );
     const paymentGlobalData = {
-      monto: handleConvertedDecimals(
-        Number(paymentAmountTotal) / Number(docToEquivalence),
-        2
-      ),
+      monto: calcMonto,
       paymentDate,
       paymentForm,
       currency,
       ...(currency === invoiceCurrencySymbol || currency === "MXN"
         ? { exchangeRate: 1 }
         : { exchangeRate: customExchangeRate }),
+      casoFacturaPago,
     };
     const recalcAmounts = handleRecalcAmountsForPayment(taxesForPayment);
     const totalPaymentTaxes = handleTotalTaxesForPayment(
@@ -3579,8 +3657,11 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     longitudSerie,
     longitudFolio,
     prodMod,
-    suiteTax
+    suiteTax,
+    cfdi44,
+    seriePersonalizada
   ) => {
+    log.debug("SERIE PERSONALIZADA", seriePersonalizada);
     //Get taxGroup data
     const taxDataBase = suiteTax
       ? handleTaxGroupDataSuiteTax()
@@ -3616,7 +3697,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     const { serie, folio } = handleFolioSerie(
       tranid,
       longitudSerie,
-      longitudFolio
+      longitudFolio,
+      seriePersonalizada
     );
     //Summary
     total = Number(total).toFixed(2);
@@ -3630,7 +3712,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         taxDataBase,
         mapUnitsDataBase,
         true,
-        suiteTax
+        suiteTax,
+        cfdi44
       );
       if (isFactoraje) {
         handleCustomCalcsForFactoraje(dataForPayment);

@@ -137,7 +137,8 @@ define([
     userConfig,
     suiteTax,
     mexUuid,
-    cfdi44
+    cfdi44,
+    seriePersonalizada
   ) => {
     log.debug("HANDLETWOSTEP", "HANDLETWOSTEP");
     //Let's certificate!
@@ -148,7 +149,8 @@ define([
       longitudSerie,
       longitudFolio,
       prodMod,
-      suiteTax
+      suiteTax,
+      cfdi44
     );
     //Global custom data
     const globalData = customData.getDataForInvoice();
@@ -347,7 +349,8 @@ define([
     longitudFolio,
     suiteTax,
     mexUuid,
-    cfdi44
+    cfdi44,
+    seriePersonalizada
   ) => {
     log.debug("HANDLEONESTEP", "HANDLEONESTEP");
     //Extra custom data
@@ -357,7 +360,9 @@ define([
       longitudSerie,
       longitudFolio,
       prodMod,
-      suiteTax
+      suiteTax,
+      cfdi44,
+      seriePersonalizada
     );
     //Global custom data
     const globalData = customData.getDataForInvoice();
@@ -672,7 +677,8 @@ define([
           userConfig,
           globalConfig.suiteTax,
           mexUuuid,
-          globalConfig.cfdi44
+          globalConfig.cfdi44,
+          userConfig.seriePersonalizada
         );
       } else {
         log.debug("ONE STEP", "ONE STEP");
@@ -696,7 +702,8 @@ define([
           userConfig.longitudFolio,
           globalConfig.suiteTax,
           mexUuuid,
-          globalConfig.cfdi44
+          globalConfig.cfdi44,
+          userConfig.seriePersonalizada
         );
       }
       const scriptObj = runtime.getCurrentScript();

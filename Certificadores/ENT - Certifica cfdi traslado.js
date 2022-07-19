@@ -599,7 +599,8 @@ define([
         globalConfig.idGuardaDocumentosCarpeta,
         customPdfCustomerTemplate
           ? customPdfCustomerTemplate
-          : userConfig.plantillaPdfPublica
+          : userConfig.plantillaPdfPublica,
+        globalConfig.cfdi44
       );
     } else {
       //One step certification
@@ -619,7 +620,8 @@ define([
         globalConfig.emailAutomatico,
         globalConfig.permisosPruebaValidex,
         userConfig.longitudSerie,
-        userConfig.longitudFolio
+        userConfig.longitudFolio,
+        globalConfig.cfdi44
       );
     }
     const scriptObj = runtime.getCurrentScript();

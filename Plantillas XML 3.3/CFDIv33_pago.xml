@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--Setting locale for MEXICO-->
+<#setting locale = "es_MX">
+<!--Certification date-->
+<#assign aDateTime = .now>
+<!--Zeros number-->
+<#assign zeros = "0.00">
+<#assign customItem = customData.extraData.customItem>
+<#assign totalTaxesForPayment = customData.extraData.totalTaxesForPayment>
+<#assign totalPaymentAmount = customData.extraData.totalPaymentAmount>
+<#assign customRecordData = customData.extraData.customRecordData>
+<#function getAttrPair attr value1 value2>
+   <#if value1?has_content>
+    <#assign result="${attr}=\"${value1}\"">
+    <#return result>
+  <#else>
+	<#assign result="${attr}=\"${value2}\"">
+    <#return result>
+  </#if>  
+</#function>
+<#function getAttrOne attr value1>
+   <#if value1?has_content>
+    <#assign result="${attr}=\"${value1}\"">
+    <#return result>
+  </#if>  
+</#function>
+<#function getNodePair node attr value>
+   <#if value?has_content>
+    <#assign result="<${node} ${attr}=\"${value}\" />">
+    <#return result>
+  </#if>  
+</#function>
+<#function getTrasTaxAttr>
+	<#assign taxesAttrList = "">
+	<#list totalTaxesForPayment.paymentTrasTaxesTotals as totalTax>
+		<#if totalTax.exempt?has_content>
+			<#if totalTax.exempt == "true">
+				<#assign taxesAttrList= taxesAttrList + " " + "TotalTrasladosBaseIVAExento=\"${totalTax.base}\"">
+			</#if>
+		<#elseif totalTax.impuesto == "002" && totalTax.tasaOcuota == "16">
+			<#assign baseRounded = totalTax.base?number?string["0.00"]>
+			<#assign amountRounded = totalTax.importe?number?string["0.00"]>
+			<#assign taxesAttrList= taxesAttrList + " " + "TotalTrasladosBaseIVA16=\"${baseRounded}\" TotalTrasladosImpuestoIVA16=\"${amountRounded}\"">
+		<#elseif totalTax.impuesto == "002" && totalTax.tasaOcuota == "8">
+			<#assign taxesAttrList= taxesAttrList + " " + "TotalTrasladosBaseIVA8=\"${totalTax.base}\" TotalTrasladosImpuestoIVA8=\"${totalTax.importe}\"">
+		<#elseif totalTax.impuesto == "002" && totalTax.tasaOcuota == "0">
+			<#assign taxesAttrList= taxesAttrList + " " + "TotalTrasladosBaseIVA0=\"${totalTax.base}\" TotalTrasladosImpuestoIVA0=\"${totalTax.importe}\"">
+		</#if>
+	</#list>
+	<#return taxesAttrList>
+</#function>
+<#function getRetTaxAttr>
+	<#assign taxesAttrList = "">
+	<#list totalTaxesForPayment.paymentRetTaxesTotals as totalTax>
+		<#if totalTax.impuesto == "002">
+			<#assign taxesAttrList= taxesAttrList + " " + "TotalRetencionesIVA=\"${totalTax.importe}\"">
+		<#elseif totalTax.impuesto == "001">
+			<#assign taxesAttrList= taxesAttrList + " " + "TotalRetencionesISR=\"${totalTax.importe}\"">
+		<#else>
+			<#assign taxesAttrList= taxesAttrList + " " + "TotalRetencionesIEPS=\"${totalTax.importe}\"">
+		</#if>
+	</#list>
+	<#return taxesAttrList>
+</#function>
+<!--Transform a string from $0,0.00 to 0.00-->
+<#function formatFromCurrency amount>
+	<#assign result = amount?keep_after("$")?replace(",", "")?number?string[zeros]>
+	<#return result>
+</#function>
+<#function formatFromString amount>
+	<#assign result = amount?number?string[zeros]>
+	<#return result>
+</#function>
+<#function formatRate amount>
+	<#assign result = ((amount?number)/100)?string["0.000000"]>
+	<#return result>
+</#function>
+<#function formatStringDate value>
+	<#assign stringDate = aDateTime?string.iso_nz>	
+	<#return value?date?iso_utc+"T"+stringDate?keep_after("T")?keep_before(".")>
+</#function>
+<#function formatDate value>
+	<#return value?string.iso_nz>
+</#function>
+<#assign cfdiDate = .now>
+<#if record.custbody_ent_entloc_nueva_fecha_cfdi4?has_content>
+	<#assign cfdiDate = formatDate(record.custbody_ent_entloc_nueva_fecha_cfdi4)>
+<#else>
+	<#assign cfdiDate = formatStringDate(record.trandate)>
+</#if>
+<#function getAttrObjImp value>
+	<#if value?has_content>
+		<#return "02">
+	<#else>
+		<#return "01">
+	</#if>
+</#function>
+<#function getAttrTipoCambioP caso value>
+	<#if caso == "3">
+		<#assign result="TipoCambioP=\"${value}\"">
+		<#return result>
+  	</#if>  
+</#function>
+<#function getAttrTipoCambioDR caso value>
+	<#if caso == "2">
+		<#assign result="TipoCambioDR=\"${value}\"">
+		<#return result>
+  	</#if>  
+</#function>
+<cfdi:Comprobante 
+    xsi:schemaLocation="http://www.sat.gob.mx/cfd/3 http://www.sat.gob.mx/sitio_internet/cfd/3/cfdv33.xsd http://www.sat.gob.mx/Pagos http://www.sat.gob.mx/sitio_internet/cfd/Pagos/Pagos10.xsd" 
+    xmlns:pago10="http://www.sat.gob.mx/Pagos"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xmlns:cfdi="http://www.sat.gob.mx/cfd/3"
+    Version="3.3" 
+    Serie="${customRecordData.serie}" 
+	Folio="${customRecordData.folio}" 
+    Fecha="${cfdiDate}" 
+    SubTotal="0" 
+    Moneda="XXX" 
+    Total="0" 
+    TipoDeComprobante="P" 
+    Exportacion="01"
+    LugarExpedicion="${customData.extraData.customSubsidiaryData.address.zip}"
+>
+    <#if customRecordData.relatedCfdis?has_content>
+		<#list customRecordData.relatedCfdis as relatedCfdi>
+			<cfdi:CfdiRelacionados TipoRelacion="${relatedCfdi.tipoRelacion?keep_before(" -")}">
+				<#list relatedCfdi.transacciones as transaccion>
+					<cfdi:CfdiRelacionado UUID="${transaccion.uuid}"/>
+				</#list>
+			</cfdi:CfdiRelacionados>
+		</#list>
+	</#if>
+	<#if customRecordData.prodMod == "true">
+		<cfdi:Emisor 
+			Rfc="${subsidiary.federalidnumber}" 
+			Nombre="${subsidiary.custrecord_ent_entloc_razon_social}" 
+			RegimenFiscal="${subsidiary.custrecord_ent_entloc_regimen_fiscal?keep_before(" -")}"
+		/>
+	<#else>
+		<cfdi:Emisor 
+			Rfc="IIA040805DZ4" 
+			Nombre="INDISTRIA ILUMINADORA DE ALMACENES" 
+			RegimenFiscal="601"
+		/>
+	</#if>
+	<cfdi:Receptor 
+		Rfc="<#if record.custbody_ent_entloc_fraje_habilitar_fa == true>${record.custbody_ent_entloc_rfc_fideicomiso}<#else>${customer.custentity_ent_entloc_rfc}</#if>" 
+		Nombre="<#if record.custbody_ent_entloc_fraje_habilitar_fa == true>${record.custbody_ent_entloc_nombre_legal_fide}<#else>${customer.custentity_ent_entloc_nombre_legal_sat}</#if>" 
+		UsoCFDI="P01"
+	/> 
+	<cfdi:Conceptos>
+        <cfdi:Concepto ClaveProdServ="84111506" Cantidad="1" ClaveUnidad="ACT" Descripcion="Pago" ValorUnitario="0" Importe="0" ObjetoImp="01" />
+    </cfdi:Conceptos>
+	<cfdi:Complemento>
+		<pago10:Pagos Version="1.0">
+			<pago10:Pago 
+				FechaPago="${record.createddate?string.iso_nz?keep_before(".")}" 
+				FormaDePagoP="${customData.extraData.paymentGlobalData.paymentForm?keep_before(" -")}" 
+				MonedaP="${customData.extraData.paymentGlobalData.currency}" 
+				Monto="${customData.extraData.paymentGlobalData.monto}" 
+				${getAttrTipoCambioP(customData.extraData.paymentGlobalData.casoFacturaPago, customData.extraData.paymentGlobalData.exchangeRate)}
+				${getAttrOne("NumOperacion", record.custbody_ent_entloc_num_operacion)}
+				${getAttrOne("RfcEmisorCtaOrd", record.custbody_ent_entloc_rfc_cuenta_ord)}
+				${getAttrOne("NomBancoOrdExt", record.custbody_ent_entloc_nombanco_ord_ext)}
+				${getAttrOne("CtaOrdenante", record.custbody_ent_entloc_cuenta_ordenanante)}
+				${getAttrOne("RfcEmisorCtaBen", record.custbody_ent_entloc_rfc_emisor_cta_ben)}
+				${getAttrOne("CtaBeneficiario", record.custbody_ent_entloc_cuenta_ben)}
+				${getAttrOne("TipoCadPago", record.custbody_ent_entloc_tipo_cad_pago)}
+				${getAttrOne("CertPago", record.custbody_ent_entloc_cert_pago)}
+				${getAttrOne("CadPago", record.custbody_ent_entloc_cadena_pago)}
+				${getAttrOne("SelloPago", record.custbody_ent_entloc_sello_pago)}
+			> 	
+				<#list customItem as item>
+					<pago10:DoctoRelacionado 
+						IdDocumento="${item.docToRel.invoiceUuid}" 
+						ImpPagado="${item.docToRel.importePagado}" 
+						ImpSaldoAnt="${item.docToRel.saldoAnterior}" 
+						ImpSaldoInsoluto="${item.docToRel.saldoAnterior?number - item.docToRel.importePagado?number}" 
+						MonedaDR="${item.docToRel.invoiceCurrency}" 
+						NumParcialidad="${item.docToRel.numParcialidad}" 
+                        MetodoDePagoDR="${item.metodoPagoFactura}" 
+						${getAttrTipoCambioDR(customData.extraData.paymentGlobalData.casoFacturaPago, item.docToRel.docToEquivalence)}
+					/>
+				</#list>
+			</pago10:Pago>
+			<#if record.custbody_ent_entloc_fraje_habilitar_fa == true>
+				<pago10:Pago 
+					FechaPago="${record.createddate?string.iso_nz?keep_before(".")}" 
+					FormaDePagoP="17" 
+					MonedaP="${customData.extraData.paymentGlobalData.currency}" 
+					Monto="${customData.extraData.factoraje.totalPaymentAmount}"
+				>
+					<#list customData.extraData.factoraje.customItemFactoraje as item>
+						<pago10:DoctoRelacionado 
+							IdDocumento="${item.docToRel.invoiceUuid}" 
+							ImpPagado="${item.docToRel.importePagado}" 
+							ImpSaldoAnt="${item.docToRel.importePagado}" 
+							ImpSaldoInsoluto="0" 
+							MonedaDR="${item.docToRel.invoiceCurrency}" 
+							NumParcialidad="2" 
+                            MetodoDePagoDR="${item.metodoPagoFactura}" 
+						/>
+					</#list>
+				</pago10:Pago>
+			</#if>
+		</pago10:Pagos>
+	</cfdi:Complemento>
+</cfdi:Comprobante>

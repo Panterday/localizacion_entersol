@@ -34,7 +34,9 @@ define([
     longitudSerie,
     longitudFolio,
     prodMod,
-    suiteTax
+    suiteTax,
+    cfdi44,
+    seriePersonalizada
   ) => {
     let renderedTemplate = null;
     const renderXml = render.create();
@@ -45,7 +47,9 @@ define([
       longitudSerie,
       longitudFolio,
       prodMod,
-      suiteTax
+      suiteTax,
+      cfdi44,
+      seriePersonalizada
     );
     log.debug("EXTRA DATA", extraData);
     //Global custom data
@@ -125,6 +129,7 @@ define([
       recordType
     );
     //Render template as string
+    log.debug("SERI EPERSONAZIDA", userConfig.seriePersonalizada);
     const xmlRenderedObj = renderizaString(
       currentRecord,
       customerRecord,
@@ -133,7 +138,9 @@ define([
       userConfig.longitudSerie,
       userConfig.longitudFolio,
       globalConfig.prodMod,
-      globalConfig.suiteTax
+      globalConfig.suiteTax,
+      globalConfig.cfdi44,
+      userConfig.seriePersonalizada
     );
     if (!xmlRenderedObj.error) {
       let xmlDocument = null;
