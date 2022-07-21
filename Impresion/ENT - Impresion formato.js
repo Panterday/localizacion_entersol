@@ -17,7 +17,9 @@ define(["N/render", "N/record", "funcionesLoc"], (
     longitudSerie,
     longitudFolio,
     prodMod,
-    suiteTax
+    suiteTax,
+    anchuraLogo,
+    alturaLogo
   ) => {
     try {
       const extraData = funcionesLoc.getExtraCustomData(
@@ -45,6 +47,14 @@ define(["N/render", "N/record", "funcionesLoc"], (
           ...(userConfig.printColor && { mainColor: userConfig.printColor }),
           ...(userConfig.font && { font: userConfig.font }),
           ...(userConfig.fontSize && { fontSize: userConfig.fontSize }),
+        },
+      });
+      renderer.addCustomDataSource({
+        format: render.DataSource.OBJECT,
+        alias: "customSizeLogo",
+        data: {
+          ...(anchuraLogo && { anchuraLogo }),
+          ...(alturaLogo && { alturaLogo }),
         },
       });
       renderer.setTemplateById(
@@ -144,7 +154,9 @@ define(["N/render", "N/record", "funcionesLoc"], (
       userConfig.longitudSerie,
       userConfig.longitudFolio,
       globalConfig.prodMod,
-      globalConfig.suiteTax
+      globalConfig.suiteTax,
+      globalConfig.anchuraLogo,
+      globalConfig.alturaLogo
     );
     const errorCase = `
     <?xml version="1.0"?><!DOCTYPE pdf PUBLIC "-//big.faceless.org//report" "report-1.1.dtd">

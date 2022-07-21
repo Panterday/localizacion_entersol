@@ -15,3 +15,12 @@ CORREGIR la generación del XML previo al aplicar el proceso de 1 paso.
 CANCELACIÓN 
 
 Vaciar campos al copiar
+
+PAGO 
+
+Mover Moneda pago 
+Mongo pago 
+Monto pagado a sección principal
+
+
+Agregar a nivel configuración ajuste de ancho y alto de logo

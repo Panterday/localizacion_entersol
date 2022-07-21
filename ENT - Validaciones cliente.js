@@ -6,6 +6,49 @@
 to one of the following values:
 copy, create, edit*/
 define(["N/record", "N/search", "N/ui/message"], (record, search, message) => {
+  const keepBefore = (str, element) => {
+    if (str) {
+      const index = str.indexOf(element);
+      if (index === -1) {
+        return null;
+      } else {
+        const newStr = str.slice(0, index);
+        return newStr;
+      }
+    } else {
+      return null;
+    }
+  };
+  const keepAfter = (str, element) => {
+    if (str) {
+      const index = str.indexOf(element);
+      if (index === -1) {
+        return null;
+      } else {
+        const newStr = str.slice(index + 1);
+        return newStr;
+      }
+    } else {
+      return null;
+    }
+  };
+  const handleConvertedDecimals = (base, noDecimals) => {
+    const esEntero = Number.isInteger(base);
+    const stringBase = base + "";
+    const intPart = keepBefore(stringBase, ".");
+    const decimalPart = keepAfter(stringBase, ".");
+    let newDecimalPart = "";
+    if (decimalPart) {
+      for (let i = 0; i < noDecimals; i++) {
+        newDecimalPart += decimalPart[i] ? decimalPart[i] : 0;
+      }
+    }
+    if (esEntero) {
+      return base.toFixed(noDecimals);
+    } else {
+      return intPart + "." + newDecimalPart;
+    }
+  };
   const handleCurrencySymbol = (currencyId) => {
     if (currencyId) {
       const currencySymbol = search.lookupFields({
@@ -267,7 +310,10 @@ define(["N/record", "N/search", "N/ui/message"], (record, search, message) => {
         })
       );
       if (montoPagado) {
-        const tipoCambio = Number((montoPago / montoPagado).toFixed(4));
+        /* const tipoCambio = Number(
+          (Number((montoPago / montoPagado).toFixed(4)) - 0.0001).toFixed(4)
+        ); */
+        const tipoCambio = handleConvertedDecimals(montoPago / montoPagado, 6);
         currentRecord.setValue({
           fieldId: "custbody_ent_entloc_tipo_cambio_pago",
           value: tipoCambio,

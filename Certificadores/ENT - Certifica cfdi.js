@@ -138,7 +138,9 @@ define([
     suiteTax,
     mexUuid,
     cfdi44,
-    seriePersonalizada
+    seriePersonalizada,
+    anchuraLogo,
+    alturaLogo
   ) => {
     log.debug("HANDLETWOSTEP", "HANDLETWOSTEP");
     //Let's certificate!
@@ -150,7 +152,8 @@ define([
       longitudFolio,
       prodMod,
       suiteTax,
-      cfdi44
+      cfdi44,
+      seriePersonalizada
     );
     //Global custom data
     const globalData = customData.getDataForInvoice();
@@ -237,6 +240,8 @@ define([
           validexCadenaOriginal,
           extraCertData,
           cfdi44: !cfdi44 ? "4.0" : "3.3",
+          ...(anchuraLogo && { anchuraLogo }),
+          ...(alturaLogo && { alturaLogo }),
         },
       };
       //Create PDF
@@ -350,7 +355,9 @@ define([
     suiteTax,
     mexUuid,
     cfdi44,
-    seriePersonalizada
+    seriePersonalizada,
+    anchuraLogo,
+    alturaLogo
   ) => {
     log.debug("HANDLEONESTEP", "HANDLEONESTEP");
     //Extra custom data
@@ -461,6 +468,8 @@ define([
               validexCadenaOriginal,
               extraCertData,
               cfdi44: !cfdi44 ? "4.0" : "3.3",
+              ...(anchuraLogo && { anchuraLogo }),
+              ...(alturaLogo && { alturaLogo }),
             },
           };
 
@@ -639,6 +648,7 @@ define([
         subsidiaryId,
         recordType
       );
+      log.debug("GLOBALCONFI", globalConfig);
       //User config
       const userConfig = funcionesLoc.getUserConfig(
         globalConfig.internalIdRegMaestro,
@@ -678,7 +688,9 @@ define([
           globalConfig.suiteTax,
           mexUuuid,
           globalConfig.cfdi44,
-          userConfig.seriePersonalizada
+          userConfig.seriePersonalizada,
+          globalConfig.anchuraLogo,
+          globalConfig.alturaLogo
         );
       } else {
         log.debug("ONE STEP", "ONE STEP");
@@ -703,7 +715,9 @@ define([
           globalConfig.suiteTax,
           mexUuuid,
           globalConfig.cfdi44,
-          userConfig.seriePersonalizada
+          userConfig.seriePersonalizada,
+          globalConfig.anchuraLogo,
+          globalConfig.alturaLogo
         );
       }
       const scriptObj = runtime.getCurrentScript();

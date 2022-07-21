@@ -2232,6 +2232,7 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     newSubTotal,
     total
   ) => {
+    log.debug("NEW ITEMS", newItems);
     let retExist = false;
     let trasExist = false;
     const newItemDescriptions = [];
@@ -2611,6 +2612,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     let emailAutomatico = false;
     let suiteTax = false;
     let cfdi44 = false;
+    let anchuraLogo = null;
+    let alturaLogo = null;
     let errorInterDescription = "";
     try {
       const buscaGlobalConfig = search.create({
@@ -2631,6 +2634,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           "custrecord_ent_entloc_envio_email_auto",
           "custrecord_ent_entloc_suite_tax",
           "custrecord_ent_entloc_version_cfdi",
+          "custrecord_ent_entloc_anchura_logo",
+          "custrecord_ent_entloc_altura_logo",
         ],
       });
       buscaGlobalConfig.run().each((result) => {
@@ -2660,6 +2665,12 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
         });
         cfdi44 = result.getValue({
           name: "custrecord_ent_entloc_version_cfdi",
+        });
+        anchuraLogo = result.getValue({
+          name: "custrecord_ent_entloc_anchura_logo",
+        });
+        alturaLogo = result.getValue({
+          name: "custrecord_ent_entloc_altura_logo",
         });
         switch (recordType) {
           case "invoice":
@@ -2736,6 +2747,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       emailAutomatico,
       suiteTax,
       cfdi44,
+      anchuraLogo,
+      alturaLogo,
       permisosPruebaValidex,
     };
   };
@@ -3315,7 +3328,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     currency,
     paymentAmountTotal,
     docToEquivalence,
-    exchangeRate
+    exchangeRate,
+    customPaymentAmountTotal
   ) => {
     let newMonto = 0;
     try {
@@ -3328,10 +3342,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           newMonto = Number(paymentAmountTotal);
         }
       } else {
-        newMonto = handleConvertedDecimals(
-          Number(paymentAmountTotal) / Number(docToEquivalence),
-          2
-        );
+        newMonto = Number(customPaymentAmountTotal) /* Number(
+          (Number(paymentAmountTotal) / Number(docToEquivalence)).toFixed(2)
+        ) */;
       }
     } catch (error) {
       log.debug("ERROR DYNAMIC AMOUNT CALC", error);
@@ -3385,6 +3398,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
     });
     const paymentAmountTotal = currentRecord.getValue({
       fieldId: "payment",
+    });
+    const customPaymentAmountTotal = currentRecord.getValue({
+      fieldId: "custbody_ent_entloc_monto_pagado",
     });
     //Equivalencia
     const docToEquivalence = handleDocToEquivalence(
@@ -3472,7 +3488,9 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
           resultTaxes: resultTaxes.taxSummary,
           globalExchangeRate,
         });
-
+        totalPaymentAmount += Number(
+          (amount / Number(docToEquivalence)).toFixed(2)
+        );
         taxesForPayment.push({
           taxes: resultTaxes,
           docToRel: handleDocRelData(
@@ -3493,7 +3511,8 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
       currency,
       paymentAmountTotal,
       docToEquivalence,
-      exchangeRate
+      exchangeRate,
+      customPaymentAmountTotal
     );
     const casoFacturaPago = handleCasoFacturaPago(
       invoiceCurrencySymbol,
@@ -3525,7 +3544,11 @@ define(["N/record", "N/search", "N/runtime", "N/render"], (
               Number(paymentAmountTotal) / Number(docToEquivalence),
               2
             )
-          : Number(paymentAmountTotal),
+          : Number(
+              (Number(totalPaymentAmount) * Number(customExchangeRate)).toFixed(
+                2
+              )
+            ),
       factoraje: factorajeObj,
       docToEquivalence,
       customExchangeRate,
