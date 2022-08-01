@@ -50,112 +50,193 @@ define(["N/record", "N/search", "N/file", "N/email", "N/render"], (
         });
 
         //RFC CLIENTE
-        //Validaciones tipo de campo
-        let rfcCliente = "";
-        if (tipoCampo == 1) {
-          //RFC Entersol Localization
-          rfcCliente = recordCliente.getValue({
-            fieldId: "custentity_ent_entloc_rfc",
-          });
-        } else if (tipoCampo == 2) {
-          //RFC Generados Velsimex
-          rfcCliente = recordCliente.getValue({
-            fieldId: "custentity_mx_rfc",
-          });
-        } else if (tipoCampo == 3) {
-          //RFC Generados Mexico Localization
-          rfcCliente = recordCliente.getValue({
-            fieldId: "custentity_ent_entloc_rfc",
-          });
-        }
-
+        const rfcCliente = recordCliente.getValue({
+          fieldId: "custentity_ent_entloc_rfc",
+        });
+        const isPerson = recordCliente.getValue({
+          fieldId: "isperson",
+        });
         //Definir si el correo del destinatario será de una persona fisica o moral
         let correosEmpresa = [];
         let correoPrincipal = "";
-        if (rfcCliente.length == 13) {
-          //Correo persona física
-          correoPrincipal = recordCliente.getValue({
-            fieldId: "email",
-          });
-          if (correoPrincipal == "") {
-            //Mensaje de persona fisica no tiene correo
-            objErr.error =
-              "El correo electrónico del cliente asignado a esta transacción no esta definido en la configuración del cliente. Asegúrese de que el cliente tenga una dirección de correo electrónico.";
-            errorFlag = true;
+        let ccCliente = [];
+        //Correo persona física
+        correoPrincipal = recordCliente.getValue({
+          fieldId: "email",
+        });
+        if (correoPrincipal == "") {
+          //Mensaje de persona fisica no tiene correo
+          objErr.error =
+            "El correo electrónico del cliente asignado a esta transacción no esta definido en la configuración del cliente. Asegúrese de que el cliente tenga una dirección de correo electrónico.";
+          errorFlag = true;
+        }
+        if (isPerson == "T") {
+          //CC en registro del cliente
+          if (recordType == "customerpayment") {
+            let ccPago = recordCliente.getValue({
+              fieldId: "custentity_ent_mail_cc_cp",
+            });
+            if (ccPago) {
+              //Si agregan más de una copia por Default
+              const ccDefaultCount = ccPago.includes(",");
+              if (ccDefaultCount) {
+                ccCliente = ccPago.split(",");
+              } else if (ccPago) {
+                ccCliente.push(ccPago);
+              }
+            }
           }
-        } else if (rfcCliente.length == 12) {
+
+          if (recordType == "creditmemo") {
+            let ccNotaCredito = recordCliente.getValue({
+              fieldId: "custentity_ent_mail_cc_nc",
+            });
+            if (ccNotaCredito) {
+              //Si agregan más de una copia por Default
+              const ccDefaultCount = ccNotaCredito.includes(",");
+              if (ccDefaultCount) {
+                ccCliente = ccNotaCredito.split(",");
+              } else if (ccNotaCredito) {
+                ccCliente.push(ccNotaCredito);
+              }
+            }
+          }
+
+          if (recordType == "invoice") {
+            let ccFactura = recordCliente.getValue({
+              fieldId: "custentity_ent_mail_cc_fv",
+            });
+            if (ccFactura) {
+              //Si agregan más de una copia por Default
+              const ccDefaultCount = ccFactura.includes(",");
+              if (ccDefaultCount) {
+                ccCliente = ccFactura.split(",");
+              } else if (ccFactura) {
+                ccCliente.push(ccFactura);
+              }
+            }
+          }
+          ccCliente.push(correoPrincipal);
+        } else if (isPerson == "F") {
           //Correo persona moral
-          const countContact = recordCliente.getLineCount({
-            sublistId: "contactroles",
+          const checkPerMoral = subsidiary.getValue({
+            fieldId: "custrecord_ent_mail_check_pers_moral",
           });
+          if (checkPerMoral) {
+            if (recordType == "customerpayment") {
+              let ccPago = recordCliente.getValue({
+                fieldId: "custentity_ent_mail_cc_cp",
+              });
+              if (ccPago) {
+                //Si agregan más de una copia por Default
+                const ccDefaultCount = ccPago.includes(",");
+                if (ccDefaultCount) {
+                  correosEmpresa = ccPago.split(",");
+                } else if (ccPago) {
+                  correosEmpresa.push(ccPago);
+                }
+              }
+            }
 
-          for (let i = 0; i < countContact; i++) {
-            let idContact = recordCliente.getSublistValue({
+            if (recordType == "creditmemo") {
+              let ccNotaCredito = recordCliente.getValue({
+                fieldId: "custentity_ent_mail_cc_nc",
+              });
+              if (ccNotaCredito) {
+                //Si agregan más de una copia por Default
+                const ccDefaultCount = ccNotaCredito.includes(",");
+                if (ccDefaultCount) {
+                  correosEmpresa = ccNotaCredito.split(",");
+                } else if (ccNotaCredito) {
+                  correosEmpresa.push(ccNotaCredito);
+                }
+              }
+            }
+
+            if (recordType == "invoice") {
+              let ccFactura = recordCliente.getValue({
+                fieldId: "custentity_ent_mail_cc_fv",
+              });
+              if (ccFactura) {
+                //Si agregan más de una copia por Default
+                const ccDefaultCount = ccFactura.includes(",");
+                if (ccDefaultCount) {
+                  correosEmpresa = ccFactura.split(",");
+                } else if (ccFactura) {
+                  correosEmpresa.push(ccFactura);
+                }
+              }
+            }
+          } else {
+            const countContact = recordCliente.getLineCount({
               sublistId: "contactroles",
-              fieldId: "contact",
-              line: i,
-            });
-            //Contactos subficha Relaciones > Contactos
-            const recordContact = record.load({
-              type: "contact",
-              id: idContact,
             });
 
-            //Búsqueda de tipo Contacto para obtener el valor de los campos que contienen el check
-            const contactChecks = search.lookupFields({
-              type: search.Type.CONTACT,
-              id: idContact,
-              columns: [
-                "custentity_ent_mail_contacto_fv",
-                "custentity_ent_mail_contacto_cp",
-                "custentity_ent_mail_contacto_nc",
-              ],
-            });
+            for (let i = 0; i < countContact; i++) {
+              let idContact = recordCliente.getSublistValue({
+                sublistId: "contactroles",
+                fieldId: "contact",
+                line: i,
+              });
+              //Contactos subficha Relaciones > Contactos
+              //Búsqueda de tipo Contacto para obtener el valor de los campos que contienen el check
+              const contactChecks = search.lookupFields({
+                type: search.Type.CONTACT,
+                id: idContact,
+                columns: [
+                  "custentity_ent_mail_contacto_fv",
+                  "custentity_ent_mail_contacto_cp",
+                  "custentity_ent_mail_contacto_nc",
+                ],
+              });
 
-            //Checks para definir si a el contacto se le enviará el correo
-            const checkFv = contactChecks.custentity_ent_mail_contacto_fv;
-            const checkNc = contactChecks.custentity_ent_mail_contacto_cp;
-            const checkCp = contactChecks.custentity_ent_mail_contacto_nc;
+              //Checks para definir si a el contacto se le enviará el correo
+              const checkFv = contactChecks.custentity_ent_mail_contacto_fv;
+              const checkNc = contactChecks.custentity_ent_mail_contacto_nc;
+              const checkCp = contactChecks.custentity_ent_mail_contacto_cp;
 
-            let correo = recordCliente.getSublistValue({
-              sublistId: "contactroles",
-              fieldId: "email",
-              line: i,
-            });
-            let nombre = recordCliente.getSublistValue({
-              sublistId: "contactroles",
-              fieldId: "contactname",
-              line: i,
-            });
-            if (!correo) {
+              let correo = recordCliente.getSublistValue({
+                sublistId: "contactroles",
+                fieldId: "email",
+                line: i,
+              });
+              let nombre = recordCliente.getSublistValue({
+                sublistId: "contactroles",
+                fieldId: "contactname",
+                line: i,
+              });
+              if (!correo) {
+                objErr.error =
+                  "El contacto de " +
+                  nombre +
+                  " no tiene registrado un correo. Ingrese a la configuración de Cliente > Subficha-Relaciones y edite el contacto de " +
+                  nombre +
+                  ".";
+                errorFlag = true;
+              }
+              if (recordType == "invoice" && checkFv && correo) {
+                correosEmpresa.push(correo);
+              }
+              if (recordType == "creditmemo" && checkNc && correo) {
+                correosEmpresa.push(correo);
+              }
+              if (recordType == "customerpayment" && checkCp && correo) {
+                correosEmpresa.push(correo);
+              }
+            }
+            if (correosEmpresa.length < 1 && !countContact && !errorFlag) {
               objErr.error =
-                "El contacto de " +
-                nombre +
-                " no tiene registrado un correo. Ingrese a la configuración de Cliente > Subficha-Relaciones y edite el contacto de " +
-                nombre +
-                ".";
+                "El cliente cuenta con contactos agregados, pero no se seleccionó ningún tipo de CFDI para enviar en el registro de Contacto.";
               errorFlag = true;
             }
-            if (recordType == "invoice" && checkFv && correo) {
-              correosEmpresa.push(correo);
-            }
-            if (recordType == "creditmemo" && checkNc) {
-              correosEmpresa.push(correo);
-            }
-            if (recordType == "customerpayment" && checkCp) {
-              correosEmpresa.push(correo);
+            if (correosEmpresa.length == 0 && !countContact) {
+              objErr.error =
+                "El cliente no cuenta con contactos agregados, asegúrese de agregar contactos en la configuración del cliente > subficha Relaciones > Nuevo contacto.";
+              errorFlag = true;
             }
           }
-          if (correosEmpresa.length < 1 && !countContact && !errorFlag) {
-            objErr.error =
-              "El cliente cuenta con contactos agregados, pero no se seleccionó ningún tipo de CFDI para enviar en el registro de Contacto.";
-            errorFlag = true;
-          }
-          if (correosEmpresa.length == 0 && !countContact) {
-            objErr.error =
-              "El cliente no cuenta con contactos agregados, asegúrese de agregar contactos en la configuración del cliente > subficha Relaciones > Nuevo contacto.";
-            errorFlag = true;
-          }
+        //Agregar correo principal del cliente
+          correosEmpresa.push(correoPrincipal);
         }
 
         //Obtener ID de Plantilla
@@ -281,7 +362,7 @@ define(["N/record", "N/search", "N/file", "N/email", "N/render"], (
           msjError,
           pdfFile,
           xmlFile,
-          correoPrincipal,
+          ccCliente,
           correosEmpresa,
           recordId,
           templateId,
@@ -289,6 +370,7 @@ define(["N/record", "N/search", "N/file", "N/email", "N/render"], (
           remitenteEmailId,
           ccDefault,
           emailRepVentas,
+          isPerson,
         };
       } catch (err) {
         log.debug("Error", err);
@@ -309,13 +391,14 @@ define(["N/record", "N/search", "N/file", "N/email", "N/render"], (
         msjError,
         pdfFile,
         xmlFile,
-        correoPrincipal,
+        ccCliente,
         correosEmpresa,
         recordId,
         templateId,
         remitenteEmailId,
         ccDefault,
         emailRepVentas,
+        isPerson,
       } = obj;
 
       let emailDoble = false;
@@ -370,11 +453,11 @@ define(["N/record", "N/search", "N/file", "N/email", "N/render"], (
       const emailBody = mergeResult.body;
 
       try {
-        if (correoPrincipal) {
+        if (isPerson == "T") {
           //Envio de correo a personas físicas
           email.send({
             author: remitenteEmailId,
-            recipients: correoPrincipal,
+            recipients: ccCliente,
             cc: ccDefaults,
             subject: emailSubject,
             body: emailBody,
@@ -383,7 +466,7 @@ define(["N/record", "N/search", "N/file", "N/email", "N/render"], (
               transactionId: idRecord,
             },
           });
-        } else {
+        } else if (isPerson == "F") {
           flagEmpresa = true;
           email.send({
             //Envio de correo a persona moral
